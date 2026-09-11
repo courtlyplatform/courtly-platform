@@ -1,7 +1,14 @@
 "use client";
 
+import {
+    useEffect,
+    useState,
+} from "react";
+
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import {
+    usePathname,
+} from "next/navigation";
 import Image from "next/image";
 
 import {
@@ -11,6 +18,14 @@ import {
 import {
     ThemeToggle,
 } from "@/shared/theme/ThemeToggle";
+
+import {
+    createClient,
+} from "@/shared/database/supabase/client";
+
+import type {
+    OrganizationRole,
+} from "@/shared/auth/get-current-organization-commercial-context";
 
 type SidebarProps = {
     collapsed: boolean;
@@ -31,6 +46,64 @@ export function Sidebar({
     const {
         dictionary,
     } = useI18n();
+
+    const [
+        role,
+        setRole,
+    ] = useState<OrganizationRole | null>(
+        null
+    );
+
+    useEffect(
+        () => {
+            let mounted = true;
+
+            async function loadRole() {
+                const supabase =
+                    createClient();
+
+                const {
+                    data: authData,
+                } =
+                    await supabase.auth.getUser();
+
+                if (
+                    !mounted ||
+                    !authData.user
+                ) {
+                    return;
+                }
+
+                const {
+                    data: membership,
+                } = await supabase
+                    .from("memberships")
+                    .select("role")
+                    .eq(
+                        "user_id",
+                        authData.user.id
+                    )
+                    .limit(1)
+                    .maybeSingle();
+
+                if (
+                    mounted &&
+                    membership?.role
+                ) {
+                    setRole(
+                        membership.role as OrganizationRole
+                    );
+                }
+            }
+
+            void loadRole();
+
+            return () => {
+                mounted = false;
+            };
+        },
+        []
+    );
 
     const navigation = [
         {
@@ -82,14 +155,22 @@ export function Sidebar({
                     .makeups,
         },
         {
-            href: "/payments",
+            href: "/financial",
             icon: "$",
             label:
                 dictionary
                     .navigation
-                    .payments,
+                    .financial,
+            ownerOnly: true,
         },
     ];
+
+    const visibleNavigation =
+        navigation.filter(
+            (item) =>
+                !item.ownerOnly ||
+                role === "OWNER"
+        );
 
     const sidebarClassName = [
         "sidebar",
@@ -177,7 +258,7 @@ export function Sidebar({
                             .mainNavigation
                     }
                 >
-                    {navigation.map(
+                    {visibleNavigation.map(
                         (item) => {
                             const active =
                                 pathname ===

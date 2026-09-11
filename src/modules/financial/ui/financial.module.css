@@ -1,0 +1,1576 @@
+/* ============================================================
+   COURTLY — FINANCIAL MANAGEMENT
+
+   IMPORTANT:
+   This module intentionally consumes the global COURTLY design
+   tokens declared in src/app/globals.css.
+
+   It does NOT define an independent dark palette.
+
+   That means:
+   - Light theme follows the same palette as Customers / Services.
+   - Dark theme follows the same palette as Customers / Services.
+   - Chart colors remain intentionally independent for readability.
+   ============================================================ */
+
+
+/* ============================================================
+   PAGE
+   ============================================================ */
+
+.page {
+    width: 100%;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 24px;
+
+    color: var(--text);
+
+    transition:
+        var(--transition-theme);
+}
+
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+
+.pageHeader {
+    display: flex;
+
+    align-items:
+        flex-start;
+
+    justify-content:
+        space-between;
+
+    gap: 24px;
+}
+
+
+.pageHeader h1,
+.sectionHeading h2,
+.cardHeading h2,
+.modalHeading h2 {
+    margin: 0;
+
+    color:
+        var(--text);
+}
+
+
+.pageHeader p,
+.sectionHeading p {
+    margin:
+        8px
+        0
+        0;
+
+    color:
+        var(--text-secondary);
+
+    line-height:
+        1.55;
+}
+
+
+.eyebrow {
+    display:
+        inline-block;
+
+    margin-bottom:
+        8px;
+
+    color:
+        var(--courtly-green);
+
+    font-size:
+        0.76rem;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        0.08em;
+
+    text-transform:
+        uppercase;
+}
+
+
+/* ============================================================
+   HEADER ACTIONS / PERIOD
+   ============================================================ */
+
+.headerActions {
+    display: flex;
+
+    align-items:
+        flex-end;
+
+    gap: 12px;
+
+    flex-wrap:
+        wrap;
+}
+
+
+.periodField {
+    display: flex;
+
+    flex-direction:
+        column;
+
+    gap: 6px;
+
+    color:
+        var(--text);
+
+    font-size:
+        0.78rem;
+
+    font-weight:
+        600;
+}
+
+
+.periodField input,
+.form input,
+.form select,
+.form textarea {
+    width: 100%;
+
+    min-height:
+        42px;
+
+    padding:
+        10px
+        12px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        8px;
+
+    background:
+        var(--input-background);
+
+    color:
+        var(--text);
+
+    font:
+        inherit;
+
+    outline:
+        none;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.periodField input:hover,
+.form input:hover,
+.form select:hover,
+.form textarea:hover {
+    border-color:
+        var(--text-secondary);
+}
+
+
+.periodField input:focus,
+.form input:focus,
+.form select:focus,
+.form textarea:focus {
+    border-color:
+        var(--courtly-green);
+
+    box-shadow:
+        0 0 0 3px
+        var(--courtly-green-soft);
+}
+
+
+.form textarea {
+    resize:
+        vertical;
+}
+
+
+/* ============================================================
+   TABS
+   Same visual language used by the rest of COURTLY.
+   ============================================================ */
+
+.tabs {
+    display: flex;
+
+    align-items:
+        center;
+
+    gap: 8px;
+
+    width:
+        fit-content;
+
+    max-width:
+        100%;
+
+    padding:
+        5px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        10px;
+
+    background:
+        var(--surface);
+
+    overflow-x:
+        auto;
+
+    transition:
+        var(--transition-theme);
+}
+
+
+.tab {
+    min-height:
+        40px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    flex-shrink:
+        0;
+
+    padding:
+        0
+        16px;
+
+    border:
+        0;
+
+    border-radius:
+        7px;
+
+    background:
+        transparent;
+
+    color:
+        var(--text-secondary);
+
+    font:
+        inherit;
+
+    font-size:
+        13px;
+
+    font-weight:
+        600;
+
+    cursor:
+        pointer;
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+
+.tab:hover {
+    background:
+        var(--surface-secondary);
+
+    color:
+        var(--text);
+}
+
+
+.tabActive {
+    background:
+        var(--courtly-green-soft);
+
+    color:
+        var(--courtly-green);
+}
+
+
+/* ============================================================
+   SUMMARY
+   ============================================================ */
+
+.summaryGrid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+    gap: 16px;
+}
+
+
+.summaryCard,
+.chartCard,
+.sectionCard,
+.kpiStrip {
+    min-width:
+        0;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        12px;
+
+    background:
+        var(--surface);
+
+    box-shadow:
+        var(--shadow);
+
+    transition:
+        var(--transition-theme);
+}
+
+
+.summaryCard {
+    display: flex;
+
+    flex-direction:
+        column;
+
+    gap: 8px;
+
+    padding:
+        20px;
+}
+
+
+.summaryCard span,
+.kpiStrip span {
+    color:
+        var(--text-secondary);
+
+    font-size:
+        0.82rem;
+}
+
+
+.summaryCard strong {
+    color:
+        var(--text);
+
+    font-size:
+        1.5rem;
+}
+
+
+.summaryCard small {
+    color:
+        var(--text-secondary);
+}
+
+
+/* ============================================================
+   KPI STRIP
+   ============================================================ */
+
+.kpiStrip {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            4,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+    overflow:
+        hidden;
+}
+
+
+.kpiStrip > div {
+    display: flex;
+
+    flex-direction:
+        column;
+
+    gap: 6px;
+
+    padding:
+        16px
+        18px;
+
+    border-right:
+        1px solid
+        var(--border);
+}
+
+
+.kpiStrip > div:last-child {
+    border-right:
+        0;
+}
+
+
+.kpiStrip strong {
+    color:
+        var(--text);
+}
+
+
+/* ============================================================
+   CHARTS
+   ============================================================ */
+
+.chartsGrid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(
+            0,
+            1.45fr
+        )
+        minmax(
+            300px,
+            0.75fr
+        );
+
+    gap: 16px;
+}
+
+
+.chartCard {
+    min-width:
+        0;
+
+    padding:
+        20px;
+}
+
+
+.cardHeading,
+.sectionHeading,
+.modalHeading {
+    display: flex;
+
+    align-items:
+        flex-start;
+
+    justify-content:
+        space-between;
+
+    gap: 16px;
+}
+
+
+.cardHeading h2,
+.sectionHeading h2 {
+    color:
+        var(--text);
+
+    font-size:
+        1rem;
+}
+
+
+.legend {
+    display: flex;
+
+    flex-wrap:
+        wrap;
+
+    gap: 10px;
+
+    color:
+        var(--text-secondary);
+
+    font-size:
+        0.75rem;
+}
+
+
+/*
+ * Chart colors are intentionally NOT mapped to the general theme.
+ * They represent financial semantics and must remain distinguishable.
+ */
+
+.barChart {
+    height:
+        260px;
+
+    display: flex;
+
+    align-items:
+        flex-end;
+
+    gap: 14px;
+
+    padding-top:
+        24px;
+}
+
+
+.barGroup {
+    min-width:
+        42px;
+
+    height:
+        100%;
+
+    flex: 1;
+
+    display: flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        center;
+
+    justify-content:
+        flex-end;
+
+    gap: 8px;
+}
+
+
+.barArea {
+    width: 100%;
+
+    flex: 1;
+
+    display: flex;
+
+    align-items:
+        flex-end;
+
+    justify-content:
+        center;
+
+    gap: 4px;
+
+    border-bottom:
+        1px solid
+        var(--border);
+}
+
+
+.bar {
+    width: 22%;
+
+    min-height:
+        3px;
+
+    border-radius:
+        6px
+        6px
+        0
+        0;
+
+    opacity:
+        0.9;
+}
+
+
+.barRevenue {
+    background:
+        #2563eb;
+}
+
+
+.barExpense {
+    background:
+        #ef4444;
+}
+
+
+.barProfit {
+    background:
+        #16a34a;
+}
+
+
+.barGroup small {
+    color:
+        var(--text-secondary);
+}
+
+
+/* ============================================================
+   COSTS BY CATEGORY
+   ============================================================ */
+
+.categoryChart {
+    display: flex;
+
+    flex-direction:
+        column;
+
+    gap: 16px;
+
+    margin-top:
+        24px;
+}
+
+
+.categoryRow {
+    display: flex;
+
+    flex-direction:
+        column;
+
+    gap: 8px;
+}
+
+
+.categoryRowTop {
+    display: flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap: 12px;
+
+    color:
+        var(--text);
+
+    font-size:
+        0.84rem;
+}
+
+
+.categoryTrack {
+    height:
+        8px;
+
+    overflow:
+        hidden;
+
+    border-radius:
+        999px;
+
+    background:
+        var(--surface-secondary);
+}
+
+
+.categoryFill {
+    height:
+        100%;
+
+    border-radius:
+        inherit;
+
+    background:
+        var(--courtly-green);
+}
+
+
+.chartEmpty,
+.emptyState {
+    padding:
+        36px
+        20px;
+
+    color:
+        var(--text-secondary);
+
+    text-align:
+        center;
+}
+
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+
+.sectionCard {
+    padding:
+        20px;
+}
+
+
+.sectionHeading {
+    margin-bottom:
+        20px;
+}
+
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+
+.tableScroll {
+    width: 100%;
+
+    overflow-x:
+        auto;
+
+    scrollbar-width:
+        thin;
+
+    scrollbar-color:
+        var(--border)
+        var(--surface);
+}
+
+
+.tableScroll::-webkit-scrollbar {
+    height:
+        8px;
+}
+
+
+.tableScroll::-webkit-scrollbar-track {
+    background:
+        var(--surface);
+}
+
+
+.tableScroll::-webkit-scrollbar-thumb {
+    border-radius:
+        999px;
+
+    background:
+        var(--border);
+}
+
+
+.table {
+    width: 100%;
+
+    min-width:
+        1080px;
+
+    border-collapse:
+        collapse;
+}
+
+
+.table th,
+.table td {
+    padding:
+        13px
+        12px;
+
+    border-bottom:
+        1px solid
+        var(--border);
+
+    text-align:
+        left;
+
+    vertical-align:
+        middle;
+}
+
+
+.table th {
+    color:
+        var(--text-secondary);
+
+    font-size:
+        0.76rem;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        0.04em;
+
+    text-transform:
+        uppercase;
+
+    white-space:
+        nowrap;
+}
+
+
+.table td {
+    color:
+        var(--text);
+
+    font-size:
+        0.88rem;
+}
+
+
+.table tbody tr {
+    transition:
+        background-color
+        0.15s ease;
+}
+
+
+.table tbody tr:hover {
+    background:
+        var(--surface-secondary);
+}
+
+
+.table tbody tr:last-child td {
+    border-bottom:
+        0;
+}
+
+
+.inlineHint {
+    display:
+        block;
+
+    margin-top:
+        4px;
+
+    color:
+        var(--text-secondary);
+}
+
+
+/* ============================================================
+   CUSTOMER IDENTITY
+   ============================================================ */
+
+.customerIdentity {
+    min-width:
+        180px;
+
+    display: flex;
+
+    align-items:
+        center;
+
+    gap: 6px;
+
+    color:
+        var(--text);
+}
+
+
+.customerIdentity strong {
+    color:
+        var(--text);
+
+    font-weight:
+        650;
+}
+
+
+.customerDocument {
+    color:
+        var(--text-secondary);
+
+    font-size:
+        0.82rem;
+
+    white-space:
+        nowrap;
+}
+
+
+.mutedValue {
+    color:
+        var(--text-secondary);
+
+    opacity:
+        0.72;
+}
+
+
+/* ============================================================
+   ROW ACTIONS
+   ============================================================ */
+
+.rowActions {
+    display: flex;
+
+    align-items:
+        center;
+
+    gap: 12px;
+
+    flex-wrap:
+        wrap;
+
+    white-space:
+        nowrap;
+}
+
+
+.rowActions button {
+    padding:
+        4px
+        0;
+
+    border:
+        0;
+
+    background:
+        transparent;
+
+    color:
+        var(--courtly-green);
+
+    font:
+        inherit;
+
+    font-size:
+        0.8rem;
+
+    font-weight:
+        600;
+
+    cursor:
+        pointer;
+}
+
+
+.rowActions button:hover:not(:disabled) {
+    text-decoration:
+        underline;
+}
+
+
+.rowActions button:disabled {
+    opacity:
+        0.5;
+
+    cursor:
+        not-allowed;
+}
+
+
+.rowActions .dangerAction {
+    color:
+        #b83a3a;
+}
+
+
+:global([data-theme="dark"]) .rowActions .dangerAction {
+    color:
+        #f08a8a;
+}
+
+
+/* ============================================================
+   STATUS BADGES
+   ============================================================ */
+
+.statusBadge {
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    padding:
+        5px
+        9px;
+
+    border-radius:
+        999px;
+
+    font-size:
+        0.72rem;
+
+    font-weight:
+        700;
+
+    white-space:
+        nowrap;
+}
+
+
+.statusPaid {
+    background:
+        var(--success-background);
+
+    color:
+        var(--success-text);
+}
+
+
+.statusPending {
+    background:
+        #fff4d6;
+
+    color:
+        #8a6100;
+}
+
+
+.statusOverdue {
+    background:
+        rgba(
+            190,
+            55,
+            55,
+            0.12
+        );
+
+    color:
+        #b83a3a;
+}
+
+
+.statusCancelled {
+    background:
+        var(--inactive-background);
+
+    color:
+        var(--inactive-text);
+}
+
+
+:global([data-theme="dark"]) .statusPending {
+    background:
+        #493b19;
+
+    color:
+        #f2cd6b;
+}
+
+
+:global([data-theme="dark"]) .statusOverdue {
+    background:
+        rgba(
+            240,
+            138,
+            138,
+            0.12
+        );
+
+    color:
+        #f08a8a;
+}
+
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+.modalBackdrop {
+    position:
+        fixed;
+
+    inset:
+        0;
+
+    z-index:
+        1000;
+
+    display: flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    padding:
+        24px;
+
+    background:
+        var(--overlay);
+
+    backdrop-filter:
+        blur(2px);
+}
+
+
+.modal {
+    width:
+        min(
+            760px,
+            100%
+        );
+
+    max-height:
+        calc(
+            100vh -
+            48px
+        );
+
+    overflow-y:
+        auto;
+
+    padding:
+        22px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        14px;
+
+    background:
+        var(--surface);
+
+    color:
+        var(--text);
+
+    box-shadow:
+        0
+        20px
+        60px
+        rgba(
+            0,
+            0,
+            0,
+            0.25
+        );
+
+    transition:
+        var(--transition-theme);
+}
+
+
+.modalHeading {
+    margin-bottom:
+        20px;
+}
+
+
+.iconButton {
+    border:
+        0;
+
+    background:
+        transparent;
+
+    color:
+        var(--text-secondary);
+
+    font-size:
+        1.5rem;
+
+    cursor:
+        pointer;
+}
+
+
+.iconButton:hover:not(:disabled) {
+    color:
+        var(--text);
+}
+
+
+/* ============================================================
+   FORM
+   ============================================================ */
+
+.form {
+    display: flex;
+
+    flex-direction:
+        column;
+
+    gap: 16px;
+}
+
+
+.formRow {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+    gap: 12px;
+}
+
+
+.formGroup {
+    display: flex;
+
+    flex-direction:
+        column;
+
+    gap: 6px;
+}
+
+
+.formGroup label,
+.checkboxLabel {
+    color:
+        var(--text);
+
+    font-size:
+        0.8rem;
+
+    font-weight:
+        600;
+}
+
+
+.form input::placeholder,
+.form textarea::placeholder {
+    color:
+        var(--text-secondary);
+}
+
+
+.form select option {
+    background:
+        var(--surface);
+
+    color:
+        var(--text);
+}
+
+
+/* ============================================================
+   RECURRENCE
+   ============================================================ */
+
+.recurrenceBox {
+    display: flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap: 14px;
+
+    padding:
+        14px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        10px;
+
+    background:
+        var(--surface-secondary);
+
+    color:
+        var(--text);
+
+    transition:
+        var(--transition-theme);
+}
+
+
+.checkboxLabel {
+    display: flex;
+
+    align-items:
+        center;
+
+    gap: 8px;
+}
+
+
+.checkboxLabel input {
+    width:
+        auto;
+
+    min-height:
+        0;
+
+    accent-color:
+        var(--courtly-green);
+}
+
+
+/* ============================================================
+   FORM ACTIONS
+   ============================================================ */
+
+.formActions {
+    display: flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        flex-end;
+
+    gap: 10px;
+
+    margin-top:
+        4px;
+
+    padding-top:
+        18px;
+
+    border-top:
+        1px solid
+        var(--border);
+}
+
+
+/* ============================================================
+   REPORT
+   ============================================================ */
+
+.reportHint {
+    margin:
+        16px
+        0
+        0;
+
+    color:
+        var(--text-secondary);
+
+    font-size:
+        0.8rem;
+
+    line-height:
+        1.5;
+}
+
+
+/* ============================================================
+   RESPONSIVE — TABLET / SMALL DESKTOP
+   ============================================================ */
+
+@media (
+    max-width:
+        1050px
+) {
+
+    .summaryGrid {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
+    }
+
+
+    .chartsGrid {
+        grid-template-columns:
+            1fr;
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE — MOBILE
+   ============================================================ */
+
+@media (
+    max-width:
+        760px
+) {
+
+    .page {
+        gap:
+            20px;
+    }
+
+
+    .pageHeader {
+        flex-direction:
+            column;
+    }
+
+
+    .headerActions {
+        width:
+            100%;
+    }
+
+
+    .periodField {
+        flex:
+            1;
+
+        min-width:
+            180px;
+    }
+
+
+    .tabs {
+        width:
+            100%;
+    }
+
+
+    .summaryGrid,
+    .kpiStrip,
+    .formRow {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .kpiStrip > div {
+        border-right:
+            0;
+
+        border-bottom:
+            1px solid
+            var(--border);
+    }
+
+
+    .kpiStrip > div:last-child {
+        border-bottom:
+            0;
+    }
+
+
+    .sectionHeading,
+    .recurrenceBox {
+        align-items:
+            stretch;
+
+        flex-direction:
+            column;
+    }
+
+
+    .modalBackdrop {
+        align-items:
+            flex-end;
+
+        padding:
+            0;
+    }
+
+
+    .modal {
+        width:
+            100%;
+
+        max-height:
+            92vh;
+
+        border-radius:
+            14px
+            14px
+            0
+            0;
+    }
+
+
+    .formActions {
+        flex-direction:
+            column-reverse;
+
+        align-items:
+            stretch;
+    }
+
+
+    .formActions button {
+        width:
+            100%;
+    }
+}
+
+
+/* ============================================================
+   VERY SMALL MOBILE
+   ============================================================ */
+
+@media (
+    max-width:
+        420px
+) {
+
+    .summaryCard,
+    .chartCard,
+    .sectionCard {
+        padding:
+            16px;
+    }
+
+
+    .tab {
+        padding:
+            0
+            12px;
+
+        font-size:
+            12px;
+    }
+
+
+    .headerActions {
+        align-items:
+            stretch;
+
+        flex-direction:
+            column;
+    }
+
+
+    .periodField {
+        width:
+            100%;
+    }
+}
+
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (
+    prefers-reduced-motion:
+        reduce
+) {
+
+    .page,
+    .summaryCard,
+    .chartCard,
+    .sectionCard,
+    .kpiStrip,
+    .tabs,
+    .modal,
+    .recurrenceBox,
+    .periodField input,
+    .form input,
+    .form select,
+    .form textarea {
+        transition:
+            none;
+    }
+}

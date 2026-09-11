@@ -47,7 +47,8 @@ export const enUS = {
         scheduling: "Schedule",
         attendance: "Attendance",
         makeups: "Makeups",
-        payments: "Finance",
+        payments: "Payments",
+        financial: "Finance",
 
         collapseMenu: "Collapse menu",
         expandMenu: "Expand menu",
@@ -848,6 +849,181 @@ export const enUS = {
                 unexpected:
                     "We couldn't complete the operation. Please try again.",
             },
+        },
+    },
+
+
+    financial: {
+        eyebrow: "Financial management",
+        title: "Finance",
+        description: "Track revenue, costs, profit and the financial health of your business.",
+        period: "Period",
+
+        tabs: {
+            overview: "Overview",
+            revenues: "Revenue",
+            expenses: "Costs",
+            reports: "Reports",
+        },
+
+        cards: {
+            mrr: "MRR",
+            billedRevenue: "Billed revenue",
+            receivedRevenue: "Received",
+            receivableRevenue: "Accounts receivable",
+            expenses: "Paid costs",
+            netProfit: "Net profit",
+            margin: "Margin",
+        },
+
+        kpis: {
+            activeCustomers: "Students with active plans",
+            activeSubscriptions: "Active subscriptions",
+            overdueRevenue: "Overdue",
+            totalExpenses: "Period costs",
+        },
+
+        charts: {
+            evolution: "Financial performance",
+            categoryExpenses: "Costs by category",
+            revenue: "Revenue",
+            expenses: "Costs",
+            profit: "Profit",
+            noData: "There is not enough data for this chart yet.",
+        },
+
+        revenues: {
+            eyebrow: "Revenue",
+            title: "Revenue",
+            description: "Charges generated from student plans and manual revenue entries.",
+            newTitle: "New manual revenue",
+            editTitle: "Edit manual revenue",
+            newAction: "New revenue",
+            empty: "No revenue was found for this period.",
+        },
+
+        expenses: {
+            eyebrow: "Cost",
+            title: "Costs",
+            description: "Register one-time or recurring business costs.",
+            newTitle: "New cost",
+            editTitle: "Edit cost",
+            newAction: "New cost",
+            recurring: "This cost is recurring",
+            recurringBadge: "Recurring",
+            empty: "No costs were found for this period.",
+        },
+
+        reports: {
+            title: "Reports",
+            description: "Consolidated history for the last 12 months in the organization's default currency.",
+            period: "Period",
+            hint: "Historical reports use financial entries already materialized. When you open a period, Courtly idempotently synchronizes that month's charges and recurring costs.",
+        },
+
+        table: {
+            description: "Description",
+            customer: "Student",
+            service: "Service",
+            category: "Category",
+            source: "Source",
+            referenceDate: "Reference",
+            dueDate: "Due date",
+            amount: "Amount",
+            status: "Status",
+            actions: "Actions",
+        },
+
+        fields: {
+            description: "Description",
+            category: "Category",
+            amount: "Amount",
+            currency: "Currency",
+            referenceDate: "Reference date",
+            dueDate: "Due date",
+            recurrence: "Recurrence",
+            notes: "Notes",
+        },
+
+        status: {
+            pending: "Pending",
+            paid: "Paid",
+            overdue: "Overdue",
+            cancelled: "Cancelled",
+        },
+
+        sources: {
+            subscription: "Student plan",
+            manual: "Manual",
+        },
+
+        cycles: {
+            weekly: "Weekly",
+            monthly: "Monthly",
+            quarterly: "Quarterly",
+            semiannual: "Semiannual",
+            annual: "Annual",
+        },
+
+        actions: {
+            save: "Save",
+            saving: "Saving...",
+            cancel: "Cancel",
+            close: "Close",
+            edit: "Edit",
+            markPaid: "Mark as paid",
+            markPending: "Move back to pending",
+            cancelEntry: "Cancel entry",
+            sync: "Sync period",
+            syncing: "Syncing...",
+        },
+
+        categoryNames: {
+            RENT: "Rent",
+            STAFF: "Staff",
+            PROFESSIONALS: "Professionals",
+            ENERGY: "Energy",
+            WATER: "Water",
+            INTERNET: "Internet",
+            MARKETING: "Marketing",
+            SOFTWARE: "Software",
+            EQUIPMENT: "Equipment",
+            MAINTENANCE: "Maintenance",
+            TAXES: "Taxes",
+            ACCOUNTING: "Accounting",
+            OTHER: "Other",
+        },
+
+        feedback: {
+            success: {
+                synced: "Financial period synced successfully.",
+                statusUpdated: "Financial status updated successfully.",
+            },
+            error: {
+                forbidden: "Only the organization owner can access and change financial data.",
+                invalidData: "Check the information provided.",
+                duplicateCategory: "A category with this name already exists.",
+                saveFailed: "We couldn't save the financial entry.",
+                statusUpdateFailed: "We couldn't change the entry status.",
+                syncFailed: "We couldn't sync the financial period.",
+            },
+        },
+
+        accessibility: {
+            sections: "Finance sections",
+        },
+
+        confirmation: {
+            markPaidTitle: "Confirm payment",
+            markPaidDescription: "Do you want to mark the revenue for {customer}, document {document}, related to {service}, in the amount of {amount}, as paid?",
+            cancelTitle: "Cancel entry",
+            cancelDescription: "Do you want to cancel the revenue for {customer}, document {document}, related to {service}, in the amount of {amount}? This action changes the financial status of the entry.",
+            confirmPaid: "Mark as paid",
+            confirmCancel: "Cancel entry",
+            goBack: "Go back",
+            unknownCustomer: "Unidentified student",
+            documentNotProvided: "not provided",
+            serviceNotProvided: "not provided",
         },
     },
 

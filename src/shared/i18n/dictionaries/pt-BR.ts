@@ -26,7 +26,8 @@ export const ptBR = {
         scheduling: "Agenda",
         attendance: "Presenças",
         makeups: "Reposições",
-        payments: "Financeiro",
+        payments: "Pagamentos",
+        financial: "Financeiro",
 
         collapseMenu: "Recolher menu",
         expandMenu: "Expandir menu",
@@ -827,6 +828,181 @@ export const ptBR = {
                 unexpected:
                     "Não foi possível concluir a operação. Tente novamente.",
             },
+        },
+    },
+
+
+    financial: {
+        eyebrow: "Gestão financeira",
+        title: "Financeiro",
+        description: "Acompanhe receitas, custos, lucro e a saúde financeira do seu negócio.",
+        period: "Período",
+
+        tabs: {
+            overview: "Visão geral",
+            revenues: "Receitas",
+            expenses: "Custos",
+            reports: "Relatórios",
+        },
+
+        cards: {
+            mrr: "MRR",
+            billedRevenue: "Faturamento",
+            receivedRevenue: "Recebido",
+            receivableRevenue: "A receber",
+            expenses: "Custos pagos",
+            netProfit: "Lucro líquido",
+            margin: "Margem",
+        },
+
+        kpis: {
+            activeCustomers: "Alunos com planos ativos",
+            activeSubscriptions: "Assinaturas ativas",
+            overdueRevenue: "Em atraso",
+            totalExpenses: "Custos do período",
+        },
+
+        charts: {
+            evolution: "Evolução financeira",
+            categoryExpenses: "Custos por categoria",
+            revenue: "Receitas",
+            expenses: "Custos",
+            profit: "Lucro",
+            noData: "Ainda não há dados suficientes para este gráfico.",
+        },
+
+        revenues: {
+            eyebrow: "Receita",
+            title: "Receitas",
+            description: "Cobranças geradas pelos planos dos alunos e receitas manuais.",
+            newTitle: "Nova receita manual",
+            editTitle: "Editar receita manual",
+            newAction: "Nova receita",
+            empty: "Nenhuma receita foi encontrada neste período.",
+        },
+
+        expenses: {
+            eyebrow: "Custo",
+            title: "Custos",
+            description: "Cadastre despesas avulsas ou recorrentes do negócio.",
+            newTitle: "Novo custo",
+            editTitle: "Editar custo",
+            newAction: "Novo custo",
+            recurring: "Este custo é recorrente",
+            recurringBadge: "Recorrente",
+            empty: "Nenhum custo foi encontrado neste período.",
+        },
+
+        reports: {
+            title: "Relatórios",
+            description: "Histórico consolidado dos últimos 12 meses na moeda padrão da organização.",
+            period: "Período",
+            hint: "Os relatórios históricos usam os lançamentos financeiros já materializados. Ao abrir um período, o Courtly sincroniza as cobranças e custos recorrentes daquele mês de forma idempotente.",
+        },
+
+        table: {
+            description: "Descrição",
+            customer: "Aluno",
+            service: "Serviço",
+            category: "Categoria",
+            source: "Origem",
+            referenceDate: "Competência",
+            dueDate: "Vencimento",
+            amount: "Valor",
+            status: "Status",
+            actions: "Ações",
+        },
+
+        fields: {
+            description: "Descrição",
+            category: "Categoria",
+            amount: "Valor",
+            currency: "Moeda",
+            referenceDate: "Data de competência",
+            dueDate: "Vencimento",
+            recurrence: "Recorrência",
+            notes: "Observações",
+        },
+
+        status: {
+            pending: "Pendente",
+            paid: "Pago",
+            overdue: "Em atraso",
+            cancelled: "Cancelado",
+        },
+
+        sources: {
+            subscription: "Plano do aluno",
+            manual: "Manual",
+        },
+
+        cycles: {
+            weekly: "Semanal",
+            monthly: "Mensal",
+            quarterly: "Trimestral",
+            semiannual: "Semestral",
+            annual: "Anual",
+        },
+
+        actions: {
+            save: "Salvar",
+            saving: "Salvando...",
+            cancel: "Cancelar",
+            close: "Fechar",
+            edit: "Editar",
+            markPaid: "Marcar como pago",
+            markPending: "Voltar para pendente",
+            cancelEntry: "Cancelar lançamento",
+            sync: "Sincronizar período",
+            syncing: "Sincronizando...",
+        },
+
+        categoryNames: {
+            RENT: "Aluguel",
+            STAFF: "Funcionários",
+            PROFESSIONALS: "Profissionais",
+            ENERGY: "Energia",
+            WATER: "Água",
+            INTERNET: "Internet",
+            MARKETING: "Marketing",
+            SOFTWARE: "Software",
+            EQUIPMENT: "Equipamentos",
+            MAINTENANCE: "Manutenção",
+            TAXES: "Impostos",
+            ACCOUNTING: "Contabilidade",
+            OTHER: "Outros",
+        },
+
+        feedback: {
+            success: {
+                synced: "Período financeiro sincronizado com sucesso.",
+                statusUpdated: "Status financeiro atualizado com sucesso.",
+            },
+            error: {
+                forbidden: "Apenas o proprietário da organização pode acessar e alterar dados financeiros.",
+                invalidData: "Verifique os dados informados.",
+                duplicateCategory: "Já existe uma categoria com este nome.",
+                saveFailed: "Não foi possível salvar o lançamento financeiro.",
+                statusUpdateFailed: "Não foi possível alterar o status do lançamento.",
+                syncFailed: "Não foi possível sincronizar o período financeiro.",
+            },
+        },
+
+        accessibility: {
+            sections: "Seções do financeiro",
+        },
+
+        confirmation: {
+            markPaidTitle: "Confirmar pagamento",
+            markPaidDescription: "Deseja marcar como paga a receita de {customer}, documento {document}, referente ao serviço {service}, no valor de {amount}?",
+            cancelTitle: "Cancelar lançamento",
+            cancelDescription: "Deseja cancelar a receita de {customer}, documento {document}, referente ao serviço {service}, no valor de {amount}? Esta ação altera o status financeiro do lançamento.",
+            confirmPaid: "Marcar como pago",
+            confirmCancel: "Cancelar lançamento",
+            goBack: "Voltar",
+            unknownCustomer: "Aluno não identificado",
+            documentNotProvided: "não informado",
+            serviceNotProvided: "não informado",
         },
     },
 

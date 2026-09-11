@@ -194,6 +194,316 @@ export type Database = {
           },
         ]
       }
+      expense_categories: {
+        Row: {
+          active: boolean
+          code: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          organization_id: string
+          system: boolean
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          system?: boolean
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          system?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expense_recurrences: {
+        Row: {
+          active: boolean
+          amount: number
+          category_id: string
+          created_at: string
+          currency_code: Database["public"]["Enums"]["organization_currency"]
+          description: string
+          ends_at: string | null
+          first_due_date: string
+          id: string
+          notes: string | null
+          organization_id: string
+          recurrence_cycle: Database["public"]["Enums"]["expense_recurrence_cycle"]
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount: number
+          category_id: string
+          created_at?: string
+          currency_code: Database["public"]["Enums"]["organization_currency"]
+          description: string
+          ends_at?: string | null
+          first_due_date: string
+          id?: string
+          notes?: string | null
+          organization_id: string
+          recurrence_cycle: Database["public"]["Enums"]["expense_recurrence_cycle"]
+          starts_at: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          category_id?: string
+          created_at?: string
+          currency_code?: Database["public"]["Enums"]["organization_currency"]
+          description?: string
+          ends_at?: string | null
+          first_due_date?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          recurrence_cycle?: Database["public"]["Enums"]["expense_recurrence_cycle"]
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_recurrences_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_expense_recurrences_category"
+            columns: ["category_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      financial_expenses: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string
+          currency_code: Database["public"]["Enums"]["organization_currency"]
+          description: string
+          due_date: string
+          id: string
+          notes: string | null
+          organization_id: string
+          paid_at: string | null
+          recurrence_id: string | null
+          reference_date: string
+          status: Database["public"]["Enums"]["financial_entry_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string
+          currency_code: Database["public"]["Enums"]["organization_currency"]
+          description: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          organization_id: string
+          paid_at?: string | null
+          recurrence_id?: string | null
+          reference_date: string
+          status?: Database["public"]["Enums"]["financial_entry_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string
+          currency_code?: Database["public"]["Enums"]["organization_currency"]
+          description?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          paid_at?: string | null
+          recurrence_id?: string | null
+          reference_date?: string
+          status?: Database["public"]["Enums"]["financial_entry_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_expenses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_financial_expenses_category"
+            columns: ["category_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_financial_expenses_recurrence"
+            columns: ["recurrence_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "expense_recurrences"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      financial_periods: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          id: string
+          month: number
+          organization_id: string
+          status: Database["public"]["Enums"]["financial_period_status"]
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          month: number
+          organization_id: string
+          status?: Database["public"]["Enums"]["financial_period_status"]
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          month?: number
+          organization_id?: string
+          status?: Database["public"]["Enums"]["financial_period_status"]
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_periods_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_revenues: {
+        Row: {
+          activity_id: string | null
+          amount: number
+          created_at: string
+          currency_code: Database["public"]["Enums"]["organization_currency"]
+          customer_id: string | null
+          customer_subscription_id: string | null
+          description: string
+          due_date: string
+          id: string
+          notes: string | null
+          organization_id: string
+          paid_at: string | null
+          reference_date: string
+          source: Database["public"]["Enums"]["financial_revenue_source"]
+          status: Database["public"]["Enums"]["financial_entry_status"]
+          updated_at: string
+        }
+        Insert: {
+          activity_id?: string | null
+          amount: number
+          created_at?: string
+          currency_code: Database["public"]["Enums"]["organization_currency"]
+          customer_id?: string | null
+          customer_subscription_id?: string | null
+          description: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          organization_id: string
+          paid_at?: string | null
+          reference_date: string
+          source: Database["public"]["Enums"]["financial_revenue_source"]
+          status?: Database["public"]["Enums"]["financial_entry_status"]
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string | null
+          amount?: number
+          created_at?: string
+          currency_code?: Database["public"]["Enums"]["organization_currency"]
+          customer_id?: string | null
+          customer_subscription_id?: string | null
+          description?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          paid_at?: string | null
+          reference_date?: string
+          source?: Database["public"]["Enums"]["financial_revenue_source"]
+          status?: Database["public"]["Enums"]["financial_entry_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_revenues_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_financial_revenues_activity"
+            columns: ["activity_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_financial_revenues_customer"
+            columns: ["customer_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_financial_revenues_subscription"
+            columns: ["customer_subscription_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
       memberships: {
         Row: {
           created_at: string
@@ -353,6 +663,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_expense_recurrence_cycle: {
+        Args: {
+          p_cycle: Database["public"]["Enums"]["expense_recurrence_cycle"]
+          p_date: string
+        }
+        Returns: string
+      }
+      add_subscription_billing_cycle: {
+        Args: {
+          p_cycle: Database["public"]["Enums"]["subscription_billing_cycle"]
+          p_date: string
+        }
+        Returns: string
+      }
       create_organization_onboarding: {
         Args: {
           p_business_type: Database["public"]["Enums"]["organization_business_type"]
@@ -365,6 +689,22 @@ export type Database = {
         }
         Returns: string
       }
+      generate_recurring_expenses_for_period: {
+        Args: {
+          p_organization_id: string
+          p_period_end: string
+          p_period_start: string
+        }
+        Returns: number
+      }
+      generate_subscription_revenues_for_period: {
+        Args: {
+          p_organization_id: string
+          p_period_end: string
+          p_period_start: string
+        }
+        Returns: number
+      }
       is_organization_manager: {
         Args: { target_organization_id: string }
         Returns: boolean
@@ -373,6 +713,18 @@ export type Database = {
         Args: { target_organization_id: string }
         Returns: boolean
       }
+      is_organization_owner: {
+        Args: { target_organization_id: string }
+        Returns: boolean
+      }
+      refresh_financial_overdue_statuses: {
+        Args: { p_organization_id: string }
+        Returns: undefined
+      }
+      seed_default_expense_categories: {
+        Args: { p_organization_id: string }
+        Returns: undefined
+      }
       set_customer_active_status: {
         Args: { p_active: boolean; p_customer_id: string }
         Returns: {
@@ -380,8 +732,27 @@ export type Database = {
           ended_subscriptions: number
         }[]
       }
+      sync_financial_period: {
+        Args: { p_reference_date: string }
+        Returns: {
+          generated_expenses: number
+          generated_revenues: number
+          organization_id: string
+          period_end: string
+          period_start: string
+        }[]
+      }
     }
     Enums: {
+      expense_recurrence_cycle:
+        | "WEEKLY"
+        | "MONTHLY"
+        | "QUARTERLY"
+        | "SEMIANNUAL"
+        | "ANNUAL"
+      financial_entry_status: "PENDING" | "PAID" | "OVERDUE" | "CANCELLED"
+      financial_period_status: "OPEN" | "CLOSED"
+      financial_revenue_source: "SUBSCRIPTION" | "MANUAL"
       organization_business_type:
         | "ACADEMY"
         | "CLUB"
@@ -531,6 +902,16 @@ export const Constants = {
   },
   public: {
     Enums: {
+      expense_recurrence_cycle: [
+        "WEEKLY",
+        "MONTHLY",
+        "QUARTERLY",
+        "SEMIANNUAL",
+        "ANNUAL",
+      ],
+      financial_entry_status: ["PENDING", "PAID", "OVERDUE", "CANCELLED"],
+      financial_period_status: ["OPEN", "CLOSED"],
+      financial_revenue_source: ["SUBSCRIPTION", "MANUAL"],
       organization_business_type: [
         "ACADEMY",
         "CLUB",
