@@ -14,11 +14,17 @@ import {
     getDictionary,
 } from "@/shared/i18n/getDictionary";
 
+import {
+    CourtlyAlert,
+} from "@/shared/ui/CourtlyAlert";
+
+
 type NewCustomerPageProps = {
     searchParams: Promise<{
         error?: string;
     }>;
 };
+
 
 export default async function NewCustomerPage({
     searchParams,
@@ -30,10 +36,52 @@ export default async function NewCustomerPage({
         await getCurrentLocale();
 
     const dictionary =
-        getDictionary(locale);
+        getDictionary(
+            locale
+        );
 
     const t =
-        dictionary.customers.form;
+        dictionary
+            .customers
+            .form;
+
+    const errors =
+        dictionary
+            .customers
+            .feedback
+            .error;
+
+
+    const errorMessages:
+        Record<string, string> = {
+            nameRequired:
+                errors.nameRequired,
+
+            invalidDocumentType:
+                errors.invalidDocumentType,
+
+            invalidDocument:
+                errors.invalidDocument,
+
+            invalidData:
+                errors.invalidData,
+
+            organizationNotFound:
+                errors.organizationNotFound,
+
+            createFailed:
+                errors.createFailed,
+        };
+
+
+    const errorMessage =
+        params.error
+            ? errorMessages[
+                params.error
+            ] ??
+            errors.invalidData
+            : null;
+
 
     return (
         <div className="customer-form-page">
@@ -53,7 +101,8 @@ export default async function NewCustomerPage({
 
                     <p>
                         {
-                            locale === "pt-BR"
+                            locale ===
+                            "pt-BR"
                                 ? "Cadastre um novo aluno na sua organização."
                                 : "Add a new student to your organization."
                         }
@@ -61,17 +110,21 @@ export default async function NewCustomerPage({
                 </div>
             </section>
 
-            {params.error && (
-                <div
-                    className="form-error"
-                    role="alert"
-                >
-                    {params.error}
-                </div>
+
+            {errorMessage && (
+                <CourtlyAlert
+                    type="error"
+                    message={
+                        errorMessage
+                    }
+                />
             )}
 
+
             <CustomerForm
-                action={createCustomer}
+                action={
+                    createCustomer
+                }
                 mode="create"
             />
         </div>

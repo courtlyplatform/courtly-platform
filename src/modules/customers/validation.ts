@@ -11,6 +11,7 @@ import {
     isValidDocument,
 } from "./documents/documentValidator";
 
+
 export type CustomerFormData = {
     name: string;
     documentType: DocumentType | null;
@@ -20,6 +21,32 @@ export type CustomerFormData = {
     birthDate: string | null;
     notes: string | null;
 };
+
+
+export type CustomerValidationErrorCode =
+    | "nameRequired"
+    | "invalidDocumentType"
+    | "invalidDocument"
+    | "invalidData";
+
+
+export class CustomerValidationError
+    extends Error {
+    code: CustomerValidationErrorCode;
+
+    constructor(
+        code: CustomerValidationErrorCode
+    ) {
+        super(code);
+
+        this.name =
+            "CustomerValidationError";
+
+        this.code =
+            code;
+    }
+}
+
 
 export function parseCustomerFormData(
     formData: FormData
@@ -66,26 +93,38 @@ export function parseCustomerFormData(
             ?.toString()
             .trim() ?? "";
 
+
     if (!name) {
-        throw new Error(
-            "O nome do aluno é obrigatório."
+        throw new CustomerValidationError(
+            "nameRequired"
         );
     }
 
+
     let documentType:
-        DocumentType | null = null;
+        DocumentType | null =
+        null;
 
     let documentNumber:
-        string | null = null;
+        string | null =
+        null;
 
+
+    /*
+     * A document is optional.
+     *
+     * However, when the user provides
+     * a document number, a valid type
+     * must also be provided.
+     */
     if (rawDocumentNumber) {
         if (
             !isDocumentType(
                 rawDocumentType
             )
         ) {
-            throw new Error(
-                "O tipo de documento é inválido."
+            throw new CustomerValidationError(
+                "invalidDocumentType"
             );
         }
 
@@ -104,34 +143,55 @@ export function parseCustomerFormData(
                 documentNumber
             )
         ) {
-            throw new Error(
-                "O documento informado é inválido."
+            throw new CustomerValidationError(
+                "invalidDocument"
             );
         }
     }
 
+
     const phone =
-        normalizePhone(rawPhone);
+        normalizePhone(
+            rawPhone
+        );
+
 
     return {
         name,
+
         documentType,
+
         documentNumber,
+
         email:
-            email || null,
+            email ||
+            null,
+
         phone:
-            phone || null,
+            phone ||
+            null,
+
         birthDate:
-            birthDate || null,
+            birthDate ||
+            null,
+
         notes:
-            notes || null,
+            notes ||
+            null,
     };
 }
+
 
 export function normalizePhone(
     value: string
 ): string {
     return value
-        .replace(/\D/g, "")
-        .slice(0, 15);
+        .replace(
+            /\D/g,
+            ""
+        )
+        .slice(
+            0,
+            15
+        );
 }

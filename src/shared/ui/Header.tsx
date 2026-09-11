@@ -10,6 +10,7 @@ import Link from "next/link";
 
 import {
     useRouter,
+    useSearchParams,
 } from "next/navigation";
 
 import {
@@ -79,6 +80,12 @@ export function Header({
 
     const router =
         useRouter();
+
+    const searchParams =
+    useSearchParams();
+
+    const searchParamsKey =
+        searchParams.toString();
 
     const menuRef =
         useRef<HTMLDivElement>(
@@ -259,7 +266,7 @@ export function Header({
         }
 
         void loadCurrentUser();
-    }, []);
+    }, [searchParamsKey]);
 
 
     useEffect(() => {

@@ -127,27 +127,45 @@ export type Database = {
       }
       organizations: {
         Row: {
+          business_type:
+            | Database["public"]["Enums"]["organization_business_type"]
+            | null
+          country: Database["public"]["Enums"]["organization_country"]
           created_at: string
+          default_currency: Database["public"]["Enums"]["organization_currency"]
           id: string
           name: string
+          phone: string | null
           slug: string
           status: Database["public"]["Enums"]["organization_status"]
           timezone: string
           updated_at: string
         }
         Insert: {
+          business_type?:
+            | Database["public"]["Enums"]["organization_business_type"]
+            | null
+          country?: Database["public"]["Enums"]["organization_country"]
           created_at?: string
+          default_currency?: Database["public"]["Enums"]["organization_currency"]
           id?: string
           name: string
+          phone?: string | null
           slug: string
           status?: Database["public"]["Enums"]["organization_status"]
           timezone?: string
           updated_at?: string
         }
         Update: {
+          business_type?:
+            | Database["public"]["Enums"]["organization_business_type"]
+            | null
+          country?: Database["public"]["Enums"]["organization_country"]
           created_at?: string
+          default_currency?: Database["public"]["Enums"]["organization_currency"]
           id?: string
           name?: string
+          phone?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["organization_status"]
           timezone?: string
@@ -232,7 +250,15 @@ export type Database = {
     }
     Functions: {
       create_organization_onboarding: {
-        Args: { p_organization_name: string; p_professional_name: string }
+        Args: {
+          p_business_type: Database["public"]["Enums"]["organization_business_type"]
+          p_country: Database["public"]["Enums"]["organization_country"]
+          p_default_currency: Database["public"]["Enums"]["organization_currency"]
+          p_organization_name: string
+          p_phone: string
+          p_professional_name: string
+          p_timezone: string
+        }
         Returns: string
       }
       is_organization_member: {
@@ -241,6 +267,15 @@ export type Database = {
       }
     }
     Enums: {
+      organization_business_type:
+        | "ACADEMY"
+        | "CLUB"
+        | "STUDIO"
+        | "INDEPENDENT_PROFESSIONAL"
+        | "CLINIC"
+        | "OTHER"
+      organization_country: "BR" | "US" | "PT" | "CA" | "OTHER"
+      organization_currency: "BRL" | "USD" | "EUR" | "CAD"
       organization_role: "OWNER" | "ADMIN" | "PROFESSIONAL" | "CUSTOMER"
       organization_status: "ACTIVE" | "INACTIVE"
     }
@@ -373,6 +408,16 @@ export const Constants = {
   },
   public: {
     Enums: {
+      organization_business_type: [
+        "ACADEMY",
+        "CLUB",
+        "STUDIO",
+        "INDEPENDENT_PROFESSIONAL",
+        "CLINIC",
+        "OTHER",
+      ],
+      organization_country: ["BR", "US", "PT", "CA", "OTHER"],
+      organization_currency: ["BRL", "USD", "EUR", "CAD"],
       organization_role: ["OWNER", "ADMIN", "PROFESSIONAL", "CUSTOMER"],
       organization_status: ["ACTIVE", "INACTIVE"],
     },

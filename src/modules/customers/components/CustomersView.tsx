@@ -8,12 +8,24 @@ import {
 import Link from "next/link";
 
 import {
+    useSearchParams,
+} from "next/navigation";
+
+import {
     useI18n,
 } from "@/shared/i18n/I18nProvider";
 
 import {
     ConfirmDialog,
 } from "@/shared/ui/confirmDialog";
+
+import {
+    CourtlyAlert,
+} from "@/shared/ui/CourtlyAlert";
+
+import type {
+    CustomerStatusResult,
+} from "@/modules/customers/actions";
 
 import {
     DOCUMENT_TYPE_OPTIONS,
@@ -23,6 +35,7 @@ import {
 import {
     formatDocument,
 } from "@/modules/customers/documents/documentFormatter";
+
 
 type Customer = {
     id: string;
@@ -34,24 +47,37 @@ type Customer = {
     active: boolean;
 };
 
+
 type CustomersViewProps = {
     customers: Customer[];
 
     toggleCustomerStatusAction: (
         customerId: string,
         active: boolean
-    ) => Promise<void>;
+    ) => Promise<CustomerStatusResult>;
 };
+
 
 type StatusFilter =
     | ""
     | "active"
     | "inactive";
 
+
 type CustomerToDeactivate = {
     id: string;
     name: string;
 } | null;
+
+
+type StatusFeedback = {
+    type:
+        | "success"
+        | "error";
+
+    message: string;
+} | null;
+
 
 function normalizeSearchText(
     value: string
@@ -66,11 +92,16 @@ function normalizeSearchText(
         .trim();
 }
 
+
 function normalizeDocumentSearch(
     value: string
 ): string {
-    return value.replace(/\D/g, "");
+    return value.replace(
+        /\D/g,
+        ""
+    );
 }
+
 
 export function CustomersView({
     customers,
@@ -80,25 +111,85 @@ export function CustomersView({
         dictionary,
     } = useI18n();
 
+    const searchParams =
+        useSearchParams();
+
+
+    /*
+     * Feedback returned after create/update.
+     *
+     * Example:
+     * /customers?success=customerCreated
+     */
+    const successCode =
+        searchParams.get(
+            "success"
+        );
+
+
+    const successMessages:
+        Record<string, string> = {
+            customerCreated:
+                dictionary
+                    .customers
+                    .feedback
+                    .success
+                    .customerCreated,
+
+            customerUpdated:
+                dictionary
+                    .customers
+                    .feedback
+                    .success
+                    .customerUpdated,
+        };
+
+
+    const successMessage =
+        successCode
+            ? successMessages[
+                successCode
+            ] ?? null
+            : null;
+
+
+    /*
+     * Used for operations that happen directly
+     * inside this component, such as activating
+     * or deactivating a student.
+     */
+    const [
+        statusFeedback,
+        setStatusFeedback,
+    ] =
+        useState<StatusFeedback>(
+            null
+        );
+
+
     const [
         nameFilter,
         setNameFilter,
     ] = useState("");
+
 
     const [
         documentTypeFilter,
         setDocumentTypeFilter,
     ] = useState("");
 
+
     const [
         documentNumberFilter,
         setDocumentNumberFilter,
     ] = useState("");
 
+
     const [
         statusFilter,
         setStatusFilter,
     ] = useState<StatusFilter>("");
+
 
     /*
      * Stores the student selected for deactivation.
@@ -113,6 +204,7 @@ export function CustomersView({
             null
         );
 
+
     /*
      * Prevents multiple deactivation requests
      * while the current request is being processed.
@@ -121,6 +213,19 @@ export function CustomersView({
         isDeactivating,
         setIsDeactivating,
     ] = useState(false);
+
+
+    /*
+     * Prevents multiple reactivation requests.
+     */
+    const [
+        reactivatingCustomerId,
+        setReactivatingCustomerId,
+    ] =
+        useState<string | null>(
+            null
+        );
+
 
     const filteredCustomers =
         useMemo(() => {
@@ -193,6 +298,7 @@ export function CustomersView({
             statusFilter,
         ]);
 
+
     const hasActiveFilters =
         Boolean(
             nameFilter ||
@@ -201,12 +307,14 @@ export function CustomersView({
             statusFilter
         );
 
+
     function clearFilters() {
         setNameFilter("");
         setDocumentTypeFilter("");
         setDocumentNumberFilter("");
         setStatusFilter("");
     }
+
 
     function getFormattedDocument(
         customer: Customer
@@ -229,6 +337,7 @@ export function CustomersView({
         );
     }
 
+
     /*
      * Opens the confirmation dialog.
      *
@@ -237,11 +346,16 @@ export function CustomersView({
     function requestCustomerDeactivation(
         customer: Customer
     ) {
+        setStatusFeedback(
+            null
+        );
+
         setCustomerToDeactivate({
             id: customer.id,
             name: customer.name,
         });
     }
+
 
     /*
      * Closes the confirmation dialog without
@@ -252,8 +366,11 @@ export function CustomersView({
             return;
         }
 
-        setCustomerToDeactivate(null);
+        setCustomerToDeactivate(
+            null
+        );
     }
+
 
     /*
      * Only runs after the user explicitly
@@ -268,18 +385,163 @@ export function CustomersView({
         }
 
         try {
-            setIsDeactivating(true);
-
-            await toggleCustomerStatusAction(
-                customerToDeactivate.id,
-                false
+            setIsDeactivating(
+                true
             );
 
-            setCustomerToDeactivate(null);
+            setStatusFeedback(
+                null
+            );
+
+            const result =
+                await toggleCustomerStatusAction(
+                    customerToDeactivate.id,
+                    false
+                );
+
+            if (!result.success) {
+                setStatusFeedback({
+                    type:
+                        "error",
+
+                    message:
+                        dictionary
+                            .customers
+                            .feedback
+                            .error
+                            .statusUpdateFailed,
+                });
+
+                setCustomerToDeactivate(
+                    null
+                );
+
+                return;
+            }
+
+            setStatusFeedback({
+                type:
+                    "success",
+
+                message:
+                    dictionary
+                        .customers
+                        .feedback
+                        .success
+                        .customerDeactivated,
+            });
+
+            setCustomerToDeactivate(
+                null
+            );
+        } catch (error) {
+            console.error(
+                "Courtly customer deactivation error:",
+                error
+            );
+
+            setStatusFeedback({
+                type:
+                    "error",
+
+                message:
+                    dictionary
+                        .customers
+                        .feedback
+                        .error
+                        .statusUpdateFailed,
+            });
+
+            setCustomerToDeactivate(
+                null
+            );
         } finally {
-            setIsDeactivating(false);
+            setIsDeactivating(
+                false
+            );
         }
     }
+
+
+    /*
+     * Reactivates a student directly from
+     * the customer list.
+     */
+    async function reactivateCustomer(
+        customer: Customer
+    ) {
+        if (
+            reactivatingCustomerId
+        ) {
+            return;
+        }
+
+        try {
+            setReactivatingCustomerId(
+                customer.id
+            );
+
+            setStatusFeedback(
+                null
+            );
+
+            const result =
+                await toggleCustomerStatusAction(
+                    customer.id,
+                    true
+                );
+
+            if (!result.success) {
+                setStatusFeedback({
+                    type:
+                        "error",
+
+                    message:
+                        dictionary
+                            .customers
+                            .feedback
+                            .error
+                            .statusUpdateFailed,
+                });
+
+                return;
+            }
+
+            setStatusFeedback({
+                type:
+                    "success",
+
+                message:
+                    dictionary
+                        .customers
+                        .feedback
+                        .success
+                        .customerReactivated,
+            });
+        } catch (error) {
+            console.error(
+                "Courtly customer reactivation error:",
+                error
+            );
+
+            setStatusFeedback({
+                type:
+                    "error",
+
+                message:
+                    dictionary
+                        .customers
+                        .feedback
+                        .error
+                        .statusUpdateFailed,
+            });
+        } finally {
+            setReactivatingCustomerId(
+                null
+            );
+        }
+    }
+
 
     return (
         <main>
@@ -326,6 +588,40 @@ export function CustomersView({
                     }
                 </Link>
             </div>
+
+
+            {/* =====================================
+                CREATE / UPDATE FEEDBACK
+               ===================================== */}
+
+            {successMessage && (
+                <CourtlyAlert
+                    type="success"
+                    message={
+                        successMessage
+                    }
+                />
+            )}
+
+
+            {/* =====================================
+                STATUS FEEDBACK
+               ===================================== */}
+
+            {statusFeedback && (
+                <CourtlyAlert
+                    key={
+                        `${statusFeedback.type}-${statusFeedback.message}`
+                    }
+                    type={
+                        statusFeedback.type
+                    }
+                    message={
+                        statusFeedback.message
+                    }
+                />
+            )}
+
 
             {/* =====================================
                 EMPTY STATE
@@ -404,6 +700,7 @@ export function CustomersView({
                             />
                         </div>
 
+
                         <div className="customer-filter-field">
                             <label htmlFor="customer-document-type-filter">
                                 {
@@ -457,6 +754,7 @@ export function CustomersView({
                             </select>
                         </div>
 
+
                         <div className="customer-filter-field">
                             <label htmlFor="customer-document-number-filter">
                                 {
@@ -491,6 +789,7 @@ export function CustomersView({
                                 }
                             />
                         </div>
+
 
                         <div className="customer-filter-field">
                             <label htmlFor="customer-status-filter">
@@ -546,6 +845,7 @@ export function CustomersView({
                             </select>
                         </div>
 
+
                         <button
                             type="button"
                             className="customer-filters-clear"
@@ -564,6 +864,7 @@ export function CustomersView({
                             }
                         </button>
                     </section>
+
 
                     {/* =================================
                         NO FILTER RESULTS
@@ -762,26 +1063,26 @@ export function CustomersView({
                                                                         }
                                                                     </button>
                                                                 ) : (
-                                                                    <form
-                                                                        action={async () => {
-                                                                            await toggleCustomerStatusAction(
-                                                                                customer.id,
-                                                                                true
+                                                                    <button
+                                                                        type="button"
+                                                                        className="action-button"
+                                                                        disabled={
+                                                                            reactivatingCustomerId ===
+                                                                            customer.id
+                                                                        }
+                                                                        onClick={() => {
+                                                                            void reactivateCustomer(
+                                                                                customer
                                                                             );
                                                                         }}
                                                                     >
-                                                                        <button
-                                                                            type="submit"
-                                                                            className="action-button"
-                                                                        >
-                                                                            {
-                                                                                dictionary
-                                                                                    .customers
-                                                                                    .actions
-                                                                                    .reactivate
-                                                                            }
-                                                                        </button>
-                                                                    </form>
+                                                                        {
+                                                                            dictionary
+                                                                                .customers
+                                                                                .actions
+                                                                                .reactivate
+                                                                        }
+                                                                    </button>
                                                                 )}
                                                             </div>
                                                         </td>
@@ -792,6 +1093,7 @@ export function CustomersView({
                                     </table>
                                 </div>
                             </section>
+
 
                             {/* =========================
                                 MOBILE
@@ -845,6 +1147,7 @@ export function CustomersView({
                                                     }
                                                 </span>
                                             </div>
+
 
                                             <dl className="customer-details">
                                                 <div>
@@ -927,6 +1230,7 @@ export function CustomersView({
                                                 </div>
                                             </dl>
 
+
                                             <div className="customer-mobile-actions">
                                                 <Link
                                                     href={`/customers/${customer.id}/edit`}
@@ -958,26 +1262,26 @@ export function CustomersView({
                                                         }
                                                     </button>
                                                 ) : (
-                                                    <form
-                                                        action={async () => {
-                                                            await toggleCustomerStatusAction(
-                                                                customer.id,
-                                                                true
+                                                    <button
+                                                        type="button"
+                                                        className="secondary-button"
+                                                        disabled={
+                                                            reactivatingCustomerId ===
+                                                            customer.id
+                                                        }
+                                                        onClick={() => {
+                                                            void reactivateCustomer(
+                                                                customer
                                                             );
                                                         }}
                                                     >
-                                                        <button
-                                                            type="submit"
-                                                            className="secondary-button"
-                                                        >
-                                                            {
-                                                                dictionary
-                                                                    .customers
-                                                                    .actions
-                                                                    .reactivate
-                                                            }
-                                                        </button>
-                                                    </form>
+                                                        {
+                                                            dictionary
+                                                                .customers
+                                                                .actions
+                                                                .reactivate
+                                                        }
+                                                    </button>
                                                 )}
                                             </div>
                                         </article>
@@ -988,6 +1292,7 @@ export function CustomersView({
                     )}
                 </>
             )}
+
 
             {/* =====================================
                 DEACTIVATION CONFIRMATION

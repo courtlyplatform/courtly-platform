@@ -352,10 +352,7 @@ export async function updateProfile(
 
     if (!fullName) {
         redirect(
-            "/profile?error=" +
-                encodeURIComponent(
-                    "Informe seu nome."
-                )
+            "/profile?error=nameRequired"
         );
     }
 
@@ -380,10 +377,13 @@ export async function updateProfile(
             });
 
     if (error) {
+        console.error(
+            "Courtly profile update error:",
+            error
+        );
+
         redirect(
-            `/profile?error=${encodeURIComponent(
-                error.message
-            )}`
+            "/profile?error=profileUpdateFailed"
         );
     }
 

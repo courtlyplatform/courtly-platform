@@ -116,6 +116,48 @@ export const ptBR = {
             deactivating: "Desativando...",
         },
 
+        feedback: {
+            success: {
+                customerCreated:
+                    "Aluno cadastrado com sucesso.",
+
+                customerUpdated:
+                    "Aluno atualizado com sucesso.",
+
+                customerDeactivated:
+                    "Aluno desativado com sucesso.",
+
+                customerReactivated:
+                    "Aluno reativado com sucesso.",
+            },
+
+            error: {
+                nameRequired:
+                    "O nome do aluno é obrigatório.",
+
+                invalidDocumentType:
+                    "Selecione um tipo de documento válido.",
+
+                invalidDocument:
+                    "Documento inválido. Verifique o CPF informado.",
+
+                invalidData:
+                    "Verifique os dados informados e tente novamente.",
+
+                organizationNotFound:
+                    "Não foi possível identificar sua organização.",
+
+                createFailed:
+                    "Não foi possível cadastrar o aluno. Tente novamente.",
+
+                updateFailed:
+                    "Não foi possível atualizar o aluno. Tente novamente.",
+
+                statusUpdateFailed:
+                    "Não foi possível alterar o status do aluno. Tente novamente.",
+            },
+        },
+
         form: {
             createTitle: "Novo aluno",
             editTitle: "Editar aluno",
@@ -133,6 +175,198 @@ export const ptBR = {
 
             back: "Voltar para alunos",
         }
+    },
+
+    profile: {
+        eyebrow: "Conta",
+        title: "Meu perfil",
+
+        description:
+            "Gerencie suas informações, foto e segurança da conta.",
+
+        roles: {
+            owner: "Proprietário",
+            admin: "Administrador",
+            professional: "Profissional",
+            customer: "Aluno",
+            user: "Usuário",
+        },
+
+        avatar: {
+            addPhoto: "Adicionar foto",
+            changePhoto: "Alterar foto",
+            removePhoto: "Remover foto",
+
+            selectPhoto:
+                "Selecionar foto de perfil",
+
+            photoAlt:
+                "Foto de {name}",
+
+            help:
+                "JPG, PNG ou WEBP. A foto será ajustada antes do envio.",
+
+            editor: {
+                eyebrow:
+                    "Foto de perfil",
+
+                title:
+                    "Ajustar foto",
+
+                description:
+                    "Posicione a imagem dentro do círculo.",
+
+                previewAlt:
+                    "Pré-visualização da foto",
+
+                instruction:
+                    "Arraste a imagem para reposicionar seu rosto.",
+
+                zoom:
+                    "Zoom",
+
+                cancel:
+                    "Cancelar",
+
+                save:
+                    "Salvar foto",
+
+                saving:
+                    "Salvando...",
+
+                close:
+                    "Fechar",
+            },
+
+            errors: {
+                invalidType:
+                    "Utilize uma imagem JPG, PNG ou WEBP.",
+
+                originalTooLarge:
+                    "A imagem original deve possuir no máximo 10 MB.",
+
+                processingFailed:
+                    "Não foi possível processar a imagem.",
+
+                preparingFailed:
+                    "Não foi possível preparar a imagem.",
+
+                generationFailed:
+                    "Não foi possível gerar a imagem.",
+
+                saveFailed:
+                    "Não foi possível salvar a foto.",
+            },
+        },
+
+        personalInformation: {
+            title:
+                "Informações pessoais",
+
+            description:
+                "Atualize os dados utilizados para identificação da sua conta.",
+
+            name:
+                "Nome",
+
+            phone:
+                "Telefone",
+
+            phonePlaceholder:
+                "Telefone de contato",
+
+            email:
+                "E-mail / Login",
+
+            emailHelp:
+                "O login não pode ser alterado nesta tela.",
+
+            role:
+                "Função",
+
+            roleHelp:
+                "A função é definida pela organização.",
+
+            save:
+                "Salvar alterações",
+        },
+
+        security: {
+            title:
+                "Segurança",
+
+            description:
+                "Defina uma nova senha para proteger sua conta.",
+
+            newPassword:
+                "Nova senha",
+
+            newPasswordPlaceholder:
+                "Mínimo de 8 caracteres",
+
+            confirmPassword:
+                "Confirmar nova senha",
+
+            confirmPasswordPlaceholder:
+                "Repita a nova senha",
+
+            changePassword:
+                "Alterar senha",
+        },
+
+        feedback: {
+            success: {
+                profileUpdated:
+                    "Informações pessoais atualizadas com sucesso.",
+
+                passwordUpdated:
+                    "Senha alterada com sucesso.",
+
+                avatarUpdated:
+                    "Foto de perfil atualizada com sucesso.",
+
+                avatarRemoved:
+                    "Foto de perfil removida com sucesso.",
+
+                changesSaved:
+                    "Alterações salvas com sucesso.",
+            },
+
+            error: {
+                nameRequired:
+                    "Informe seu nome.",
+
+                passwordTooShort:
+                    "A nova senha deve possuir pelo menos 8 caracteres.",
+
+                passwordsDoNotMatch:
+                    "As senhas não coincidem.",
+
+                avatarRequired:
+                    "Selecione uma imagem.",
+
+                avatarTooLarge:
+                    "A imagem deve possuir no máximo 5 MB.",
+
+                invalidAvatarType:
+                    "Utilize uma imagem JPG, PNG ou WEBP.",
+
+                profileUpdateFailed:
+                    "Não foi possível atualizar suas informações. Tente novamente.",
+
+                passwordUpdateFailed:
+                    "Não foi possível alterar sua senha. Tente novamente.",
+
+                avatarUploadFailed:
+                    "Não foi possível atualizar sua foto de perfil. Tente novamente.",
+
+                avatarRemoveFailed:
+                    "Não foi possível remover sua foto de perfil. Tente novamente.",
+
+                unexpected:
+                    "Não foi possível concluir a operação. Tente novamente.",
+            },
+        },
     },
 
     accessibility: {
