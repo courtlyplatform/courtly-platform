@@ -81,10 +81,32 @@ export const enUS = {
 
         table: {
             name: "Name",
+            documentType: "Document type",
+            documentNumber: "Document",
             email: "Email",
             phone: "Phone",
             status: "Status",
             actions: "Actions",
+        },
+
+        filters: {
+            name: "Name",
+            namePlaceholder: "Search by name",
+
+            documentType: "Document type",
+            allDocumentTypes: "All",
+
+            documentNumber: "Document number",
+            documentNumberPlaceholder: "Search document",
+
+            status: "Status",
+            allStatuses: "All",
+            active: "Active",
+            inactive: "Inactive",
+
+            clear: "Clear filters",
+
+            noResults: "No students found with the selected filters.",
         },
 
         status: {
@@ -105,6 +127,19 @@ export const enUS = {
                 "Add your first student to start organizing your activities.",
 
             action: "Add student",
+        },
+
+        confirmation: {
+            deactivateTitle:
+                "Deactivate student?",
+
+            deactivateDescription:
+                'Are you sure you want to deactivate "{name}"? The student record will be kept and can be reactivated later.',
+
+            confirmDeactivate:
+                "Deactivate student",
+            
+            deactivating: "Deactivating...",
         },
 
         form: {

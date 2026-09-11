@@ -60,10 +60,32 @@ export const ptBR = {
 
         table: {
             name: "Nome",
+            documentType: "Tipo de documento",
+            documentNumber: "Documento",
             email: "E-mail",
             phone: "Telefone",
             status: "Status",
             actions: "Ações",
+        },
+
+        filters: {
+            name: "Nome",
+            namePlaceholder: "Buscar por nome",
+
+            documentType: "Tipo de documento",
+            allDocumentTypes: "Todos",
+
+            documentNumber: "Número do documento",
+            documentNumberPlaceholder: "Buscar documento",
+
+            status: "Status",
+            allStatuses: "Todos",
+            active: "Ativos",
+            inactive: "Inativos",
+
+            clear: "Limpar filtros",
+
+            noResults: "Nenhum aluno encontrado com os filtros selecionados.",
         },
 
         status: {
@@ -84,6 +106,14 @@ export const ptBR = {
                 "Cadastre seu primeiro aluno para começar a organizar suas atividades.",
 
             action: "Adicionar aluno",
+        },
+
+        confirmation: {
+            deactivateTitle: "Desativar aluno?",
+            deactivateDescription:
+                'Tem certeza de que deseja desativar o aluno "{name}"? O cadastro será mantido e poderá ser reativado posteriormente.',
+            confirmDeactivate: "Desativar aluno",
+            deactivating: "Desativando...",
         },
 
         form: {

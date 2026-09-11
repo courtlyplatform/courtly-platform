@@ -96,8 +96,7 @@ export function CustomerForm({
         customer?.document_number
             ? formatDocument(
                   initialDocumentType,
-                  customer
-                      .document_number
+                  customer.document_number
               )
             : ""
     );
@@ -127,6 +126,10 @@ export function CustomerForm({
             action={action}
             className="customer-form"
         >
+            {/* =====================================
+                NAME — FULL WIDTH
+               ===================================== */}
+
             <div className="form-group">
                 <label htmlFor="name">
                     {t.name}
@@ -145,157 +148,190 @@ export function CustomerForm({
                 />
             </div>
 
-            <div className="form-group">
-                <label htmlFor="document_type">
-                    {t.documentType}
-                </label>
+            {/* =====================================
+                DOCUMENT TYPE + DOCUMENT NUMBER
+               ===================================== */}
 
-                <select
-                    id="document_type"
-                    name="document_type"
-                    value={
-                        documentType
-                    }
-                    onChange={(
-                        event
-                    ) =>
-                        handleDocumentTypeChange(
+            <div className="customer-form-row">
+                <div className="form-group">
+                    <label htmlFor="document_type">
+                        {
+                            t.documentType
+                        }
+                    </label>
+
+                    <select
+                        id="document_type"
+                        name="document_type"
+                        value={
+                            documentType
+                        }
+                        onChange={(
                             event
-                                .target
-                                .value
-                        )
-                    }
-                >
-                    {DOCUMENT_TYPE_OPTIONS.map(
-                        (option) => (
-                            <option
-                                key={
-                                    option.value
-                                }
-                                value={
-                                    option.value
-                                }
-                            >
-                                {
-                                    option.label
-                                }
-                            </option>
-                        )
-                    )}
-                </select>
-            </div>
-
-            <div className="form-group">
-                <label htmlFor="document_number">
-                    {
-                        t.documentNumber
-                    }
-                </label>
-
-                <input
-                    id="document_number"
-                    name="document_number"
-                    type="text"
-                    inputMode={
-                        documentType ===
-                        "CPF"
-                            ? "numeric"
-                            : "text"
-                    }
-                    value={
-                        documentNumber
-                    }
-                    maxLength={
-                        getDocumentMaxLength(
-                            documentType
-                        )
-                    }
-                    placeholder={
-                        getDocumentPlaceholder(
-                            documentType
-                        )
-                    }
-                    onChange={(
-                        event
-                    ) => {
-                        setDocumentNumber(
-                            formatDocument(
-                                documentType,
+                        ) =>
+                            handleDocumentTypeChange(
                                 event
                                     .target
                                     .value
                             )
-                        );
-                    }}
-                    autoComplete="off"
-                />
-            </div>
+                        }
+                    >
+                        {DOCUMENT_TYPE_OPTIONS.map(
+                            (
+                                option
+                            ) => (
+                                <option
+                                    key={
+                                        option.value
+                                    }
+                                    value={
+                                        option.value
+                                    }
+                                >
+                                    {
+                                        option.label
+                                    }
+                                </option>
+                            )
+                        )}
+                    </select>
+                </div>
 
-            <div className="form-group">
-                <label htmlFor="email">
-                    {t.email}
-                </label>
+                <div className="form-group">
+                    <label htmlFor="document_number">
+                        {
+                            t.documentNumber
+                        }
+                    </label>
 
-                <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    defaultValue={
-                        customer?.email ??
-                        ""
-                    }
-                    autoComplete="email"
-                />
-            </div>
-
-            <div className="form-group">
-                <label htmlFor="phone">
-                    {t.phone}
-                </label>
-
-                <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={15}
-                    defaultValue={
-                        customer?.phone ??
-                        ""
-                    }
-                    onInput={(
-                        event
-                    ) => {
-                        const input =
+                    <input
+                        id="document_number"
+                        name="document_number"
+                        type="text"
+                        inputMode={
+                            documentType ===
+                            "CPF"
+                                ? "numeric"
+                                : "text"
+                        }
+                        value={
+                            documentNumber
+                        }
+                        maxLength={
+                            getDocumentMaxLength(
+                                documentType
+                            )
+                        }
+                        placeholder={
+                            getDocumentPlaceholder(
+                                documentType
+                            )
+                        }
+                        onChange={(
                             event
-                                .currentTarget;
-
-                        input.value =
-                            onlyPhoneDigits(
-                                input.value
+                        ) => {
+                            setDocumentNumber(
+                                formatDocument(
+                                    documentType,
+                                    event
+                                        .target
+                                        .value
+                                )
                             );
-                    }}
-                    autoComplete="tel"
+                        }}
+                        autoComplete="off"
+                    />
+                </div>
+            </div>
+
+            {/* =====================================
+                EMAIL + PHONE
+               ===================================== */}
+
+            <div className="customer-form-row">
+                <div className="form-group">
+                    <label htmlFor="email">
+                        {t.email}
+                    </label>
+
+                    <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        defaultValue={
+                            customer?.email ??
+                            ""
+                        }
+                        autoComplete="email"
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="phone">
+                        {t.phone}
+                    </label>
+
+                    <input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={15}
+                        defaultValue={
+                            customer?.phone ??
+                            ""
+                        }
+                        onInput={(
+                            event
+                        ) => {
+                            const input =
+                                event
+                                    .currentTarget;
+
+                            input.value =
+                                onlyPhoneDigits(
+                                    input.value
+                                );
+                        }}
+                        autoComplete="tel"
+                    />
+                </div>
+            </div>
+
+            {/* =====================================
+                BIRTH DATE — HALF WIDTH
+               ===================================== */}
+
+            <div className="customer-form-row">
+                <div className="form-group">
+                    <label htmlFor="birth_date">
+                        {
+                            t.birthDate
+                        }
+                    </label>
+
+                    <input
+                        id="birth_date"
+                        name="birth_date"
+                        type="date"
+                        defaultValue={
+                            customer
+                                ?.birth_date ??
+                            ""
+                        }
+                    />
+                </div>
+
+                <div
+                    className="customer-form-empty-column"
+                    aria-hidden="true"
                 />
             </div>
 
-            <div className="form-group">
-                <label htmlFor="birth_date">
-                    {t.birthDate}
-                </label>
-
-                <input
-                    id="birth_date"
-                    name="birth_date"
-                    type="date"
-                    defaultValue={
-                        customer
-                            ?.birth_date ??
-                        ""
-                    }
-                />
-            </div>
+            {/* =====================================
+                NOTES — FULL WIDTH
+               ===================================== */}
 
             <div className="form-group">
                 <label htmlFor="notes">
@@ -312,6 +348,10 @@ export function CustomerForm({
                     rows={5}
                 />
             </div>
+
+            {/* =====================================
+                ACTIONS
+               ===================================== */}
 
             <div className="customer-form-actions">
                 <button
