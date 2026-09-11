@@ -48,6 +48,7 @@ export type Database = {
           organization_id: string
           phone: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           active?: boolean
@@ -62,6 +63,7 @@ export type Database = {
           organization_id: string
           phone?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           active?: boolean
@@ -76,6 +78,7 @@ export type Database = {
           organization_id?: string
           phone?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -196,6 +199,33 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_path: string | null
+          created_at: string
+          full_name: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_path?: string | null
+          created_at?: string
+          full_name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_path?: string | null
+          created_at?: string
+          full_name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -211,7 +241,7 @@ export type Database = {
       }
     }
     Enums: {
-      organization_role: "OWNER" | "ADMIN" | "PROFESSIONAL"
+      organization_role: "OWNER" | "ADMIN" | "PROFESSIONAL" | "CUSTOMER"
       organization_status: "ACTIVE" | "INACTIVE"
     }
     CompositeTypes: {
@@ -343,7 +373,7 @@ export const Constants = {
   },
   public: {
     Enums: {
-      organization_role: ["OWNER", "ADMIN", "PROFESSIONAL"],
+      organization_role: ["OWNER", "ADMIN", "PROFESSIONAL", "CUSTOMER"],
       organization_status: ["ACTIVE", "INACTIVE"],
     },
   },
