@@ -67,67 +67,133 @@ export const enUS = {
     },
 
     customers: {
-        eyebrow: "Management",
+        eyebrow:
+            "Management",
 
-        title: "Students",
+        title:
+            "Students",
 
         description:
             "Manage your organization's students.",
 
-        newCustomer: "New student",
+        newCustomer:
+            "New student",
 
-        customer: "Student",
+        customer:
+            "Student",
 
-        notProvided: "Not provided",
+        notProvided:
+            "Not provided",
 
         table: {
-            name: "Name",
-            documentType: "Document type",
-            documentNumber: "Document",
-            email: "Email",
-            phone: "Phone",
-            status: "Status",
-            actions: "Actions",
+            name:
+                "Name",
+
+            documentType:
+                "Document type",
+
+            documentNumber:
+                "Document",
+
+            email:
+                "Email",
+
+            phone:
+                "Phone",
+
+            plans:
+                "Plans / Services",
+
+            status:
+                "Status",
+
+            actions:
+                "Actions",
+        },
+
+        plans: {
+            none:
+                "No active plans",
+
+            activeSingular:
+                "{count} active plan",
+
+            activePlural:
+                "{count} active plans",
+
+            view:
+                "View plans",
+
+            more:
+                "+{count} more",
         },
 
         filters: {
-            name: "Name",
-            namePlaceholder: "Search by name",
+            name:
+                "Name",
 
-            documentType: "Document type",
-            allDocumentTypes: "All",
+            namePlaceholder:
+                "Search by name",
 
-            documentNumber: "Document number",
-            documentNumberPlaceholder: "Search document",
+            documentType:
+                "Document type",
 
-            status: "Status",
-            allStatuses: "All",
-            active: "Active",
-            inactive: "Inactive",
+            allDocumentTypes:
+                "All",
 
-            clear: "Clear filters",
+            documentNumber:
+                "Document number",
 
-            noResults: "No students found with the selected filters.",
+            documentNumberPlaceholder:
+                "Search document",
+
+            status:
+                "Status",
+
+            allStatuses:
+                "All",
+
+            active:
+                "Active",
+
+            inactive:
+                "Inactive",
+
+            clear:
+                "Clear filters",
+
+            noResults:
+                "No students found with the selected filters.",
         },
 
         status: {
-            active: "Active",
-            inactive: "Inactive",
+            active:
+                "Active",
+
+            inactive:
+                "Inactive",
         },
 
         actions: {
-            edit: "Edit",
-            deactivate: "Deactivate",
-            reactivate: "Reactivate",
+            edit:
+                "Edit",
+
+            deactivate:
+                "Deactivate",
+
+            reactivate:
+                "Reactivate",
         },
 
         empty: {
-            title: "No students yet",
+            title:
+                "No students yet",
 
             description:
                 "Add your first student to start organizing your activities.",
 
-            action: "Add student",
+            action:
+                "Add student",
         },
 
         confirmation: {
@@ -135,12 +201,13 @@ export const enUS = {
                 "Deactivate student?",
 
             deactivateDescription:
-                'Are you sure you want to deactivate "{name}"? The student record will be kept and can be reactivated later.',
+                'Do you want to deactivate "{name}"? All active or paused plans and services will be ended. The student record and commercial history will be preserved.',
 
             confirmDeactivate:
                 "Deactivate student",
-            
-            deactivating: "Deactivating...",
+
+            deactivating:
+                "Deactivating...",
         },
 
         feedback: {
@@ -152,10 +219,10 @@ export const enUS = {
                     "Student updated successfully.",
 
                 customerDeactivated:
-                    "Student deactivated successfully.",
+                    "Student deactivated successfully. Agreements ended: {count}.",
 
                 customerReactivated:
-                    "Student reactivated successfully.",
+                    "Student reactivated successfully. Previous agreements remain ended.",
             },
 
             error: {
@@ -180,27 +247,50 @@ export const enUS = {
                 updateFailed:
                     "We could not update the student. Please try again.",
 
+                forbidden:
+                    "You don't have permission to change this student's status.",
+
                 statusUpdateFailed:
-                    "We could not change the student's status. Please try again.",
+                    "We could not change the student's status. No commercial changes were completed.",
             },
         },
 
         form: {
-            createTitle: "New student",
-            editTitle: "Edit student",
+            createTitle:
+                "New student",
 
-            name: "Name",
-            documentType: "Document type",
-            documentNumber: "Document number",
-            email: "Email",
-            phone: "Phone",
-            birthDate: "Birth date",
-            notes: "Notes",
+            editTitle:
+                "Edit student",
 
-            create: "Add student",
-            save: "Save changes",
+            name:
+                "Name",
 
-            back: "Back to students",
+            documentType:
+                "Document type",
+
+            documentNumber:
+                "Document number",
+
+            email:
+                "Email",
+
+            phone:
+                "Phone",
+
+            birthDate:
+                "Birth date",
+
+            notes:
+                "Notes",
+
+            create:
+                "Add student",
+
+            save:
+                "Save changes",
+
+            back:
+                "Back to students",
         },
     },
 
@@ -547,6 +637,216 @@ export const enUS = {
 
                 unexpected:
                     "We couldn't complete the operation.",
+            },
+        },
+    },
+
+    customerSubscriptions: {
+
+        tabs: {
+            personal:
+                "Personal information",
+
+            services:
+                "Plans / Services",
+        },
+
+        title:
+            "Plans / Services",
+
+        description:
+            "Manage the services contracted by {name}.",
+
+        service:
+            "Service",
+
+        unknownService:
+            "Unavailable service",
+
+        addService:
+            "Add service",
+
+        selectService:
+            "Select a service",
+
+        amount:
+            "Amount",
+
+        currency:
+            "Currency",
+
+        billingCycle:
+            "Billing cycle",
+
+        startsAt:
+            "Start date",
+
+        endsAt:
+            "End date",
+
+        edit:
+            "Edit",
+
+        pause:
+            "Pause",
+
+        resume:
+            "Resume",
+
+        end:
+            "End",
+
+        add:
+            "Add",
+
+        save:
+            "Save changes",
+
+        saving:
+            "Saving...",
+
+        cancel:
+            "Cancel",
+
+        status: {
+            active:
+                "Active",
+
+            paused:
+                "Paused",
+
+            ended:
+                "Ended",
+        },
+
+        reactivationNotice: {
+            title:
+                "Inactive student",
+
+            description:
+                "Adding a new plan or service will automatically reactivate {name}.",
+        },
+
+        cycles: {
+            weekly:
+                "Weekly",
+
+            monthly:
+                "Monthly",
+
+            quarterly:
+                "Quarterly",
+
+            semiannual:
+                "Semiannual",
+
+            annual:
+                "Annual",
+
+            oneTime:
+                "One-time",
+        },
+
+        modal: {
+            eyebrow:
+                "Commercial agreement",
+
+            createTitle:
+                "Add service",
+
+            editTitle:
+                "Edit student service",
+
+            close:
+                "Close",
+        },
+
+        empty: {
+            title:
+                "No contracted services",
+
+            description:
+                "This student does not have any services yet.",
+
+            action:
+                "Add service",
+        },
+
+        confirmation: {
+            endTitle:
+                "End service?",
+
+            endDescription:
+                "Do you want to end {service}? The commercial history will be preserved.",
+
+            confirmEnd:
+                "End service",
+
+            ending:
+                "Ending...",
+        },
+
+        feedback: {
+
+            success: {
+                created:
+                    "Service successfully assigned to the student.",
+
+                updated:
+                    "Student service successfully updated.",
+
+                paused:
+                    "Service successfully paused.",
+
+                resumed:
+                    "Service successfully resumed.",
+
+                ended:
+                    "Service successfully ended.",
+
+                createdAndReactivated:
+                    "Service successfully assigned and student automatically reactivated.",
+            },
+
+            error: {
+                forbidden:
+                    "You don't have permission to manage this student's services.",
+
+                customerNotFound:
+                    "We couldn't find the student.",
+
+                activityNotFound:
+                    "We couldn't find the selected service.",
+
+                inactiveActivity:
+                    "An inactive service cannot be contracted.",
+
+                duplicateOpenSubscription:
+                    "This student already has this service active or paused.",
+
+                endedImmutable:
+                    "An ended agreement cannot be changed. Create a new subscription if the student returns.",
+
+                activityRequired:
+                    "Select a service.",
+
+                invalidAmount:
+                    "Enter a valid amount.",
+
+                startDateRequired:
+                    "Enter the start date.",
+
+                invalidData:
+                    "Check the information provided.",
+
+                saveFailed:
+                    "We couldn't assign the service to the student.",
+
+                statusUpdateFailed:
+                    "We couldn't change the service status.",
+
+                unexpected:
+                    "We couldn't complete the operation. Please try again.",
             },
         },
     },

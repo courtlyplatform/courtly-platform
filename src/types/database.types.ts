@@ -78,6 +78,66 @@ export type Database = {
           },
         ]
       }
+      customer_subscriptions: {
+        Row: {
+          activity_id: string
+          amount: number
+          billing_cycle: Database["public"]["Enums"]["subscription_billing_cycle"]
+          created_at: string
+          currency_code: Database["public"]["Enums"]["organization_currency"]
+          customer_id: string
+          ends_at: string | null
+          id: string
+          organization_id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          amount: number
+          billing_cycle: Database["public"]["Enums"]["subscription_billing_cycle"]
+          created_at?: string
+          currency_code: Database["public"]["Enums"]["organization_currency"]
+          customer_id: string
+          ends_at?: string | null
+          id?: string
+          organization_id: string
+          starts_at?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          amount?: number
+          billing_cycle?: Database["public"]["Enums"]["subscription_billing_cycle"]
+          created_at?: string
+          currency_code?: Database["public"]["Enums"]["organization_currency"]
+          customer_id?: string
+          ends_at?: string | null
+          id?: string
+          organization_id?: string
+          starts_at?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_customer_subscriptions_activity"
+            columns: ["activity_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_customer_subscriptions_customer"
+            columns: ["customer_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           active: boolean
@@ -305,9 +365,20 @@ export type Database = {
         }
         Returns: string
       }
+      is_organization_manager: {
+        Args: { target_organization_id: string }
+        Returns: boolean
+      }
       is_organization_member: {
         Args: { target_organization_id: string }
         Returns: boolean
+      }
+      set_customer_active_status: {
+        Args: { p_active: boolean; p_customer_id: string }
+        Returns: {
+          active: boolean
+          ended_subscriptions: number
+        }[]
       }
     }
     Enums: {
@@ -322,6 +393,14 @@ export type Database = {
       organization_currency: "BRL" | "USD" | "EUR" | "CAD"
       organization_role: "OWNER" | "ADMIN" | "PROFESSIONAL" | "CUSTOMER"
       organization_status: "ACTIVE" | "INACTIVE"
+      subscription_billing_cycle:
+        | "WEEKLY"
+        | "MONTHLY"
+        | "QUARTERLY"
+        | "SEMIANNUAL"
+        | "ANNUAL"
+        | "ONE_TIME"
+      subscription_status: "ACTIVE" | "PAUSED" | "ENDED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -464,6 +543,15 @@ export const Constants = {
       organization_currency: ["BRL", "USD", "EUR", "CAD"],
       organization_role: ["OWNER", "ADMIN", "PROFESSIONAL", "CUSTOMER"],
       organization_status: ["ACTIVE", "INACTIVE"],
+      subscription_billing_cycle: [
+        "WEEKLY",
+        "MONTHLY",
+        "QUARTERLY",
+        "SEMIANNUAL",
+        "ANNUAL",
+        "ONE_TIME",
+      ],
+      subscription_status: ["ACTIVE", "PAUSED", "ENDED"],
     },
   },
 } as const

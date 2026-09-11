@@ -13,78 +13,106 @@ import {
 } from "@/shared/database/supabase/server";
 
 import {
+    getCurrentOrganizationId,
+} from "@/shared/auth/get-current-organization-id";
+
+import {
     CustomerValidationError,
     parseCustomerFormData,
 } from "./validation";
 
 
+/* ============================================================
+   CUSTOMER STATUS RESULT
+   ============================================================ */
+
 export type CustomerStatusResult =
     | {
         success: true;
+
         active: boolean;
+
+        endedSubscriptions:
+            number;
     }
     | {
         success: false;
-        error: "statusUpdateFailed";
+
+        error:
+            | "statusUpdateFailed"
+            | "forbidden";
     };
 
 
-async function getCurrentOrganizationId():
-Promise<string> {
-    const supabase =
-        await createClient();
+/* ============================================================
+   SET CUSTOMER STATUS RPC TYPES
 
-    const {
-        data: {
-            user,
-        },
-        error: userError,
-    } =
-        await supabase.auth.getUser();
+   These types represent the PostgreSQL function:
 
-    if (
-        userError ||
-        !user
-    ) {
-        throw new Error(
-            "Unauthenticated user."
-        );
-    }
+       public.set_customer_active_status(
+           p_customer_id uuid,
+           p_active boolean
+       )
 
-    const {
-        data: membership,
-        error,
-    } =
-        await supabase
-            .from("memberships")
-            .select(
-                "organization_id"
-            )
-            .eq(
-                "user_id",
-                user.id
-            )
-            .limit(1)
-            .single();
+   Once database.types.ts contains this RPC, this local adapter
+   can later be removed and supabase.rpc(...) can be used
+   directly with generated typing.
+   ============================================================ */
 
-    if (
-        error ||
-        !membership
-    ) {
-        throw new Error(
-            "User organization not found."
-        );
-    }
+type SetCustomerActiveStatusRpcArgs = {
+    p_customer_id:
+        string;
 
-    return (
-        membership.organization_id
-    );
-}
+    p_active:
+        boolean;
+};
 
+
+type SetCustomerActiveStatusRpcRow = {
+    active:
+        boolean;
+
+    ended_subscriptions:
+        number;
+};
+
+
+type SetCustomerActiveStatusRpcResponse = {
+    data:
+        SetCustomerActiveStatusRpcRow[] |
+        null;
+
+    error:
+        {
+            message:
+                string;
+        } |
+        null;
+};
+
+
+type SetCustomerActiveStatusRpcClient = {
+    rpc: (
+        functionName:
+            "set_customer_active_status",
+
+        args:
+            SetCustomerActiveStatusRpcArgs
+    ) =>
+        PromiseLike<
+            SetCustomerActiveStatusRpcResponse
+        >;
+};
+
+
+/* ============================================================
+   VALIDATION ERROR
+   ============================================================ */
 
 function getValidationErrorCode(
     error: unknown
 ): string {
+
     if (
         error instanceof
         CustomerValidationError
@@ -92,27 +120,41 @@ function getValidationErrorCode(
         return error.code;
     }
 
+
     return "invalidData";
 }
 
 
+/* ============================================================
+   CREATE CUSTOMER
+   ============================================================ */
+
 export async function createCustomer(
     formData: FormData
 ): Promise<void> {
+
     const supabase =
         await createClient();
+
 
     let organizationId:
         string;
 
+
     try {
+
         organizationId =
-            await getCurrentOrganizationId();
+            await getCurrentOrganizationId(
+                supabase
+            );
+
     } catch (error) {
+
         console.error(
             "Courtly create customer organization error:",
             error
         );
+
 
         redirect(
             "/customers/new?error=organizationNotFound"
@@ -122,16 +164,21 @@ export async function createCustomer(
 
     let customerData;
 
+
     try {
+
         customerData =
             parseCustomerFormData(
                 formData
             );
+
     } catch (error) {
+
         const errorCode =
             getValidationErrorCode(
                 error
             );
+
 
         redirect(
             `/customers/new?error=${encodeURIComponent(
@@ -145,7 +192,9 @@ export async function createCustomer(
         error,
     } =
         await supabase
-            .from("customers")
+            .from(
+                "customers"
+            )
             .insert({
                 organization_id:
                     organizationId,
@@ -177,10 +226,12 @@ export async function createCustomer(
 
 
     if (error) {
+
         console.error(
             "Courtly create customer error:",
             error
         );
+
 
         redirect(
             "/customers/new?error=createFailed"
@@ -192,30 +243,44 @@ export async function createCustomer(
         "/customers"
     );
 
+
     redirect(
         "/customers?success=customerCreated"
     );
 }
 
 
+/* ============================================================
+   UPDATE CUSTOMER
+   ============================================================ */
+
 export async function updateCustomer(
     customerId: string,
     formData: FormData
 ): Promise<void> {
+
     const supabase =
         await createClient();
+
 
     let organizationId:
         string;
 
+
     try {
+
         organizationId =
-            await getCurrentOrganizationId();
+            await getCurrentOrganizationId(
+                supabase
+            );
+
     } catch (error) {
+
         console.error(
             "Courtly update customer organization error:",
             error
         );
+
 
         redirect(
             `/customers/${customerId}/edit?error=organizationNotFound`
@@ -225,16 +290,21 @@ export async function updateCustomer(
 
     let customerData;
 
+
     try {
+
         customerData =
             parseCustomerFormData(
                 formData
             );
+
     } catch (error) {
+
         const errorCode =
             getValidationErrorCode(
                 error
             );
+
 
         redirect(
             `/customers/${customerId}/edit?error=${encodeURIComponent(
@@ -248,7 +318,9 @@ export async function updateCustomer(
         error,
     } =
         await supabase
-            .from("customers")
+            .from(
+                "customers"
+            )
             .update({
                 name:
                     customerData.name,
@@ -282,10 +354,12 @@ export async function updateCustomer(
 
 
     if (error) {
+
         console.error(
             "Courtly update customer error:",
             error
         );
+
 
         redirect(
             `/customers/${customerId}/edit?error=updateFailed`
@@ -297,9 +371,11 @@ export async function updateCustomer(
         "/customers"
     );
 
+
     revalidatePath(
         `/customers/${customerId}/edit`
     );
+
 
     redirect(
         "/customers?success=customerUpdated"
@@ -307,66 +383,214 @@ export async function updateCustomer(
 }
 
 
+/* ============================================================
+   CUSTOMER LIFECYCLE STATUS
+   ============================================================ */
+
+/*
+ * IMPORTANT:
+ *
+ * Never update customers.active directly here.
+ *
+ * The database RPC performs customer lifecycle changes
+ * atomically with the commercial subscription lifecycle.
+ *
+ *
+ * DEACTIVATE
+ * ------------------------------------------------------------
+ *
+ * customer.active
+ *      true -> false
+ *
+ * customer_subscriptions
+ *      ACTIVE -> ENDED
+ *      PAUSED -> ENDED
+ *
+ *
+ * REACTIVATE
+ * ------------------------------------------------------------
+ *
+ * customer.active
+ *      false -> true
+ *
+ * Existing ENDED subscriptions remain ENDED.
+ *
+ * A returning customer must receive a new commercial
+ * subscription.
+ */
 export async function toggleCustomerStatus(
     customerId: string,
+
     active: boolean
 ): Promise<CustomerStatusResult> {
+
     try {
+
         const supabase =
             await createClient();
 
-        const organizationId =
-            await getCurrentOrganizationId();
+
+        /*
+         * database.types.ts may temporarily not contain the
+         * newly-created RPC yet.
+         *
+         * We narrow only this specific RPC instead of using
+         * "any" or disabling TypeScript validation.
+         */
+        const customerStatusRpcClient =
+            supabase as unknown as
+                SetCustomerActiveStatusRpcClient;
+
 
         const {
+            data,
             error,
         } =
-            await supabase
-                .from("customers")
-                .update({
-                    active,
-                })
-                .eq(
-                    "id",
-                    customerId
-                )
-                .eq(
-                    "organization_id",
-                    organizationId
-                );
+            await customerStatusRpcClient.rpc(
+                "set_customer_active_status",
+                {
+                    p_customer_id:
+                        customerId,
 
+                    p_active:
+                        active,
+                }
+            );
+
+
+        /* ====================================================
+           RPC ERROR
+           ==================================================== */
 
         if (error) {
+
             console.error(
-                "Courtly customer status update error:",
+                "Courtly customer status RPC error:",
                 error
             );
 
+
+            const normalized =
+                error.message
+                    .toLowerCase();
+
+
+            if (
+                normalized.includes(
+                    "not allowed"
+                ) ||
+                normalized.includes(
+                    "not authorized"
+                ) ||
+                normalized.includes(
+                    "permission"
+                )
+            ) {
+
+                return {
+                    success:
+                        false,
+
+                    error:
+                        "forbidden",
+                };
+            }
+
+
             return {
-                success: false,
+                success:
+                    false,
+
                 error:
                     "statusUpdateFailed",
             };
         }
 
 
+        /* ====================================================
+           RPC RESULT
+           ==================================================== */
+
+        const rpcResult =
+            data?.[0] ??
+            null;
+
+
+        /*
+         * The database function always returns one row.
+         *
+         * If no row is returned unexpectedly, we fail rather
+         * than assuming the operation succeeded.
+         */
+        if (!rpcResult) {
+
+            console.error(
+                "Courtly customer status RPC returned no result."
+            );
+
+
+            return {
+                success:
+                    false,
+
+                error:
+                    "statusUpdateFailed",
+            };
+        }
+
+
+        const endedSubscriptions =
+            Number(
+                rpcResult
+                    .ended_subscriptions
+            );
+
+
+        /* ====================================================
+           REVALIDATION
+           ==================================================== */
+
         revalidatePath(
             "/customers"
         );
 
 
+        revalidatePath(
+            `/customers/${customerId}/edit`
+        );
+
+
+        /* ====================================================
+           SUCCESS
+           ==================================================== */
+
         return {
-            success: true,
-            active,
+            success:
+                true,
+
+            active:
+                rpcResult.active,
+
+            endedSubscriptions:
+                Number.isFinite(
+                    endedSubscriptions
+                )
+                    ? endedSubscriptions
+                    : 0,
         };
+
     } catch (error) {
+
         console.error(
             "Courtly customer status unexpected error:",
             error
         );
 
+
         return {
-            success: false,
+            success:
+                false,
+
             error:
                 "statusUpdateFailed",
         };

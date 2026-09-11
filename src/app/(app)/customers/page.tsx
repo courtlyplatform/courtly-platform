@@ -10,13 +10,18 @@ import {
     getCustomers,
 } from "@/modules/customers/queries";
 
+
 export default async function CustomersPage() {
+
     const customers =
         await getCustomers();
 
+
     return (
         <CustomersView
-            customers={customers}
+            customers={
+                customers
+            }
             toggleCustomerStatusAction={
                 toggleCustomerStatus
             }

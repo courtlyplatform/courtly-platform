@@ -46,75 +46,147 @@ export const ptBR = {
     },
 
     customers: {
-        eyebrow: "Gestão",
+        eyebrow:
+            "Gestão",
 
-        title: "Alunos",
+        title:
+            "Alunos",
 
         description:
             "Gerencie os alunos da sua organização.",
 
-        newCustomer: "Novo aluno",
+        newCustomer:
+            "Novo aluno",
 
-        customer: "Aluno",
+        customer:
+            "Aluno",
 
-        notProvided: "Não informado",
+        notProvided:
+            "Não informado",
 
         table: {
-            name: "Nome",
-            documentType: "Tipo de documento",
-            documentNumber: "Documento",
-            email: "E-mail",
-            phone: "Telefone",
-            status: "Status",
-            actions: "Ações",
+            name:
+                "Nome",
+
+            documentType:
+                "Tipo de documento",
+
+            documentNumber:
+                "Documento",
+
+            email:
+                "E-mail",
+
+            phone:
+                "Telefone",
+
+            plans:
+                "Planos / Serviços",
+
+            status:
+                "Status",
+
+            actions:
+                "Ações",
+        },
+
+        plans: {
+            none:
+                "Nenhum plano ativo",
+
+            activeSingular:
+                "{count} plano ativo",
+
+            activePlural:
+                "{count} planos ativos",
+
+            view:
+                "Ver planos",
+
+            more:
+                "+{count} mais",
         },
 
         filters: {
-            name: "Nome",
-            namePlaceholder: "Buscar por nome",
+            name:
+                "Nome",
 
-            documentType: "Tipo de documento",
-            allDocumentTypes: "Todos",
+            namePlaceholder:
+                "Buscar por nome",
 
-            documentNumber: "Número do documento",
-            documentNumberPlaceholder: "Buscar documento",
+            documentType:
+                "Tipo de documento",
 
-            status: "Status",
-            allStatuses: "Todos",
-            active: "Ativos",
-            inactive: "Inativos",
+            allDocumentTypes:
+                "Todos",
 
-            clear: "Limpar filtros",
+            documentNumber:
+                "Número do documento",
 
-            noResults: "Nenhum aluno encontrado com os filtros selecionados.",
+            documentNumberPlaceholder:
+                "Buscar documento",
+
+            status:
+                "Status",
+
+            allStatuses:
+                "Todos",
+
+            active:
+                "Ativos",
+
+            inactive:
+                "Inativos",
+
+            clear:
+                "Limpar filtros",
+
+            noResults:
+                "Nenhum aluno encontrado com os filtros selecionados.",
         },
 
         status: {
-            active: "Ativo",
-            inactive: "Inativo",
+            active:
+                "Ativo",
+
+            inactive:
+                "Inativo",
         },
 
         actions: {
-            edit: "Editar",
-            deactivate: "Desativar",
-            reactivate: "Reativar",
+            edit:
+                "Editar",
+
+            deactivate:
+                "Desativar",
+
+            reactivate:
+                "Reativar",
         },
 
         empty: {
-            title: "Nenhum aluno cadastrado",
+            title:
+                "Nenhum aluno cadastrado",
 
             description:
                 "Cadastre seu primeiro aluno para começar a organizar suas atividades.",
 
-            action: "Adicionar aluno",
+            action:
+                "Adicionar aluno",
         },
 
         confirmation: {
-            deactivateTitle: "Desativar aluno?",
+            deactivateTitle:
+                "Desativar aluno?",
+
             deactivateDescription:
-                'Tem certeza de que deseja desativar o aluno "{name}"? O cadastro será mantido e poderá ser reativado posteriormente.',
-            confirmDeactivate: "Desativar aluno",
-            deactivating: "Desativando...",
+                'Deseja desativar o aluno "{name}"? Todos os planos e serviços ativos ou pausados serão encerrados. O cadastro e o histórico comercial serão preservados.',
+
+            confirmDeactivate:
+                "Desativar aluno",
+
+            deactivating:
+                "Desativando...",
         },
 
         feedback: {
@@ -126,10 +198,10 @@ export const ptBR = {
                     "Aluno atualizado com sucesso.",
 
                 customerDeactivated:
-                    "Aluno desativado com sucesso.",
+                    "Aluno desativado com sucesso. Contratos encerrados: {count}.",
 
                 customerReactivated:
-                    "Aluno reativado com sucesso.",
+                    "Aluno reativado com sucesso. Os contratos anteriores permanecem encerrados.",
             },
 
             error: {
@@ -154,28 +226,51 @@ export const ptBR = {
                 updateFailed:
                     "Não foi possível atualizar o aluno. Tente novamente.",
 
+                forbidden:
+                    "Você não possui permissão para alterar o status deste aluno.",
+
                 statusUpdateFailed:
-                    "Não foi possível alterar o status do aluno. Tente novamente.",
+                    "Não foi possível alterar o status do aluno. Nenhuma alteração comercial foi concluída.",
             },
         },
 
         form: {
-            createTitle: "Novo aluno",
-            editTitle: "Editar aluno",
+            createTitle:
+                "Novo aluno",
 
-            name: "Nome",
-            documentType: "Tipo de documento",
-            documentNumber:"Número do documento",
-            email: "E-mail",
-            phone: "Telefone",
-            birthDate: "Data de nascimento",
-            notes: "Observações",
+            editTitle:
+                "Editar aluno",
 
-            create: "Cadastrar aluno",
-            save: "Salvar alterações",
+            name:
+                "Nome",
 
-            back: "Voltar para alunos",
-        }
+            documentType:
+                "Tipo de documento",
+
+            documentNumber:
+                "Número do documento",
+
+            email:
+                "E-mail",
+
+            phone:
+                "Telefone",
+
+            birthDate:
+                "Data de nascimento",
+
+            notes:
+                "Observações",
+
+            create:
+                "Cadastrar aluno",
+
+            save:
+                "Salvar alterações",
+
+            back:
+                "Voltar para alunos",
+        },
     },
 
     profile: {
@@ -525,6 +620,215 @@ export const ptBR = {
         },
     },
 
+    customerSubscriptions: {
+
+        tabs: {
+            personal:
+                "Dados pessoais",
+
+            services:
+                "Planos / Serviços",
+        },
+
+        title:
+            "Planos / Serviços",
+
+        description:
+            "Gerencie os serviços contratados por {name}.",
+
+        service:
+            "Serviço",
+
+        unknownService:
+            "Serviço indisponível",
+
+        addService:
+            "Adicionar serviço",
+
+        selectService:
+            "Selecione um serviço",
+
+        amount:
+            "Valor",
+
+        currency:
+            "Moeda",
+
+        billingCycle:
+            "Ciclo de cobrança",
+
+        startsAt:
+            "Início",
+
+        endsAt:
+            "Término",
+
+        edit:
+            "Editar",
+
+        pause:
+            "Pausar",
+
+        resume:
+            "Retomar",
+
+        end:
+            "Encerrar",
+
+        add:
+            "Adicionar",
+
+        save:
+            "Salvar alterações",
+
+        saving:
+            "Salvando...",
+
+        cancel:
+            "Cancelar",
+
+        status: {
+            active:
+                "Ativo",
+
+            paused:
+                "Pausado",
+
+            ended:
+                "Encerrado",
+        },
+
+        reactivationNotice: {
+            title:
+                "Aluno inativo",
+
+            description:
+                "Ao adicionar um novo plano ou serviço, {name} será reativado automaticamente.",
+        },
+
+        cycles: {
+            weekly:
+                "Semanal",
+
+            monthly:
+                "Mensal",
+
+            quarterly:
+                "Trimestral",
+
+            semiannual:
+                "Semestral",
+
+            annual:
+                "Anual",
+
+            oneTime:
+                "Pagamento único",
+        },
+
+        modal: {
+            eyebrow:
+                "Contrato comercial",
+
+            createTitle:
+                "Adicionar serviço",
+
+            editTitle:
+                "Editar serviço do aluno",
+
+            close:
+                "Fechar",
+        },
+
+        empty: {
+            title:
+                "Nenhum serviço contratado",
+
+            description:
+                "Este aluno ainda não possui serviços vinculados.",
+
+            action:
+                "Adicionar serviço",
+        },
+
+        confirmation: {
+            endTitle:
+                "Encerrar serviço?",
+
+            endDescription:
+                "Deseja encerrar o serviço {service}? O histórico comercial será preservado.",
+
+            confirmEnd:
+                "Encerrar",
+
+            ending:
+                "Encerrando...",
+        },
+
+        feedback: {
+
+            success: {
+                created:
+                    "Serviço vinculado ao aluno com sucesso.",
+
+                updated:
+                    "Serviço do aluno atualizado com sucesso.",
+
+                paused:
+                    "Serviço pausado com sucesso.",
+
+                resumed:
+                    "Serviço retomado com sucesso.",
+
+                ended:
+                    "Serviço encerrado com sucesso.",
+                
+                createdAndReactivated:
+                    "Serviço vinculado com sucesso e aluno reativado automaticamente.",
+            },
+
+            error: {
+                forbidden:
+                    "Você não possui permissão para gerenciar os serviços deste aluno.",
+
+                customerNotFound:
+                    "Não foi possível localizar o aluno.",
+
+                activityNotFound:
+                    "Não foi possível localizar o serviço selecionado.",
+
+                inactiveActivity:
+                    "Não é possível contratar um serviço desativado.",
+
+                duplicateOpenSubscription:
+                    "Este aluno já possui este serviço ativo ou pausado.",
+
+                endedImmutable:
+                    "Um contrato encerrado não pode ser alterado. Crie um novo vínculo se o aluno retornar.",
+
+                activityRequired:
+                    "Selecione um serviço.",
+
+                invalidAmount:
+                    "Informe um valor válido.",
+
+                startDateRequired:
+                    "Informe a data de início.",
+
+                invalidData:
+                    "Verifique os dados informados.",
+
+                saveFailed:
+                    "Não foi possível vincular o serviço ao aluno.",
+
+                statusUpdateFailed:
+                    "Não foi possível alterar o status do serviço.",
+
+                unexpected:
+                    "Não foi possível concluir a operação. Tente novamente.",
+            },
+        },
+    },
 
     accessibility: {
     mainNavigation: "Navegação principal",

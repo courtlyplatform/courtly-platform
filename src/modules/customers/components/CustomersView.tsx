@@ -8,6 +8,7 @@ import {
 import Link from "next/link";
 
 import {
+    useRouter,
     useSearchParams,
 } from "next/navigation";
 
@@ -27,6 +28,10 @@ import type {
     CustomerStatusResult,
 } from "@/modules/customers/actions";
 
+import type {
+    CustomerListItem,
+} from "@/modules/customers/types";
+
 import {
     DOCUMENT_TYPE_OPTIONS,
     isDocumentType,
@@ -37,24 +42,15 @@ import {
 } from "@/modules/customers/documents/documentFormatter";
 
 
-type Customer = {
-    id: string;
-    name: string;
-    document_type: string | null;
-    document_number: string | null;
-    email: string | null;
-    phone: string | null;
-    active: boolean;
-};
-
-
 type CustomersViewProps = {
-    customers: Customer[];
+    customers:
+        CustomerListItem[];
 
     toggleCustomerStatusAction: (
         customerId: string,
         active: boolean
-    ) => Promise<CustomerStatusResult>;
+    ) =>
+        Promise<CustomerStatusResult>;
 };
 
 
@@ -66,6 +62,7 @@ type StatusFilter =
 
 type CustomerToDeactivate = {
     id: string;
+
     name: string;
 } | null;
 
@@ -79,11 +76,18 @@ type StatusFeedback = {
 } | null;
 
 
+/* ============================================================
+   SEARCH NORMALIZATION
+   ============================================================ */
+
 function normalizeSearchText(
     value: string
 ): string {
+
     return value
-        .normalize("NFD")
+        .normalize(
+            "NFD"
+        )
         .replace(
             /[\u0300-\u036f]/g,
             ""
@@ -96,6 +100,7 @@ function normalizeSearchText(
 function normalizeDocumentSearch(
     value: string
 ): string {
+
     return value.replace(
         /\D/g,
         ""
@@ -103,24 +108,33 @@ function normalizeDocumentSearch(
 }
 
 
+/* ============================================================
+   CUSTOMERS VIEW
+   ============================================================ */
+
 export function CustomersView({
     customers,
     toggleCustomerStatusAction,
 }: CustomersViewProps) {
+
+    const router =
+        useRouter();
+
+
     const {
         dictionary,
-    } = useI18n();
+    } =
+        useI18n();
+
 
     const searchParams =
         useSearchParams();
 
 
-    /*
-     * Feedback returned after create/update.
-     *
-     * Example:
-     * /customers?success=customerCreated
-     */
+    /* ========================================================
+       URL FEEDBACK
+       ======================================================== */
+
     const successCode =
         searchParams.get(
             "success"
@@ -128,36 +142,41 @@ export function CustomersView({
 
 
     const successMessages:
-        Record<string, string> = {
-            customerCreated:
-                dictionary
-                    .customers
-                    .feedback
-                    .success
-                    .customerCreated,
+        Record<
+            string,
+            string
+        > = {
 
-            customerUpdated:
-                dictionary
-                    .customers
-                    .feedback
-                    .success
-                    .customerUpdated,
-        };
+        customerCreated:
+            dictionary
+                .customers
+                .feedback
+                .success
+                .customerCreated,
+
+        customerUpdated:
+            dictionary
+                .customers
+                .feedback
+                .success
+                .customerUpdated,
+    };
 
 
     const successMessage =
         successCode
             ? successMessages[
-                successCode
-            ] ?? null
+                  successCode
+              ] ??
+              null
+
             : null;
 
 
-    /*
-     * Used for operations that happen directly
-     * inside this component, such as activating
-     * or deactivating a student.
-     */
+    /* ========================================================
+       LOCAL STATUS FEEDBACK
+       ======================================================== */
+
     const [
         statusFeedback,
         setStatusFeedback,
@@ -167,35 +186,50 @@ export function CustomersView({
         );
 
 
+    /* ========================================================
+       FILTERS
+       ======================================================== */
+
     const [
         nameFilter,
         setNameFilter,
-    ] = useState("");
+    ] =
+        useState(
+            ""
+        );
 
 
     const [
         documentTypeFilter,
         setDocumentTypeFilter,
-    ] = useState("");
+    ] =
+        useState(
+            ""
+        );
 
 
     const [
         documentNumberFilter,
         setDocumentNumberFilter,
-    ] = useState("");
+    ] =
+        useState(
+            ""
+        );
 
 
     const [
         statusFilter,
         setStatusFilter,
-    ] = useState<StatusFilter>("");
+    ] =
+        useState<StatusFilter>(
+            ""
+        );
 
 
-    /*
-     * Stores the student selected for deactivation.
-     *
-     * When null, the confirmation dialog is closed.
-     */
+    /* ========================================================
+       DEACTIVATION STATE
+       ======================================================== */
+
     const [
         customerToDeactivate,
         setCustomerToDeactivate,
@@ -205,98 +239,119 @@ export function CustomersView({
         );
 
 
-    /*
-     * Prevents multiple deactivation requests
-     * while the current request is being processed.
-     */
     const [
         isDeactivating,
         setIsDeactivating,
-    ] = useState(false);
+    ] =
+        useState(
+            false
+        );
 
 
-    /*
-     * Prevents multiple reactivation requests.
-     */
+    /* ========================================================
+       REACTIVATION STATE
+       ======================================================== */
+
     const [
         reactivatingCustomerId,
         setReactivatingCustomerId,
     ] =
-        useState<string | null>(
+        useState<
+            string | null
+        >(
             null
         );
 
 
+    /* ========================================================
+       FILTERED CUSTOMERS
+       ======================================================== */
+
     const filteredCustomers =
-        useMemo(() => {
-            const normalizedNameFilter =
-                normalizeSearchText(
-                    nameFilter
-                );
+        useMemo(
+            () => {
 
-            const normalizedDocumentFilter =
-                normalizeDocumentSearch(
-                    documentNumberFilter
-                );
-
-            return customers.filter(
-                (customer) => {
-                    const normalizedCustomerName =
-                        normalizeSearchText(
-                            customer.name
-                        );
-
-                    const matchesName =
-                        !normalizedNameFilter ||
-                        normalizedCustomerName.includes(
-                            normalizedNameFilter
-                        );
-
-                    const matchesDocumentType =
-                        !documentTypeFilter ||
-                        customer.document_type ===
-                            documentTypeFilter;
-
-                    const normalizedCustomerDocument =
-                        normalizeDocumentSearch(
-                            customer.document_number ??
-                                ""
-                        );
-
-                    const matchesDocumentNumber =
-                        !normalizedDocumentFilter ||
-                        normalizedCustomerDocument.includes(
-                            normalizedDocumentFilter
-                        );
-
-                    const matchesStatus =
-                        !statusFilter ||
-                        (
-                            statusFilter ===
-                                "active" &&
-                            customer.active
-                        ) ||
-                        (
-                            statusFilter ===
-                                "inactive" &&
-                            !customer.active
-                        );
-
-                    return (
-                        matchesName &&
-                        matchesDocumentType &&
-                        matchesDocumentNumber &&
-                        matchesStatus
+                const normalizedNameFilter =
+                    normalizeSearchText(
+                        nameFilter
                     );
-                }
-            );
-        }, [
-            customers,
-            nameFilter,
-            documentTypeFilter,
-            documentNumberFilter,
-            statusFilter,
-        ]);
+
+
+                const normalizedDocumentFilter =
+                    normalizeDocumentSearch(
+                        documentNumberFilter
+                    );
+
+
+                return customers.filter(
+                    (
+                        customer
+                    ) => {
+
+                        const normalizedCustomerName =
+                            normalizeSearchText(
+                                customer.name
+                            );
+
+
+                        const matchesName =
+                            !normalizedNameFilter ||
+                            normalizedCustomerName.includes(
+                                normalizedNameFilter
+                            );
+
+
+                        const matchesDocumentType =
+                            !documentTypeFilter ||
+                            customer.document_type ===
+                                documentTypeFilter;
+
+
+                        const normalizedCustomerDocument =
+                            normalizeDocumentSearch(
+                                customer.document_number ??
+                                    ""
+                            );
+
+
+                        const matchesDocumentNumber =
+                            !normalizedDocumentFilter ||
+                            normalizedCustomerDocument.includes(
+                                normalizedDocumentFilter
+                            );
+
+
+                        const matchesStatus =
+                            !statusFilter ||
+                            (
+                                statusFilter ===
+                                    "active" &&
+                                customer.active
+                            ) ||
+                            (
+                                statusFilter ===
+                                    "inactive" &&
+                                !customer.active
+                            );
+
+
+                        return (
+                            matchesName &&
+                            matchesDocumentType &&
+                            matchesDocumentNumber &&
+                            matchesStatus
+                        );
+                    }
+                );
+            },
+            [
+                customers,
+                nameFilter,
+                documentTypeFilter,
+                documentNumberFilter,
+                statusFilter,
+            ]
+        );
 
 
     const hasActiveFilters =
@@ -308,17 +363,35 @@ export function CustomersView({
         );
 
 
+    /* ========================================================
+       HELPERS
+       ======================================================== */
+
     function clearFilters() {
-        setNameFilter("");
-        setDocumentTypeFilter("");
-        setDocumentNumberFilter("");
-        setStatusFilter("");
+
+        setNameFilter(
+            ""
+        );
+
+        setDocumentTypeFilter(
+            ""
+        );
+
+        setDocumentNumberFilter(
+            ""
+        );
+
+        setStatusFilter(
+            ""
+        );
     }
 
 
     function getFormattedDocument(
-        customer: Customer
+        customer:
+            CustomerListItem
     ): string {
+
         if (
             !customer.document_type ||
             !customer.document_number ||
@@ -326,10 +399,12 @@ export function CustomersView({
                 customer.document_type
             )
         ) {
+
             return dictionary
                 .customers
                 .notProvided;
         }
+
 
         return formatDocument(
             customer.document_type,
@@ -338,33 +413,148 @@ export function CustomersView({
     }
 
 
-    /*
-     * Opens the confirmation dialog.
-     *
-     * No database operation happens here.
-     */
+    function getPlanCountLabel(
+        customer:
+            CustomerListItem
+    ): string {
+
+        const count =
+            customer
+                .activePlans
+                .length;
+
+
+        if (
+            count ===
+            0
+        ) {
+
+            return dictionary
+                .customers
+                .plans
+                .none;
+        }
+
+
+        const template =
+            count === 1
+                ? dictionary
+                      .customers
+                      .plans
+                      .activeSingular
+
+                : dictionary
+                      .customers
+                      .plans
+                      .activePlural;
+
+
+        return template.replace(
+            "{count}",
+            String(
+                count
+            )
+        );
+    }
+
+
+    function getPlanNames(
+        customer:
+            CustomerListItem
+    ): string {
+
+        const plans =
+            customer.activePlans;
+
+
+        if (
+            plans.length ===
+            0
+        ) {
+            return "";
+        }
+
+
+        const visibleNames =
+            plans
+                .slice(
+                    0,
+                    2
+                )
+                .map(
+                    (
+                        plan
+                    ) =>
+                        plan.name
+                );
+
+
+        if (
+            plans.length <=
+            2
+        ) {
+            return visibleNames.join(
+                ", "
+            );
+        }
+
+
+        const remaining =
+            plans.length -
+            2;
+
+
+        const moreLabel =
+            dictionary
+                .customers
+                .plans
+                .more
+                .replace(
+                    "{count}",
+                    String(
+                        remaining
+                    )
+                );
+
+
+        return `${visibleNames.join(
+            ", "
+        )} ${moreLabel}`;
+    }
+
+
+    /* ========================================================
+       DEACTIVATION
+       ======================================================== */
+
     function requestCustomerDeactivation(
-        customer: Customer
+        customer:
+            CustomerListItem
     ) {
+
         setStatusFeedback(
             null
         );
 
+
         setCustomerToDeactivate({
-            id: customer.id,
-            name: customer.name,
+            id:
+                customer.id,
+
+            name:
+                customer.name,
         });
     }
 
 
-    /*
-     * Closes the confirmation dialog without
-     * changing the student's status.
-     */
     function cancelCustomerDeactivation() {
-        if (isDeactivating) {
+
+        if (
+            isDeactivating
+        ) {
             return;
         }
+
 
         setCustomerToDeactivate(
             null
@@ -372,11 +562,8 @@ export function CustomersView({
     }
 
 
-    /*
-     * Only runs after the user explicitly
-     * confirms the deactivation.
-     */
     async function confirmCustomerDeactivation() {
+
         if (
             !customerToDeactivate ||
             isDeactivating
@@ -384,14 +571,18 @@ export function CustomersView({
             return;
         }
 
+
         try {
+
             setIsDeactivating(
                 true
             );
 
+
             setStatusFeedback(
                 null
             );
+
 
             const result =
                 await toggleCustomerStatusAction(
@@ -399,46 +590,89 @@ export function CustomersView({
                     false
                 );
 
-            if (!result.success) {
+
+            if (
+                !result.success
+            ) {
+
                 setStatusFeedback({
                     type:
                         "error",
 
                     message:
-                        dictionary
-                            .customers
-                            .feedback
-                            .error
-                            .statusUpdateFailed,
+                        result.error ===
+                        "forbidden"
+
+                            ? dictionary
+                                  .customers
+                                  .feedback
+                                  .error
+                                  .forbidden
+
+                            : dictionary
+                                  .customers
+                                  .feedback
+                                  .error
+                                  .statusUpdateFailed,
                 });
+
 
                 setCustomerToDeactivate(
                     null
                 );
 
+
                 return;
             }
+
+
+            const successText =
+                dictionary
+                    .customers
+                    .feedback
+                    .success
+                    .customerDeactivated
+                    .replace(
+                        "{count}",
+                        String(
+                            result
+                                .endedSubscriptions
+                        )
+                    );
+
 
             setStatusFeedback({
                 type:
                     "success",
 
                 message:
-                    dictionary
-                        .customers
-                        .feedback
-                        .success
-                        .customerDeactivated,
+                    successText,
             });
+
 
             setCustomerToDeactivate(
                 null
             );
+
+
+            /*
+             * Important:
+             *
+             * getCustomers() now also calculates the active
+             * commercial plans. Refreshing the route updates:
+             *
+             * - customer status
+             * - active plan counter
+             */
+            router.refresh();
+
         } catch (error) {
+
             console.error(
                 "Courtly customer deactivation error:",
                 error
             );
+
 
             setStatusFeedback({
                 type:
@@ -452,10 +686,13 @@ export function CustomersView({
                         .statusUpdateFailed,
             });
 
+
             setCustomerToDeactivate(
                 null
             );
+
         } finally {
+
             setIsDeactivating(
                 false
             );
@@ -463,27 +700,33 @@ export function CustomersView({
     }
 
 
-    /*
-     * Reactivates a student directly from
-     * the customer list.
-     */
+    /* ========================================================
+       REACTIVATION
+       ======================================================== */
+
     async function reactivateCustomer(
-        customer: Customer
+        customer:
+            CustomerListItem
     ) {
+
         if (
             reactivatingCustomerId
         ) {
             return;
         }
 
+
         try {
+
             setReactivatingCustomerId(
                 customer.id
             );
 
+
             setStatusFeedback(
                 null
             );
+
 
             const result =
                 await toggleCustomerStatusAction(
@@ -491,21 +734,36 @@ export function CustomersView({
                     true
                 );
 
-            if (!result.success) {
+
+            if (
+                !result.success
+            ) {
+
                 setStatusFeedback({
                     type:
                         "error",
 
                     message:
-                        dictionary
-                            .customers
-                            .feedback
-                            .error
-                            .statusUpdateFailed,
+                        result.error ===
+                        "forbidden"
+
+                            ? dictionary
+                                  .customers
+                                  .feedback
+                                  .error
+                                  .forbidden
+
+                            : dictionary
+                                  .customers
+                                  .feedback
+                                  .error
+                                  .statusUpdateFailed,
                 });
+
 
                 return;
             }
+
 
             setStatusFeedback({
                 type:
@@ -518,11 +776,21 @@ export function CustomersView({
                         .success
                         .customerReactivated,
             });
+
+
+            /*
+             * Reactivation intentionally does NOT reactivate
+             * previous subscriptions.
+             */
+            router.refresh();
+
         } catch (error) {
+
             console.error(
                 "Courtly customer reactivation error:",
                 error
             );
+
 
             setStatusFeedback({
                 type:
@@ -535,7 +803,9 @@ export function CustomersView({
                         .error
                         .statusUpdateFailed,
             });
+
         } finally {
+
             setReactivatingCustomerId(
                 null
             );
@@ -543,13 +813,19 @@ export function CustomersView({
     }
 
 
+    /* ========================================================
+       RENDER
+       ======================================================== */
+
     return (
-        <main>
+        <main className="customers-page">
+
             {/* =====================================
                 PAGE HEADER
                ===================================== */}
 
             <div className="page-heading">
+
                 <div>
                     <span className="page-eyebrow">
                         {
@@ -575,6 +851,7 @@ export function CustomersView({
                         }
                     </p>
                 </div>
+
 
                 <Link
                     href="/customers/new"
@@ -627,8 +904,11 @@ export function CustomersView({
                 EMPTY STATE
                ===================================== */}
 
-            {customers.length === 0 ? (
+            {customers.length ===
+            0 ? (
+
                 <div className="empty-state">
+
                     <h2>
                         {
                             dictionary
@@ -659,14 +939,18 @@ export function CustomersView({
                         }
                     </Link>
                 </div>
+
             ) : (
                 <>
+
                     {/* =================================
                         FILTERS
                        ================================= */}
 
                     <section className="customer-filters">
+
                         <div className="customer-filter-field">
+
                             <label htmlFor="customer-name-filter">
                                 {
                                     dictionary
@@ -702,6 +986,7 @@ export function CustomersView({
 
 
                         <div className="customer-filter-field">
+
                             <label htmlFor="customer-document-type-filter">
                                 {
                                     dictionary
@@ -736,7 +1021,9 @@ export function CustomersView({
                                 </option>
 
                                 {DOCUMENT_TYPE_OPTIONS.map(
-                                    (option) => (
+                                    (
+                                        option
+                                    ) => (
                                         <option
                                             key={
                                                 option.value
@@ -756,6 +1043,7 @@ export function CustomersView({
 
 
                         <div className="customer-filter-field">
+
                             <label htmlFor="customer-document-number-filter">
                                 {
                                     dictionary
@@ -792,6 +1080,7 @@ export function CustomersView({
 
 
                         <div className="customer-filter-field">
+
                             <label htmlFor="customer-status-filter">
                                 {
                                     dictionary
@@ -812,7 +1101,8 @@ export function CustomersView({
                                     setStatusFilter(
                                         event
                                             .target
-                                            .value as StatusFilter
+                                            .value as
+                                            StatusFilter
                                     )
                                 }
                             >
@@ -872,6 +1162,7 @@ export function CustomersView({
 
                     {filteredCustomers.length ===
                     0 ? (
+
                         <div className="customers-filter-empty">
                             {
                                 dictionary
@@ -880,17 +1171,23 @@ export function CustomersView({
                                     .noResults
                             }
                         </div>
+
                     ) : (
                         <>
+
                             {/* =========================
                                 DESKTOP / TABLET
                                ========================= */}
 
                             <section className="customers-table-card">
+
                                 <div className="table-scroll">
+
                                     <table className="customers-table">
+
                                         <thead>
                                             <tr>
+
                                                 <th>
                                                     {
                                                         dictionary
@@ -941,6 +1238,15 @@ export function CustomersView({
                                                         dictionary
                                                             .customers
                                                             .table
+                                                            .plans
+                                                    }
+                                                </th>
+
+                                                <th>
+                                                    {
+                                                        dictionary
+                                                            .customers
+                                                            .table
                                                             .status
                                                     }
                                                 </th>
@@ -956,16 +1262,20 @@ export function CustomersView({
                                             </tr>
                                         </thead>
 
+
                                         <tbody>
+
                                             {filteredCustomers.map(
                                                 (
                                                     customer
                                                 ) => (
+
                                                     <tr
                                                         key={
                                                             customer.id
                                                         }
                                                     >
+
                                                         <td>
                                                             <strong>
                                                                 {
@@ -973,6 +1283,7 @@ export function CustomersView({
                                                                 }
                                                             </strong>
                                                         </td>
+
 
                                                         <td>
                                                             {
@@ -983,6 +1294,7 @@ export function CustomersView({
                                                             }
                                                         </td>
 
+
                                                         <td>
                                                             {
                                                                 getFormattedDocument(
@@ -990,6 +1302,7 @@ export function CustomersView({
                                                                 )
                                                             }
                                                         </td>
+
 
                                                         <td>
                                                             {
@@ -1000,6 +1313,7 @@ export function CustomersView({
                                                             }
                                                         </td>
 
+
                                                         <td>
                                                             {
                                                                 customer.phone ??
@@ -1009,7 +1323,58 @@ export function CustomersView({
                                                             }
                                                         </td>
 
+
+                                                        {/* =====================
+                                                            PLANS / SERVICES
+                                                           ===================== */}
+
+                                                        <td className="customer-plans-cell">
+
+                                                            <Link
+                                                                href={`/customers/${customer.id}/edit?tab=services`}
+                                                                className="customer-plans-link"
+                                                            >
+
+                                                                <strong>
+                                                                    {
+                                                                        getPlanCountLabel(
+                                                                            customer
+                                                                        )
+                                                                    }
+                                                                </strong>
+
+
+                                                                {customer
+                                                                    .activePlans
+                                                                    .length >
+                                                                    0 && (
+
+                                                                    <span>
+                                                                        {
+                                                                            getPlanNames(
+                                                                                customer
+                                                                            )
+                                                                        }
+                                                                    </span>
+                                                                )}
+
+
+                                                                <small>
+                                                                    {
+                                                                        dictionary
+                                                                            .customers
+                                                                            .plans
+                                                                            .view
+                                                                    }{" "}
+                                                                    →
+                                                                </small>
+
+                                                            </Link>
+                                                        </td>
+
+
                                                         <td>
+
                                                             <span
                                                                 className={
                                                                     customer.active
@@ -1023,6 +1388,7 @@ export function CustomersView({
                                                                               .customers
                                                                               .status
                                                                               .active
+
                                                                         : dictionary
                                                                               .customers
                                                                               .status
@@ -1031,8 +1397,11 @@ export function CustomersView({
                                                             </span>
                                                         </td>
 
+
                                                         <td>
+
                                                             <div className="table-actions">
+
                                                                 <Link
                                                                     href={`/customers/${customer.id}/edit`}
                                                                     className="action-link"
@@ -1045,10 +1414,15 @@ export function CustomersView({
                                                                     }
                                                                 </Link>
 
+
                                                                 {customer.active ? (
+
                                                                     <button
                                                                         type="button"
                                                                         className="action-button"
+                                                                        disabled={
+                                                                            isDeactivating
+                                                                        }
                                                                         onClick={() =>
                                                                             requestCustomerDeactivation(
                                                                                 customer
@@ -1062,7 +1436,9 @@ export function CustomersView({
                                                                                 .deactivate
                                                                         }
                                                                     </button>
+
                                                                 ) : (
+
                                                                     <button
                                                                         type="button"
                                                                         className="action-button"
@@ -1100,17 +1476,21 @@ export function CustomersView({
                                ========================= */}
 
                             <section className="customers-mobile-list">
+
                                 {filteredCustomers.map(
                                     (
                                         customer
                                     ) => (
+
                                         <article
                                             key={
                                                 customer.id
                                             }
                                             className="customer-mobile-card"
                                         >
+
                                             <div className="customer-mobile-header">
+
                                                 <div>
                                                     <span className="customer-label">
                                                         {
@@ -1127,6 +1507,7 @@ export function CustomersView({
                                                     </h2>
                                                 </div>
 
+
                                                 <span
                                                     className={
                                                         customer.active
@@ -1140,6 +1521,7 @@ export function CustomersView({
                                                                   .customers
                                                                   .status
                                                                   .active
+
                                                             : dictionary
                                                                   .customers
                                                                   .status
@@ -1150,6 +1532,7 @@ export function CustomersView({
 
 
                                             <dl className="customer-details">
+
                                                 <div>
                                                     <dt>
                                                         {
@@ -1170,6 +1553,7 @@ export function CustomersView({
                                                     </dd>
                                                 </div>
 
+
                                                 <div>
                                                     <dt>
                                                         {
@@ -1188,6 +1572,7 @@ export function CustomersView({
                                                         }
                                                     </dd>
                                                 </div>
+
 
                                                 <div>
                                                     <dt>
@@ -1209,6 +1594,7 @@ export function CustomersView({
                                                     </dd>
                                                 </div>
 
+
                                                 <div>
                                                     <dt>
                                                         {
@@ -1228,10 +1614,72 @@ export function CustomersView({
                                                         }
                                                     </dd>
                                                 </div>
+
+
+                                                {/* =================
+                                                    MOBILE PLANS
+                                                   ================= */}
+
+                                                <div className="customer-mobile-plans">
+                                                    <dt>
+                                                        {
+                                                            dictionary
+                                                                .customers
+                                                                .table
+                                                                .plans
+                                                        }
+                                                    </dt>
+
+                                                    <dd>
+
+                                                        <Link
+                                                            href={`/customers/${customer.id}/edit?tab=services`}
+                                                            className="customer-mobile-plans-link"
+                                                        >
+
+                                                            <strong>
+                                                                {
+                                                                    getPlanCountLabel(
+                                                                        customer
+                                                                    )
+                                                                }
+                                                            </strong>
+
+
+                                                            {customer
+                                                                .activePlans
+                                                                .length >
+                                                                0 && (
+
+                                                                <span>
+                                                                    {
+                                                                        getPlanNames(
+                                                                            customer
+                                                                        )
+                                                                    }
+                                                                </span>
+                                                            )}
+
+
+                                                            <small>
+                                                                {
+                                                                    dictionary
+                                                                        .customers
+                                                                        .plans
+                                                                        .view
+                                                                }{" "}
+                                                                →
+                                                            </small>
+
+                                                        </Link>
+                                                    </dd>
+                                                </div>
+
                                             </dl>
 
 
                                             <div className="customer-mobile-actions">
+
                                                 <Link
                                                     href={`/customers/${customer.id}/edit`}
                                                     className="secondary-button"
@@ -1244,10 +1692,15 @@ export function CustomersView({
                                                     }
                                                 </Link>
 
+
                                                 {customer.active ? (
+
                                                     <button
                                                         type="button"
                                                         className="secondary-button"
+                                                        disabled={
+                                                            isDeactivating
+                                                        }
                                                         onClick={() =>
                                                             requestCustomerDeactivation(
                                                                 customer
@@ -1261,7 +1714,9 @@ export function CustomersView({
                                                                 .deactivate
                                                         }
                                                     </button>
+
                                                 ) : (
+
                                                     <button
                                                         type="button"
                                                         className="secondary-button"
@@ -1284,6 +1739,7 @@ export function CustomersView({
                                                     </button>
                                                 )}
                                             </div>
+
                                         </article>
                                     )
                                 )}
@@ -1313,10 +1769,12 @@ export function CustomersView({
                     dictionary
                         .customers
                         .confirmation
-                        .deactivateDescription.replace(
+                        .deactivateDescription
+                        .replace(
                             "{name}",
                             customerToDeactivate
-                                ?.name ?? ""
+                                ?.name ??
+                                ""
                         )
                 }
                 confirmLabel={
@@ -1325,6 +1783,7 @@ export function CustomersView({
                               .customers
                               .confirmation
                               .deactivating
+
                         : dictionary
                               .customers
                               .confirmation
