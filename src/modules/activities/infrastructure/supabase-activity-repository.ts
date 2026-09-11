@@ -1,0 +1,247 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import type {
+  Activity,
+  CreateActivityInput,
+  SetActivityStatusInput,
+  UpdateActivityInput,
+} from "../domain/activity";
+
+import type { ActivityRepository } from "../domain/activity-repository";
+
+type ActivityRow = {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string | null;
+  default_duration_minutes: number;
+  default_price: number | string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export class SupabaseActivityRepository
+  implements ActivityRepository
+{
+  constructor(
+    private readonly supabase: SupabaseClient
+  ) {}
+
+  async listByOrganization(
+    organizationId: string
+  ): Promise<Activity[]> {
+    const { data, error } = await this.supabase
+      .from("activities")
+      .select(`
+        id,
+        organization_id,
+        name,
+        description,
+        default_duration_minutes,
+        default_price,
+        active,
+        created_at,
+        updated_at
+      `)
+      .eq("organization_id", organizationId)
+      .order("active", {
+        ascending: false,
+      })
+      .order("name", {
+        ascending: true,
+      });
+
+    if (error) {
+      throw new Error(
+        `Failed to list activities: ${error.message}`
+      );
+    }
+
+    return (data as ActivityRow[]).map(
+      mapActivityToDomain
+    );
+  }
+
+  async findById(
+    organizationId: string,
+    activityId: string
+  ): Promise<Activity | null> {
+    const { data, error } = await this.supabase
+      .from("activities")
+      .select(`
+        id,
+        organization_id,
+        name,
+        description,
+        default_duration_minutes,
+        default_price,
+        active,
+        created_at,
+        updated_at
+      `)
+      .eq(
+        "organization_id",
+        organizationId
+      )
+      .eq("id", activityId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(
+        `Failed to find activity: ${error.message}`
+      );
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    return mapActivityToDomain(
+      data as ActivityRow
+    );
+  }
+
+  async create(
+    input: CreateActivityInput
+  ): Promise<Activity> {
+    const { data, error } = await this.supabase
+      .from("activities")
+      .insert({
+        organization_id:
+          input.organizationId,
+
+        name: input.name,
+
+        description:
+          input.description ?? null,
+
+        default_duration_minutes:
+          input.defaultDurationMinutes,
+
+        default_price:
+          input.defaultPrice ?? null,
+      })
+      .select(`
+        id,
+        organization_id,
+        name,
+        description,
+        default_duration_minutes,
+        default_price,
+        active,
+        created_at,
+        updated_at
+      `)
+      .single();
+
+    if (error) {
+      throw new Error(
+        `Failed to create activity: ${error.message}`
+      );
+    }
+
+    return mapActivityToDomain(
+      data as ActivityRow
+    );
+  }
+
+  async update(
+    input: UpdateActivityInput
+  ): Promise<Activity> {
+    const { data, error } = await this.supabase
+      .from("activities")
+      .update({
+        name: input.name,
+
+        description:
+          input.description ?? null,
+
+        default_duration_minutes:
+          input.defaultDurationMinutes,
+
+        default_price:
+          input.defaultPrice ?? null,
+      })
+      .eq(
+        "organization_id",
+        input.organizationId
+      )
+      .eq("id", input.id)
+      .select(`
+        id,
+        organization_id,
+        name,
+        description,
+        default_duration_minutes,
+        default_price,
+        active,
+        created_at,
+        updated_at
+      `)
+      .single();
+
+    if (error) {
+      throw new Error(
+        `Failed to update activity: ${error.message}`
+      );
+    }
+
+    return mapActivityToDomain(
+      data as ActivityRow
+    );
+  }
+
+  async setActive(
+    input: SetActivityStatusInput
+  ): Promise<void> {
+    const { error } = await this.supabase
+      .from("activities")
+      .update({
+        active: input.active,
+      })
+      .eq(
+        "organization_id",
+        input.organizationId
+      )
+      .eq("id", input.id);
+
+    if (error) {
+      throw new Error(
+        `Failed to update activity status: ${error.message}`
+      );
+    }
+  }
+}
+
+function mapActivityToDomain(
+  row: ActivityRow
+): Activity {
+  return {
+    id: row.id,
+
+    organizationId:
+      row.organization_id,
+
+    name: row.name,
+
+    description:
+      row.description,
+
+    defaultDurationMinutes:
+      row.default_duration_minutes,
+
+    defaultPrice:
+      row.default_price === null
+        ? null
+        : Number(row.default_price),
+
+    active: row.active,
+
+    createdAt:
+      row.created_at,
+
+    updatedAt:
+      row.updated_at,
+  };
+}

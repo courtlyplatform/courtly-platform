@@ -43,6 +43,7 @@ export const enUS = {
     navigation: {
         overview: "Overview",
         customers: "Students",
+        services: "Services",
         scheduling: "Schedule",
         attendance: "Attendance",
         makeups: "Makeups",
@@ -391,6 +392,161 @@ export const enUS = {
 
                 unexpected:
                     "We couldn't complete the operation. Please try again.",
+            },
+        },
+    },
+
+    services: {
+        eyebrow: "Management",
+
+        title: "Services",
+
+        description:
+            "Manage the activities and services offered by your organization.",
+
+        service: "Service",
+
+        new: "New service",
+        edit: "Edit service",
+
+        name: "Name",
+        serviceDescription: "Description",
+
+        namePlaceholder:
+            "E.g. Tennis",
+
+        descriptionPlaceholder:
+            "E.g. Individual and group lessons",
+
+        duration: "Default duration",
+
+        durationHelp:
+            "Used as the suggested duration when creating an appointment.",
+
+        price: "Default price",
+
+        priceHelp:
+            "Commercial reference only. It does not depend on duration.",
+
+        minutes: "min",
+
+        active: "Active",
+        inactive: "Inactive",
+
+        activate: "Reactivate",
+        deactivate: "Deactivate",
+
+        editAction: "Edit",
+
+        save: "Save changes",
+        create: "Create service",
+        cancel: "Cancel",
+        saving: "Saving...",
+
+        noPrice: "Not defined",
+
+        modalDescription:
+            "Duration and price are independent and can be customized later.",
+
+        close: "Close",
+
+        filters: {
+            name: "Service",
+
+            namePlaceholder:
+                "Search by name or description",
+
+            duration: "Duration",
+            allDurations: "All",
+
+            minPrice: "Minimum price",
+            maxPrice: "Maximum price",
+
+            minPricePlaceholder: "0.00",
+            maxPricePlaceholder: "0.00",
+
+            status: "Status",
+
+            allStatuses: "All",
+            active: "Active",
+            inactive: "Inactive",
+
+            clear: "Clear filters",
+
+            noResults:
+                "No services found with the selected filters.",
+        },
+
+        table: {
+            name: "Service",
+            description: "Description",
+            duration: "Duration",
+            price: "Default price",
+            status: "Status",
+            actions: "Actions",
+        },
+
+        empty: {
+            title: "No services yet",
+
+            description:
+                "Add your first service to start organizing your appointments.",
+
+            action: "Add service",
+        },
+
+        confirmation: {
+            deactivateTitle:
+                "Deactivate service?",
+
+            deactivateDescription:
+                'Are you sure you want to deactivate "{name}"? The service will be kept and can be reactivated later.',
+
+            confirmDeactivate:
+                "Deactivate service",
+
+            deactivating:
+                "Deactivating...",
+        },
+
+        validation: {
+            nameRequired:
+                "Enter the service name.",
+
+            invalidDuration:
+                "Enter a valid duration.",
+
+            invalidPrice:
+                "Enter a valid price.",
+        },
+
+        feedback: {
+            success: {
+                serviceCreated:
+                    "Service created successfully.",
+
+                serviceUpdated:
+                    "Service updated successfully.",
+
+                serviceDeactivated:
+                    "Service deactivated successfully.",
+
+                serviceReactivated:
+                    "Service reactivated successfully.",
+            },
+
+            error: {
+                saveFailed:
+                    "We couldn't save the service.",
+
+                statusUpdateFailed:
+                    "We couldn't change the service status.",
+
+                duplicateName:
+                    "A service with this name already exists.",
+
+                unexpected:
+                    "We couldn't complete the operation.",
             },
         },
     },

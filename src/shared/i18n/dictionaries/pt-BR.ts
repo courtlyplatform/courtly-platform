@@ -22,6 +22,7 @@ export const ptBR = {
     navigation: {
         overview: "Visão geral",
         customers: "Alunos",
+        services: "Serviços",
         scheduling: "Agenda",
         attendance: "Presenças",
         makeups: "Reposições",
@@ -368,6 +369,162 @@ export const ptBR = {
             },
         },
     },
+
+    services: {
+        eyebrow: "Gestão",
+
+        title: "Serviços",
+
+        description:
+            "Gerencie as atividades e serviços oferecidos pela sua organização.",
+
+        service: "Serviço",
+
+        new: "Novo serviço",
+        edit: "Editar serviço",
+
+        name: "Nome",
+        serviceDescription: "Descrição",
+
+        namePlaceholder:
+            "Ex.: Tênis",
+
+        descriptionPlaceholder:
+            "Ex.: Aulas individuais e em grupo",
+
+        duration: "Duração padrão",
+
+        durationHelp:
+            "Usada como sugestão ao criar um compromisso.",
+
+        price: "Preço padrão",
+
+        priceHelp:
+            "Referência comercial. Não depende da duração.",
+
+        minutes: "min",
+
+        active: "Ativo",
+        inactive: "Inativo",
+
+        activate: "Reativar",
+        deactivate: "Desativar",
+
+        editAction: "Editar",
+
+        save: "Salvar alterações",
+        create: "Criar serviço",
+        cancel: "Cancelar",
+        saving: "Salvando...",
+
+        noPrice: "Não definido",
+
+        modalDescription:
+            "Duração e preço são independentes e poderão ser personalizados posteriormente.",
+
+        close: "Fechar",
+
+        filters: {
+            name: "Serviço",
+
+            namePlaceholder:
+                "Buscar por nome ou descrição",
+
+            duration: "Duração",
+            allDurations: "Todas",
+
+            minPrice: "Preço mínimo",
+            maxPrice: "Preço máximo",
+
+            minPricePlaceholder: "0,00",
+            maxPricePlaceholder: "0,00",
+
+            status: "Status",
+
+            allStatuses: "Todos",
+            active: "Ativos",
+            inactive: "Inativos",
+
+            clear: "Limpar filtros",
+
+            noResults:
+                "Nenhum serviço encontrado com os filtros selecionados.",
+        },
+
+        table: {
+            name: "Serviço",
+            description: "Descrição",
+            duration: "Duração",
+            price: "Preço padrão",
+            status: "Status",
+            actions: "Ações",
+        },
+
+        empty: {
+            title: "Nenhum serviço cadastrado",
+
+            description:
+                "Cadastre seu primeiro serviço para começar a organizar seus atendimentos.",
+
+            action: "Adicionar serviço",
+        },
+
+        confirmation: {
+            deactivateTitle:
+                "Desativar serviço?",
+
+            deactivateDescription:
+                'Tem certeza de que deseja desativar o serviço "{name}"? O cadastro será mantido e poderá ser reativado posteriormente.',
+
+            confirmDeactivate:
+                "Desativar serviço",
+
+            deactivating:
+                "Desativando...",
+        },
+
+        validation: {
+            nameRequired:
+                "Informe o nome do serviço.",
+
+            invalidDuration:
+                "Informe uma duração válida.",
+
+            invalidPrice:
+                "Informe um preço válido.",
+        },
+
+        feedback: {
+            success: {
+                serviceCreated:
+                    "Serviço cadastrado com sucesso.",
+
+                serviceUpdated:
+                    "Serviço atualizado com sucesso.",
+
+                serviceDeactivated:
+                    "Serviço desativado com sucesso.",
+
+                serviceReactivated:
+                    "Serviço reativado com sucesso.",
+            },
+
+            error: {
+                saveFailed:
+                    "Não foi possível salvar o serviço.",
+
+                statusUpdateFailed:
+                    "Não foi possível alterar o status do serviço.",
+
+                duplicateName:
+                    "Já existe um serviço com este nome.",
+
+                unexpected:
+                    "Não foi possível concluir a operação.",
+            },
+        },
+    },
+
 
     accessibility: {
     mainNavigation: "Navegação principal",

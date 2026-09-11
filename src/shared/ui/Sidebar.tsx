@@ -50,6 +50,14 @@ export function Sidebar({
                     .customers,
         },
         {
+            href: "/services",
+            icon: "◇",
+            label:
+                dictionary
+                    .navigation
+                    .services,
+        },
+        {
             href: "/scheduling",
             icon: "□",
             label:
@@ -173,7 +181,7 @@ export function Sidebar({
                         (item) => {
                             const active =
                                 pathname ===
-                                item.href ||
+                                    item.href ||
                                 pathname.startsWith(
                                     `${item.href}/`
                                 );
@@ -230,24 +238,26 @@ export function Sidebar({
                     <button
                         type="button"
                         className="sidebar-collapse"
-                        onClick={onToggle}
+                        onClick={
+                            onToggle
+                        }
                         aria-label={
                             collapsed
                                 ? dictionary
-                                    .navigation
-                                    .expandMenu
+                                      .navigation
+                                      .expandMenu
                                 : dictionary
-                                    .navigation
-                                    .collapseMenu
+                                      .navigation
+                                      .collapseMenu
                         }
                         title={
                             collapsed
                                 ? dictionary
-                                    .navigation
-                                    .expandMenu
+                                      .navigation
+                                      .expandMenu
                                 : dictionary
-                                    .navigation
-                                    .collapseMenu
+                                      .navigation
+                                      .collapseMenu
                         }
                     >
                         <span aria-hidden="true">
