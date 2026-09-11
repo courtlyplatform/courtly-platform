@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import {
     useI18n,
 } from "./I18nProvider";
@@ -44,12 +46,14 @@ export function LanguageSwitcher() {
                         .portuguese
                 }
             >
-                <span
-                    className="language-flag"
+                <Image
+                    src="/images/brazil-flag.webp"
+                    alt=""
+                    width={24}
+                    height={16}
+                    className="language-flag-image"
                     aria-hidden="true"
-                >
-                    🇧🇷
-                </span>
+                />
             </button>
 
             <button
@@ -76,12 +80,14 @@ export function LanguageSwitcher() {
                         .english
                 }
             >
-                <span
-                    className="language-flag"
+                <Image
+                    src="/images/us-flag.webp"
+                    alt=""
+                    width={24}
+                    height={16}
+                    className="language-flag-image"
                     aria-hidden="true"
-                >
-                    🇺🇸
-                </span>
+                />
             </button>
         </div>
     );

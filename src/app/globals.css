@@ -630,10 +630,18 @@ select:focus-visible {
     box-shadow: var(--shadow);
 }
 
-.language-flag {
-    font-size: 17px;
+.language-flag-image {
+    display: block;
 
-    line-height: 1;
+    width: 24px;
+    height: 16px;
+
+    object-fit: cover;
+
+    border-radius: 2px;
+
+    pointer-events: none;
+    user-select: none;
 }
 
 .language-label {
@@ -1433,8 +1441,8 @@ select:focus-visible {
 
 
     /* -----------------------------------------------------
-       LANGUAGE SWITCHER
-       ----------------------------------------------------- */
+   LANGUAGE SWITCHER
+   ----------------------------------------------------- */
 
     .language-switcher {
         gap: 2px;
@@ -1451,11 +1459,6 @@ select:focus-visible {
     .language-label {
         display: none;
     }
-
-    .language-flag {
-        font-size: 18px;
-    }
-
 
     /* -----------------------------------------------------
        PAGE HEADER
