@@ -1,3 +1,4 @@
+
 export const ptBR = {
     common: {
         appName: "Courtly",
@@ -881,6 +882,27 @@ export const ptBR = {
             empty: "Nenhuma receita foi encontrada neste período.",
         },
 
+        revenueFilters: {
+            ariaLabel: "Filtros de receitas",
+            customer: "Aluno",
+            customerPlaceholder: "Buscar por nome ou documento",
+            service: "Serviço",
+            servicePlaceholder: "Buscar por serviço",
+            documentType: "Tipo de documento",
+            allDocumentTypes: "Todos",
+            status: "Status",
+            allStatuses: "Todos",
+            dueDate: "Vencimento",
+            sortBy: "Ordenar por",
+            defaultSort: "Padrão",
+            highestAmount: "Maior valor",
+            newestReference: "Competência mais recente",
+            oldestReference: "Competência mais antiga",
+            statusSort: "Status",
+            clear: "Limpar filtros",
+            noResults: "Nenhuma receita encontrada com os filtros selecionados.",
+        },
+
         expenses: {
             eyebrow: "Custo",
             title: "Custos",
@@ -904,6 +926,8 @@ export const ptBR = {
             description: "Descrição",
             customer: "Aluno",
             service: "Serviço",
+            documentType: "Tipo de documento",
+            documentNumber: "Número do documento",
             category: "Categoria",
             source: "Origem",
             referenceDate: "Competência",

@@ -729,6 +729,204 @@
 
 
 /* ============================================================
+   REVENUE FILTERS
+   Mirrors the filter panel used in Customers.
+   ============================================================ */
+
+.revenueFilters {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+    gap: 14px;
+
+    margin-bottom:
+        20px;
+
+    padding:
+        18px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        12px;
+
+    background:
+        var(--surface-secondary);
+
+    transition:
+        var(--transition-theme);
+}
+
+
+.revenueFilterField {
+    display: flex;
+
+    flex-direction:
+        column;
+
+    gap: 6px;
+}
+
+
+.revenueFilterField label {
+    color:
+        var(--text);
+
+    font-size:
+        0.8rem;
+
+    font-weight:
+        600;
+}
+
+
+.revenueFilterField input,
+.revenueFilterField select {
+    width: 100%;
+
+    min-height:
+        42px;
+
+    padding:
+        10px
+        12px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        8px;
+
+    background:
+        var(--input-background);
+
+    color:
+        var(--text);
+
+    font:
+        inherit;
+
+    outline:
+        none;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.revenueFilterField input::placeholder {
+    color:
+        var(--text-secondary);
+}
+
+
+.revenueFilterField input:hover,
+.revenueFilterField select:hover {
+    border-color:
+        var(--text-secondary);
+}
+
+
+.revenueFilterField input:focus,
+.revenueFilterField select:focus {
+    border-color:
+        var(--courtly-green);
+
+    box-shadow:
+        0 0 0 3px
+        var(--courtly-green-soft);
+}
+
+
+.revenueFilterField select option {
+    background:
+        var(--surface);
+
+    color:
+        var(--text);
+}
+
+
+.revenueFiltersClear {
+    min-height:
+        42px;
+
+    align-self:
+        end;
+
+    justify-self:
+        start;
+
+    padding:
+        0
+        16px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        8px;
+
+    background:
+        transparent;
+
+    color:
+        var(--text);
+
+    font:
+        inherit;
+
+    font-size:
+        0.82rem;
+
+    font-weight:
+        600;
+
+    cursor:
+        pointer;
+
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        opacity 0.15s ease;
+}
+
+
+.revenueFiltersClear:hover:not(:disabled) {
+    background:
+        var(--surface);
+
+    border-color:
+        var(--text-secondary);
+}
+
+
+.revenueFiltersClear:disabled {
+    opacity:
+        0.45;
+
+    cursor:
+        not-allowed;
+}
+
+
+/* ============================================================
    TABLE
    ============================================================ */
 
@@ -859,40 +1057,12 @@
 
 
 /* ============================================================
-   CUSTOMER IDENTITY
+   REVENUE DOCUMENT
    ============================================================ */
 
-.customerIdentity {
-    min-width:
-        180px;
-
-    display: flex;
-
-    align-items:
-        center;
-
-    gap: 6px;
-
+.documentNumber {
     color:
         var(--text);
-}
-
-
-.customerIdentity strong {
-    color:
-        var(--text);
-
-    font-weight:
-        650;
-}
-
-
-.customerDocument {
-    color:
-        var(--text-secondary);
-
-    font-size:
-        0.82rem;
 
     white-space:
         nowrap;
@@ -980,6 +1150,213 @@
 :global([data-theme="dark"]) .rowActions .dangerAction {
     color:
         #f08a8a;
+}
+
+
+/* ============================================================
+   MOBILE FINANCIAL CARDS
+   Desktop keeps the data tables. On mobile, each financial
+   entry follows the same card language used by Students and
+   Services.
+   ============================================================ */
+
+.mobileList {
+    display: none;
+}
+
+
+.mobileCard {
+    padding: 18px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        12px;
+
+    background:
+        var(--surface);
+
+    color:
+        var(--text);
+
+    box-shadow:
+        var(--shadow);
+
+    transition:
+        var(--transition-theme);
+}
+
+
+.mobileCardHeader {
+    display: flex;
+
+    align-items:
+        flex-start;
+
+    justify-content:
+        space-between;
+
+    gap: 16px;
+}
+
+
+.mobileCardHeader > div {
+    min-width: 0;
+}
+
+
+.mobileCardHeader h2 {
+    margin:
+        4px
+        0
+        0;
+
+    color:
+        var(--text);
+
+    font-size:
+        18px;
+
+    line-height:
+        1.2;
+
+    overflow-wrap:
+        anywhere;
+}
+
+
+.mobileCardLabel {
+    color:
+        var(--text-secondary);
+
+    font-size:
+        11px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        0.05em;
+
+    text-transform:
+        uppercase;
+}
+
+
+.mobileRecurring {
+    display:
+        inline-flex;
+
+    margin-top:
+        8px;
+
+    padding:
+        4px
+        8px;
+
+    border-radius:
+        999px;
+
+    background:
+        var(--surface-secondary);
+
+    color:
+        var(--text-secondary);
+
+    font-size:
+        11px;
+
+    font-weight:
+        600;
+}
+
+
+.mobileDetails {
+    display: grid;
+
+    gap: 14px;
+
+    margin:
+        20px
+        0;
+}
+
+
+.mobileDetails div {
+    min-width: 0;
+}
+
+
+.mobileDetails dt {
+    margin-bottom:
+        4px;
+
+    color:
+        var(--text-secondary);
+
+    font-size:
+        11px;
+
+    font-weight:
+        600;
+
+    letter-spacing:
+        0.02em;
+
+    text-transform:
+        uppercase;
+}
+
+
+.mobileDetails dd {
+    margin: 0;
+
+    color:
+        var(--text);
+
+    font-size:
+        14px;
+
+    overflow-wrap:
+        anywhere;
+}
+
+
+.mobileAmount {
+    font-weight:
+        700;
+}
+
+
+.mobileActions {
+    display: flex;
+
+    gap: 10px;
+
+    flex-direction:
+        column;
+}
+
+
+.mobileActions > * {
+    width: 100%;
+
+    flex:
+        1;
+}
+
+
+.mobileDangerAction {
+    color:
+        #b83a3a !important;
+}
+
+
+:global([data-theme="dark"]) .mobileDangerAction {
+    color:
+        #f08a8a !important;
 }
 
 
@@ -1387,6 +1764,18 @@
         grid-template-columns:
             1fr;
     }
+
+
+    .revenueFilters {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
+    }
 }
 
 
@@ -1396,12 +1785,57 @@
 
 @media (
     max-width:
-        760px
+        767px
 ) {
 
     .page {
         gap:
             20px;
+    }
+
+
+    .desktopOnly {
+        display:
+            none;
+    }
+
+
+    .mobileList {
+        display:
+            grid;
+
+        gap:
+            12px;
+    }
+
+
+    .sectionCard {
+        padding:
+            0;
+
+        border:
+            0;
+
+        border-radius:
+            0;
+
+        background:
+            transparent;
+
+        box-shadow:
+            none;
+    }
+
+
+    .sectionHeading {
+        margin-bottom:
+            18px;
+    }
+
+
+    .sectionHeading :global(.primary-button) {
+        width:
+            100%;
     }
 
 
@@ -1434,9 +1868,19 @@
 
     .summaryGrid,
     .kpiStrip,
-    .formRow {
+    .formRow,
+    .revenueFilters {
         grid-template-columns:
             1fr;
+    }
+
+
+    .revenueFiltersClear {
+        width:
+            100%;
+
+        justify-self:
+            stretch;
     }
 
 
@@ -1516,8 +1960,13 @@
 ) {
 
     .summaryCard,
-    .chartCard,
-    .sectionCard {
+    .chartCard {
+        padding:
+            16px;
+    }
+
+
+    .mobileCard {
         padding:
             16px;
     }

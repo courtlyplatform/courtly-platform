@@ -11,6 +11,7 @@ import {
 } from "@/modules/customers/documents/documentFormatter";
 
 import {
+    DOCUMENT_TYPE_OPTIONS,
     isDocumentType,
 } from "@/modules/customers/documents/documentTypes";
 
@@ -86,6 +87,54 @@ type RevenueStatusConfirmation = {
     revenue: FinancialRevenue;
     status: "PAID" | "CANCELLED";
 } | null;
+
+type RevenueStatusFilter =
+    | ""
+    | FinancialEntryStatus;
+
+type RevenueSortOption =
+    | ""
+    | "amount-desc"
+    | "reference-desc"
+    | "reference-asc"
+    | "status";
+
+const REVENUE_STATUS_ORDER:
+    Record<
+        FinancialEntryStatus,
+        number
+    > = {
+        OVERDUE: 0,
+        PENDING: 1,
+        PAID: 2,
+        CANCELLED: 3,
+    };
+
+function normalizeSearchText(
+    value: string
+): string {
+
+    return value
+        .normalize(
+            "NFD"
+        )
+        .replace(
+            /[\u0300-\u036f]/g,
+            ""
+        )
+        .toLowerCase()
+        .trim();
+}
+
+function normalizeDocumentSearch(
+    value: string
+): string {
+
+    return value.replace(
+        /\D/g,
+        ""
+    );
+}
 
 function getRevenueCustomerDocument(
     revenue: FinancialRevenue
@@ -164,6 +213,46 @@ export function FinancialClient({
             RevenueStatusConfirmation
         >(null);
 
+    const [
+        revenueCustomerFilter,
+        setRevenueCustomerFilter,
+    ] =
+        useState("");
+
+    const [
+        revenueServiceFilter,
+        setRevenueServiceFilter,
+    ] =
+        useState("");
+
+    const [
+        revenueDocumentTypeFilter,
+        setRevenueDocumentTypeFilter,
+    ] =
+        useState("");
+
+    const [
+        revenueStatusFilter,
+        setRevenueStatusFilter,
+    ] =
+        useState<
+            RevenueStatusFilter
+        >("");
+
+    const [
+        revenueDueDateFilter,
+        setRevenueDueDateFilter,
+    ] =
+        useState("");
+
+    const [
+        revenueSort,
+        setRevenueSort,
+    ] =
+        useState<
+            RevenueSortOption
+        >("");
+
     const [isPending, startTransition] =
         useTransition();
 
@@ -190,6 +279,184 @@ export function FinancialClient({
             [initialData.categories]
         );
 
+    const filteredRevenues =
+        useMemo(
+            () => {
+
+                const normalizedCustomerFilter =
+                    normalizeSearchText(
+                        revenueCustomerFilter
+                    );
+
+                const normalizedCustomerDocumentFilter =
+                    normalizeDocumentSearch(
+                        revenueCustomerFilter
+                    );
+
+                const normalizedServiceFilter =
+                    normalizeSearchText(
+                        revenueServiceFilter
+                    );
+
+                const filtered =
+                    initialData.revenues.filter(
+                        (
+                            revenue
+                        ) => {
+
+                            const normalizedCustomerName =
+                                normalizeSearchText(
+                                    revenue.customerName ??
+                                    ""
+                                );
+
+                            const normalizedCustomerDocument =
+                                normalizeDocumentSearch(
+                                    revenue.customerDocumentNumber ??
+                                    ""
+                                );
+
+                            const normalizedServiceName =
+                                normalizeSearchText(
+                                    revenue.activityName ??
+                                    ""
+                                );
+
+                            const matchesCustomer =
+                                !revenueCustomerFilter ||
+                                normalizedCustomerName.includes(
+                                    normalizedCustomerFilter
+                                ) ||
+                                (
+                                    Boolean(
+                                        normalizedCustomerDocumentFilter
+                                    ) &&
+                                    normalizedCustomerDocument.includes(
+                                        normalizedCustomerDocumentFilter
+                                    )
+                                );
+
+                            const matchesService =
+                                !normalizedServiceFilter ||
+                                normalizedServiceName.includes(
+                                    normalizedServiceFilter
+                                );
+
+                            const matchesDocumentType =
+                                !revenueDocumentTypeFilter ||
+                                revenue.customerDocumentType ===
+                                    revenueDocumentTypeFilter;
+
+                            const matchesStatus =
+                                !revenueStatusFilter ||
+                                revenue.status ===
+                                    revenueStatusFilter;
+
+                            const matchesDueDate =
+                                !revenueDueDateFilter ||
+                                revenue.dueDate ===
+                                    revenueDueDateFilter;
+
+                            return (
+                                matchesCustomer &&
+                                matchesService &&
+                                matchesDocumentType &&
+                                matchesStatus &&
+                                matchesDueDate
+                            );
+                        }
+                    );
+
+                return [
+                    ...filtered,
+                ].sort(
+                    (
+                        left,
+                        right
+                    ) => {
+
+                        if (
+                            revenueSort ===
+                            "amount-desc"
+                        ) {
+
+                            return (
+                                right.amount -
+                                left.amount
+                            );
+                        }
+
+                        if (
+                            revenueSort ===
+                            "reference-desc"
+                        ) {
+
+                            return right.referenceDate.localeCompare(
+                                left.referenceDate
+                            );
+                        }
+
+                        if (
+                            revenueSort ===
+                            "reference-asc"
+                        ) {
+
+                            return left.referenceDate.localeCompare(
+                                right.referenceDate
+                            );
+                        }
+
+                        if (
+                            revenueSort ===
+                            "status"
+                        ) {
+
+                            const statusDifference =
+                                REVENUE_STATUS_ORDER[
+                                    left.status
+                                ] -
+                                REVENUE_STATUS_ORDER[
+                                    right.status
+                                ];
+
+                            if (
+                                statusDifference !==
+                                0
+                            ) {
+
+                                return statusDifference;
+                            }
+
+                            return left.dueDate.localeCompare(
+                                right.dueDate
+                            );
+                        }
+
+                        return 0;
+                    }
+                );
+            },
+            [
+                initialData.revenues,
+                revenueCustomerFilter,
+                revenueServiceFilter,
+                revenueDocumentTypeFilter,
+                revenueStatusFilter,
+                revenueDueDateFilter,
+                revenueSort,
+            ]
+        );
+
+    const hasActiveRevenueFilters =
+        Boolean(
+            revenueCustomerFilter ||
+            revenueServiceFilter ||
+            revenueDocumentTypeFilter ||
+            revenueStatusFilter ||
+            revenueDueDateFilter ||
+            revenueSort
+        );
+
     function changePeriod(
         value: string
     ) {
@@ -201,6 +468,33 @@ export function FinancialClient({
             `/financial?period=${encodeURIComponent(
                 value
             )}`
+        );
+    }
+
+    function clearRevenueFilters() {
+
+        setRevenueCustomerFilter(
+            ""
+        );
+
+        setRevenueServiceFilter(
+            ""
+        );
+
+        setRevenueDocumentTypeFilter(
+            ""
+        );
+
+        setRevenueStatusFilter(
+            ""
+        );
+
+        setRevenueDueDateFilter(
+            ""
+        );
+
+        setRevenueSort(
+            ""
         );
     }
 
@@ -688,6 +982,7 @@ export function FinancialClient({
                                     t.revenues.title
                                 }
                             </h2>
+
                             <p>
                                 {
                                     t.revenues.description
@@ -717,207 +1012,827 @@ export function FinancialClient({
                             }
                         />
                     ) : (
-                        <div
-                            className={
-                                styles.tableScroll
-                            }
-                        >
-                            <table
+                        <>
+                            <section
                                 className={
-                                    styles.table
+                                    styles.revenueFilters
+                                }
+                                aria-label={
+                                    t.revenueFilters
+                                        .ariaLabel
                                 }
                             >
-                                <thead>
-                                    <tr>
-                                        <th>
+                                <div
+                                    className={
+                                        styles.revenueFilterField
+                                    }
+                                >
+                                    <label
+                                        htmlFor="financial-revenue-customer-filter"
+                                    >
+                                        {
+                                            t.revenueFilters
+                                                .customer
+                                        }
+                                    </label>
+
+                                    <input
+                                        id="financial-revenue-customer-filter"
+                                        type="search"
+                                        value={
+                                            revenueCustomerFilter
+                                        }
+                                        placeholder={
+                                            t.revenueFilters
+                                                .customerPlaceholder
+                                        }
+                                        onChange={(
+                                            event
+                                        ) =>
+                                            setRevenueCustomerFilter(
+                                                event
+                                                    .target
+                                                    .value
+                                            )
+                                        }
+                                    />
+                                </div>
+
+                                <div
+                                    className={
+                                        styles.revenueFilterField
+                                    }
+                                >
+                                    <label
+                                        htmlFor="financial-revenue-service-filter"
+                                    >
+                                        {
+                                            t.revenueFilters
+                                                .service
+                                        }
+                                    </label>
+
+                                    <input
+                                        id="financial-revenue-service-filter"
+                                        type="search"
+                                        value={
+                                            revenueServiceFilter
+                                        }
+                                        placeholder={
+                                            t.revenueFilters
+                                                .servicePlaceholder
+                                        }
+                                        onChange={(
+                                            event
+                                        ) =>
+                                            setRevenueServiceFilter(
+                                                event
+                                                    .target
+                                                    .value
+                                            )
+                                        }
+                                    />
+                                </div>
+
+                                <div
+                                    className={
+                                        styles.revenueFilterField
+                                    }
+                                >
+                                    <label
+                                        htmlFor="financial-revenue-document-type-filter"
+                                    >
+                                        {
+                                            t.revenueFilters
+                                                .documentType
+                                        }
+                                    </label>
+
+                                    <select
+                                        id="financial-revenue-document-type-filter"
+                                        value={
+                                            revenueDocumentTypeFilter
+                                        }
+                                        onChange={(
+                                            event
+                                        ) =>
+                                            setRevenueDocumentTypeFilter(
+                                                event
+                                                    .target
+                                                    .value
+                                            )
+                                        }
+                                    >
+                                        <option value="">
                                             {
-                                                t.table.description
+                                                t.revenueFilters
+                                                    .allDocumentTypes
                                             }
-                                        </th>
+                                        </option>
 
-                                        <th>
-                                            {
-                                                t.table.customer
-                                            }
-                                        </th>
-
-                                        <th>
-                                            {
-                                                t.table.service
-                                            }
-                                        </th>
-
-                                        <th>
-                                            {
-                                                t.table.source
-                                            }
-                                        </th>
-
-                                        <th>
-                                            {
-                                                t.table.referenceDate
-                                            }
-                                        </th>
-
-                                        <th>
-                                            {
-                                                t.table.dueDate
-                                            }
-                                        </th>
-
-                                        <th>
-                                            {
-                                                t.table.amount
-                                            }
-                                        </th>
-
-                                        <th>
-                                            {
-                                                t.table.status
-                                            }
-                                        </th>
-
-                                        <th>
-                                            {
-                                                t.table.actions
-                                            }
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {initialData.revenues.map(
-                                        (
-                                            revenue
-                                        ) => {
-                                            const customerDocument =
-                                                getRevenueCustomerDocument(
-                                                    revenue
-                                                );
-
-                                            return (
-                                                <tr
+                                        {DOCUMENT_TYPE_OPTIONS.map(
+                                            (
+                                                option
+                                            ) => (
+                                                <option
                                                     key={
-                                                        revenue.id
+                                                        option.value
+                                                    }
+                                                    value={
+                                                        option.value
                                                     }
                                                 >
-                                                    <td>
-                                                        <strong>
-                                                            {
-                                                                revenue.description
+                                                    {
+                                                        option.label
+                                                    }
+                                                </option>
+                                            )
+                                        )}
+                                    </select>
+                                </div>
+
+                                <div
+                                    className={
+                                        styles.revenueFilterField
+                                    }
+                                >
+                                    <label
+                                        htmlFor="financial-revenue-status-filter"
+                                    >
+                                        {
+                                            t.revenueFilters
+                                                .status
+                                        }
+                                    </label>
+
+                                    <select
+                                        id="financial-revenue-status-filter"
+                                        value={
+                                            revenueStatusFilter
+                                        }
+                                        onChange={(
+                                            event
+                                        ) =>
+                                            setRevenueStatusFilter(
+                                                event
+                                                    .target
+                                                    .value as
+                                                    RevenueStatusFilter
+                                            )
+                                        }
+                                    >
+                                        <option value="">
+                                            {
+                                                t.revenueFilters
+                                                    .allStatuses
+                                            }
+                                        </option>
+
+                                        <option value="PENDING">
+                                            {
+                                                t.status.pending
+                                            }
+                                        </option>
+
+                                        <option value="PAID">
+                                            {
+                                                t.status.paid
+                                            }
+                                        </option>
+
+                                        <option value="OVERDUE">
+                                            {
+                                                t.status.overdue
+                                            }
+                                        </option>
+
+                                        <option value="CANCELLED">
+                                            {
+                                                t.status.cancelled
+                                            }
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div
+                                    className={
+                                        styles.revenueFilterField
+                                    }
+                                >
+                                    <label
+                                        htmlFor="financial-revenue-due-date-filter"
+                                    >
+                                        {
+                                            t.revenueFilters
+                                                .dueDate
+                                        }
+                                    </label>
+
+                                    <input
+                                        id="financial-revenue-due-date-filter"
+                                        type="date"
+                                        value={
+                                            revenueDueDateFilter
+                                        }
+                                        onChange={(
+                                            event
+                                        ) =>
+                                            setRevenueDueDateFilter(
+                                                event
+                                                    .target
+                                                    .value
+                                            )
+                                        }
+                                    />
+                                </div>
+
+                                <div
+                                    className={
+                                        styles.revenueFilterField
+                                    }
+                                >
+                                    <label
+                                        htmlFor="financial-revenue-sort"
+                                    >
+                                        {
+                                            t.revenueFilters
+                                                .sortBy
+                                        }
+                                    </label>
+
+                                    <select
+                                        id="financial-revenue-sort"
+                                        value={
+                                            revenueSort
+                                        }
+                                        onChange={(
+                                            event
+                                        ) =>
+                                            setRevenueSort(
+                                                event
+                                                    .target
+                                                    .value as
+                                                    RevenueSortOption
+                                            )
+                                        }
+                                    >
+                                        <option value="">
+                                            {
+                                                t.revenueFilters
+                                                    .defaultSort
+                                            }
+                                        </option>
+
+                                        <option value="amount-desc">
+                                            {
+                                                t.revenueFilters
+                                                    .highestAmount
+                                            }
+                                        </option>
+
+                                        <option value="reference-desc">
+                                            {
+                                                t.revenueFilters
+                                                    .newestReference
+                                            }
+                                        </option>
+
+                                        <option value="reference-asc">
+                                            {
+                                                t.revenueFilters
+                                                    .oldestReference
+                                            }
+                                        </option>
+
+                                        <option value="status">
+                                            {
+                                                t.revenueFilters
+                                                    .statusSort
+                                            }
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className={
+                                        styles.revenueFiltersClear
+                                    }
+                                    onClick={
+                                        clearRevenueFilters
+                                    }
+                                    disabled={
+                                        !hasActiveRevenueFilters
+                                    }
+                                >
+                                    {
+                                        t.revenueFilters
+                                            .clear
+                                    }
+                                </button>
+                            </section>
+
+                            {filteredRevenues.length ===
+                            0 ? (
+                                <EmptyMessage
+                                    text={
+                                        t.revenueFilters
+                                            .noResults
+                                    }
+                                />
+                            ) : (
+                                <>
+                                    <div
+                                        className={`${styles.tableScroll} ${styles.desktopOnly}`}
+                                    >
+                                    <table
+                                        className={
+                                            styles.table
+                                        }
+                                    >
+                                        <thead>
+                                            <tr>
+                                                <th>
+                                                    {
+                                                        t.table.service
+                                                    }
+                                                </th>
+
+                                                <th>
+                                                    {
+                                                        t.table.customer
+                                                    }
+                                                </th>
+
+                                                <th>
+                                                    {
+                                                        t.table.documentType
+                                                    }
+                                                </th>
+
+                                                <th>
+                                                    {
+                                                        t.table.documentNumber
+                                                    }
+                                                </th>
+
+                                                <th>
+                                                    {
+                                                        t.table.source
+                                                    }
+                                                </th>
+
+                                                <th>
+                                                    {
+                                                        t.table.referenceDate
+                                                    }
+                                                </th>
+
+                                                <th>
+                                                    {
+                                                        t.table.dueDate
+                                                    }
+                                                </th>
+
+                                                <th>
+                                                    {
+                                                        t.table.amount
+                                                    }
+                                                </th>
+
+                                                <th>
+                                                    {
+                                                        t.table.status
+                                                    }
+                                                </th>
+
+                                                <th>
+                                                    {
+                                                        t.table.actions
+                                                    }
+                                                </th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            {filteredRevenues.map(
+                                                (
+                                                    revenue
+                                                ) => {
+
+                                                    const customerDocument =
+                                                        getRevenueCustomerDocument(
+                                                            revenue
+                                                        );
+
+                                                    const documentTypeLabel =
+                                                        DOCUMENT_TYPE_OPTIONS.find(
+                                                            (
+                                                                option
+                                                            ) =>
+                                                                option.value ===
+                                                                revenue.customerDocumentType
+                                                        )
+                                                            ?.label ??
+                                                        revenue.customerDocumentType ??
+                                                        "—";
+
+                                                    return (
+                                                        <tr
+                                                            key={
+                                                                revenue.id
                                                             }
-                                                        </strong>
-                                                    </td>
-
-                                                    <td>
-                                                        {revenue.customerName ? (
-                                                            <div
-                                                                className={
-                                                                    styles
-                                                                        .customerIdentity
-                                                                }
-                                                            >
-                                                                <strong>
-                                                                    {
-                                                                        revenue
-                                                                            .customerName
-                                                                    }
-                                                                </strong>
-
-                                                                {customerDocument && (
+                                                        >
+                                                            <td>
+                                                                {revenue.activityName ? (
+                                                                    <strong>
+                                                                        {
+                                                                            revenue.activityName
+                                                                        }
+                                                                    </strong>
+                                                                ) : (
                                                                     <span
                                                                         className={
-                                                                            styles
-                                                                                .customerDocument
+                                                                            styles.mutedValue
                                                                         }
                                                                     >
-                                                                        {" - "}
+                                                                        —
+                                                                    </span>
+                                                                )}
+                                                            </td>
+
+                                                            <td>
+                                                                {revenue.customerName ? (
+                                                                    <strong>
+                                                                        {
+                                                                            revenue.customerName
+                                                                        }
+                                                                    </strong>
+                                                                ) : (
+                                                                    <span
+                                                                        className={
+                                                                            styles.mutedValue
+                                                                        }
+                                                                    >
+                                                                        —
+                                                                    </span>
+                                                                )}
+                                                            </td>
+
+                                                            <td>
+                                                                {
+                                                                    documentTypeLabel
+                                                                }
+                                                            </td>
+
+                                                            <td>
+                                                                {customerDocument ? (
+                                                                    <span
+                                                                        className={
+                                                                            styles.documentNumber
+                                                                        }
+                                                                    >
                                                                         {
                                                                             customerDocument
                                                                         }
                                                                     </span>
+                                                                ) : (
+                                                                    <span
+                                                                        className={
+                                                                            styles.mutedValue
+                                                                        }
+                                                                    >
+                                                                        —
+                                                                    </span>
                                                                 )}
-                                                            </div>
-                                                        ) : (
-                                                            <span
-                                                                className={
-                                                                    styles
-                                                                        .mutedValue
-                                                                }
-                                                            >
-                                                                —
-                                                            </span>
-                                                        )}
-                                                    </td>
+                                                            </td>
 
-                                                    <td>
-                                                        {revenue.activityName ? (
-                                                            <strong>
+                                                            <td>
                                                                 {
-                                                                    revenue.activityName
+                                                                    revenue.source ===
+                                                                    "SUBSCRIPTION"
+                                                                        ? t.sources.subscription
+                                                                        : t.sources.manual
                                                                 }
-                                                            </strong>
-                                                        ) : (
-                                                            <span
-                                                                className={
-                                                                    styles.mutedValue
-                                                                }
-                                                            >
-                                                                —
-                                                            </span>
-                                                        )}
-                                                    </td>
+                                                            </td>
 
-                                                    <td>
-                                                        {
-                                                            revenue.source ===
-                                                            "SUBSCRIPTION"
-                                                                ? t.sources.subscription
-                                                                : t.sources.manual
+                                                            <td>
+                                                                {formatDate(
+                                                                    revenue.referenceDate,
+                                                                    locale
+                                                                )}
+                                                            </td>
+
+                                                            <td>
+                                                                {formatDate(
+                                                                    revenue.dueDate,
+                                                                    locale
+                                                                )}
+                                                            </td>
+
+                                                            <td>
+                                                                {formatCurrency(
+                                                                    revenue.amount,
+                                                                    revenue.currencyCode,
+                                                                    locale
+                                                                )}
+                                                            </td>
+
+                                                            <td>
+                                                                <StatusBadge
+                                                                    status={
+                                                                        revenue.status
+                                                                    }
+                                                                    t={t}
+                                                                />
+                                                            </td>
+
+                                                            <td>
+                                                                <div
+                                                                    className={
+                                                                        styles.rowActions
+                                                                    }
+                                                                >
+                                                                    {revenue.source ===
+                                                                        "MANUAL" && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                openEditRevenue(
+                                                                                    revenue
+                                                                                )
+                                                                            }
+                                                                            disabled={
+                                                                                isPending
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                t.actions.edit
+                                                                            }
+                                                                        </button>
+                                                                    )}
+
+                                                                    {revenue.status !==
+                                                                        "PAID" &&
+                                                                        revenue.status !==
+                                                                            "CANCELLED" && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                requestRevenueStatusChange(
+                                                                                    revenue,
+                                                                                    "PAID"
+                                                                                )
+                                                                            }
+                                                                            disabled={
+                                                                                isPending
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                t.actions.markPaid
+                                                                            }
+                                                                        </button>
+                                                                    )}
+
+                                                                    {revenue.status ===
+                                                                        "PAID" && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                changeRevenueStatus(
+                                                                                    revenue,
+                                                                                    "PENDING"
+                                                                                )
+                                                                            }
+                                                                            disabled={
+                                                                                isPending
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                t.actions.markPending
+                                                                            }
+                                                                        </button>
+                                                                    )}
+
+                                                                    {revenue.status !==
+                                                                        "CANCELLED" && (
+                                                                        <button
+                                                                            type="button"
+                                                                            className={
+                                                                                styles.dangerAction
+                                                                            }
+                                                                            onClick={() =>
+                                                                                requestRevenueStatusChange(
+                                                                                    revenue,
+                                                                                    "CANCELLED"
+                                                                                )
+                                                                            }
+                                                                            disabled={
+                                                                                isPending
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                t.actions.cancelEntry
+                                                                            }
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                }
+                                            )}
+                                        </tbody>
+                                    </table>
+                                    </div>
+
+                                    <section
+                                        className={
+                                            styles.mobileList
+                                        }
+                                    >
+                                        {filteredRevenues.map(
+                                            (
+                                                revenue
+                                            ) => {
+                                                const customerDocument =
+                                                    getRevenueCustomerDocument(
+                                                        revenue
+                                                    );
+
+                                                const documentTypeLabel =
+                                                    DOCUMENT_TYPE_OPTIONS.find(
+                                                        (
+                                                            option
+                                                        ) =>
+                                                            option.value ===
+                                                            revenue.customerDocumentType
+                                                    )
+                                                        ?.label ??
+                                                    revenue.customerDocumentType ??
+                                                    "—";
+
+                                                return (
+                                                    <article
+                                                        key={
+                                                            revenue.id
                                                         }
-                                                    </td>
-
-                                                    <td>
-                                                        {formatDate(
-                                                            revenue.referenceDate,
-                                                            locale
-                                                        )}
-                                                    </td>
-
-                                                    <td>
-                                                        {formatDate(
-                                                            revenue.dueDate,
-                                                            locale
-                                                        )}
-                                                    </td>
-
-                                                    <td>
-                                                        {formatCurrency(
-                                                            revenue.amount,
-                                                            revenue.currencyCode,
-                                                            locale
-                                                        )}
-                                                    </td>
-
-                                                    <td>
-                                                        <StatusBadge
-                                                            status={
-                                                                revenue.status
-                                                            }
-                                                            t={t}
-                                                        />
-                                                    </td>
-
-                                                    <td>
+                                                        className={
+                                                            styles.mobileCard
+                                                        }
+                                                    >
                                                         <div
                                                             className={
-                                                                styles.rowActions
+                                                                styles.mobileCardHeader
+                                                            }
+                                                        >
+                                                            <div>
+                                                                <span
+                                                                    className={
+                                                                        styles.mobileCardLabel
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        t.revenues.eyebrow
+                                                                    }
+                                                                </span>
+
+                                                                <h2>
+                                                                    {
+                                                                        revenue.activityName ??
+                                                                        "—"
+                                                                    }
+                                                                </h2>
+                                                            </div>
+
+                                                            <StatusBadge
+                                                                status={
+                                                                    revenue.status
+                                                                }
+                                                                t={t}
+                                                            />
+                                                        </div>
+
+                                                        <dl
+                                                            className={
+                                                                styles.mobileDetails
+                                                            }
+                                                        >
+                                                            <div>
+                                                                <dt>
+                                                                    {
+                                                                        t.table.customer
+                                                                    }
+                                                                </dt>
+                                                                <dd>
+                                                                    {
+                                                                        revenue.customerName ??
+                                                                        "—"
+                                                                    }
+                                                                </dd>
+                                                            </div>
+
+                                                            <div>
+                                                                <dt>
+                                                                    {
+                                                                        t.table.documentType
+                                                                    }
+                                                                </dt>
+                                                                <dd>
+                                                                    {
+                                                                        documentTypeLabel
+                                                                    }
+                                                                </dd>
+                                                            </div>
+
+                                                            <div>
+                                                                <dt>
+                                                                    {
+                                                                        t.table.documentNumber
+                                                                    }
+                                                                </dt>
+                                                                <dd>
+                                                                    {
+                                                                        customerDocument ??
+                                                                        "—"
+                                                                    }
+                                                                </dd>
+                                                            </div>
+
+                                                            <div>
+                                                                <dt>
+                                                                    {
+                                                                        t.table.source
+                                                                    }
+                                                                </dt>
+                                                                <dd>
+                                                                    {
+                                                                        revenue.source ===
+                                                                        "SUBSCRIPTION"
+                                                                            ? t.sources.subscription
+                                                                            : t.sources.manual
+                                                                    }
+                                                                </dd>
+                                                            </div>
+
+                                                            <div>
+                                                                <dt>
+                                                                    {
+                                                                        t.table.referenceDate
+                                                                    }
+                                                                </dt>
+                                                                <dd>
+                                                                    {formatDate(
+                                                                        revenue.referenceDate,
+                                                                        locale
+                                                                    )}
+                                                                </dd>
+                                                            </div>
+
+                                                            <div>
+                                                                <dt>
+                                                                    {
+                                                                        t.table.dueDate
+                                                                    }
+                                                                </dt>
+                                                                <dd>
+                                                                    {formatDate(
+                                                                        revenue.dueDate,
+                                                                        locale
+                                                                    )}
+                                                                </dd>
+                                                            </div>
+
+                                                            <div>
+                                                                <dt>
+                                                                    {
+                                                                        t.table.amount
+                                                                    }
+                                                                </dt>
+                                                                <dd
+                                                                    className={
+                                                                        styles.mobileAmount
+                                                                    }
+                                                                >
+                                                                    {formatCurrency(
+                                                                        revenue.amount,
+                                                                        revenue.currencyCode,
+                                                                        locale
+                                                                    )}
+                                                                </dd>
+                                                            </div>
+                                                        </dl>
+
+                                                        <div
+                                                            className={
+                                                                styles.mobileActions
                                                             }
                                                         >
                                                             {revenue.source ===
                                                                 "MANUAL" && (
                                                                 <button
                                                                     type="button"
+                                                                    className="secondary-button"
                                                                     onClick={() =>
                                                                         openEditRevenue(
                                                                             revenue
@@ -937,28 +1852,30 @@ export function FinancialClient({
                                                                 "PAID" &&
                                                                 revenue.status !==
                                                                     "CANCELLED" && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() =>
-                                                                        requestRevenueStatusChange(
-                                                                            revenue,
-                                                                            "PAID"
-                                                                        )
-                                                                    }
-                                                                    disabled={
-                                                                        isPending
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        t.actions.markPaid
-                                                                    }
-                                                                </button>
-                                                            )}
+                                                                    <button
+                                                                        type="button"
+                                                                        className="secondary-button"
+                                                                        onClick={() =>
+                                                                            requestRevenueStatusChange(
+                                                                                revenue,
+                                                                                "PAID"
+                                                                            )
+                                                                        }
+                                                                        disabled={
+                                                                            isPending
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            t.actions.markPaid
+                                                                        }
+                                                                    </button>
+                                                                )}
 
                                                             {revenue.status ===
                                                                 "PAID" && (
                                                                 <button
                                                                     type="button"
+                                                                    className="secondary-button"
                                                                     onClick={() =>
                                                                         changeRevenueStatus(
                                                                             revenue,
@@ -979,9 +1896,7 @@ export function FinancialClient({
                                                                 "CANCELLED" && (
                                                                 <button
                                                                     type="button"
-                                                                    className={
-                                                                        styles.dangerAction
-                                                                    }
+                                                                    className={`${styles.mobileDangerAction} secondary-button`}
                                                                     onClick={() =>
                                                                         requestRevenueStatusChange(
                                                                             revenue,
@@ -998,14 +1913,14 @@ export function FinancialClient({
                                                                 </button>
                                                             )}
                                                         </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        }
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                                    </article>
+                                                );
+                                            }
+                                        )}
+                                    </section>
+                                </>
+                            )}
+                        </>
                     )}
                 </section>
             )}
@@ -1056,11 +1971,10 @@ export function FinancialClient({
                             }
                         />
                     ) : (
-                        <div
-                            className={
-                                styles.tableScroll
-                            }
-                        >
+                        <>
+                            <div
+                                className={`${styles.tableScroll} ${styles.desktopOnly}`}
+                            >
                             <table
                                 className={
                                     styles.table
@@ -1267,7 +2181,237 @@ export function FinancialClient({
                                     )}
                                 </tbody>
                             </table>
-                        </div>
+                            </div>
+
+                            <section
+                                className={
+                                    styles.mobileList
+                                }
+                            >
+                                {initialData.expenses.map(
+                                    (
+                                        expense
+                                    ) => {
+                                        const category =
+                                            categoryById.get(
+                                                expense.categoryId
+                                            );
+
+                                        return (
+                                            <article
+                                                key={
+                                                    expense.id
+                                                }
+                                                className={
+                                                    styles.mobileCard
+                                                }
+                                            >
+                                                <div
+                                                    className={
+                                                        styles.mobileCardHeader
+                                                    }
+                                                >
+                                                    <div>
+                                                        <span
+                                                            className={
+                                                                styles.mobileCardLabel
+                                                            }
+                                                        >
+                                                            {
+                                                                t.expenses.eyebrow
+                                                            }
+                                                        </span>
+
+                                                        <h2>
+                                                            {
+                                                                expense.description
+                                                            }
+                                                        </h2>
+
+                                                        {expense.recurrenceId && (
+                                                            <span
+                                                                className={
+                                                                    styles.mobileRecurring
+                                                                }
+                                                            >
+                                                                {
+                                                                    t.expenses.recurringBadge
+                                                                }
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <StatusBadge
+                                                        status={
+                                                            expense.status
+                                                        }
+                                                        t={t}
+                                                    />
+                                                </div>
+
+                                                <dl
+                                                    className={
+                                                        styles.mobileDetails
+                                                    }
+                                                >
+                                                    <div>
+                                                        <dt>
+                                                            {
+                                                                t.table.category
+                                                            }
+                                                        </dt>
+                                                        <dd>
+                                                            {resolveCategoryName(
+                                                                category?.code ??
+                                                                    null,
+                                                                category?.name ??
+                                                                    "—",
+                                                                t
+                                                            )}
+                                                        </dd>
+                                                    </div>
+
+                                                    <div>
+                                                        <dt>
+                                                            {
+                                                                t.table.referenceDate
+                                                            }
+                                                        </dt>
+                                                        <dd>
+                                                            {formatDate(
+                                                                expense.referenceDate,
+                                                                locale
+                                                            )}
+                                                        </dd>
+                                                    </div>
+
+                                                    <div>
+                                                        <dt>
+                                                            {
+                                                                t.table.dueDate
+                                                            }
+                                                        </dt>
+                                                        <dd>
+                                                            {formatDate(
+                                                                expense.dueDate,
+                                                                locale
+                                                            )}
+                                                        </dd>
+                                                    </div>
+
+                                                    <div>
+                                                        <dt>
+                                                            {
+                                                                t.table.amount
+                                                            }
+                                                        </dt>
+                                                        <dd
+                                                            className={
+                                                                styles.mobileAmount
+                                                            }
+                                                        >
+                                                            {formatCurrency(
+                                                                expense.amount,
+                                                                expense.currencyCode,
+                                                                locale
+                                                            )}
+                                                        </dd>
+                                                    </div>
+                                                </dl>
+
+                                                <div
+                                                    className={
+                                                        styles.mobileActions
+                                                    }
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        className="secondary-button"
+                                                        onClick={() =>
+                                                            openEditExpense(
+                                                                expense
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            isPending
+                                                        }
+                                                    >
+                                                        {
+                                                            t.actions.edit
+                                                        }
+                                                    </button>
+
+                                                    {expense.status !==
+                                                        "PAID" &&
+                                                        expense.status !==
+                                                            "CANCELLED" && (
+                                                            <button
+                                                                type="button"
+                                                                className="secondary-button"
+                                                                onClick={() =>
+                                                                    changeExpenseStatus(
+                                                                        expense,
+                                                                        "PAID"
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    isPending
+                                                                }
+                                                            >
+                                                                {
+                                                                    t.actions.markPaid
+                                                                }
+                                                            </button>
+                                                        )}
+
+                                                    {expense.status ===
+                                                        "PAID" && (
+                                                        <button
+                                                            type="button"
+                                                            className="secondary-button"
+                                                            onClick={() =>
+                                                                changeExpenseStatus(
+                                                                    expense,
+                                                                    "PENDING"
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                isPending
+                                                            }
+                                                        >
+                                                            {
+                                                                t.actions.markPending
+                                                            }
+                                                        </button>
+                                                    )}
+
+                                                    {expense.status !==
+                                                        "CANCELLED" && (
+                                                        <button
+                                                            type="button"
+                                                            className={`${styles.mobileDangerAction} secondary-button`}
+                                                            onClick={() =>
+                                                                changeExpenseStatus(
+                                                                    expense,
+                                                                    "CANCELLED"
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                isPending
+                                                            }
+                                                        >
+                                                            {
+                                                                t.actions.cancelEntry
+                                                            }
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </article>
+                                        );
+                                    }
+                                )}
+                            </section>
+                        </>
                     )}
                 </section>
             )}
@@ -1298,9 +2442,7 @@ export function FinancialClient({
                     </div>
 
                     <div
-                        className={
-                            styles.tableScroll
-                        }
+                        className={`${styles.tableScroll} ${styles.desktopOnly}`}
                     >
                         <table
                             className={
@@ -1401,6 +2543,142 @@ export function FinancialClient({
                             </tbody>
                         </table>
                     </div>
+
+                    <section
+                        className={
+                            styles.mobileList
+                        }
+                    >
+                        {initialData.reports.map(
+                            (
+                                row
+                            ) => (
+                                <article
+                                    key={
+                                        row.period
+                                    }
+                                    className={
+                                        styles.mobileCard
+                                    }
+                                >
+                                    <div
+                                        className={
+                                            styles.mobileCardHeader
+                                        }
+                                    >
+                                        <div>
+                                            <span
+                                                className={
+                                                    styles.mobileCardLabel
+                                                }
+                                            >
+                                                {
+                                                    t.reports.period
+                                                }
+                                            </span>
+
+                                            <h2>
+                                                {formatMonthYear(
+                                                    row.period,
+                                                    locale
+                                                )}
+                                            </h2>
+                                        </div>
+                                    </div>
+
+                                    <dl
+                                        className={
+                                            styles.mobileDetails
+                                        }
+                                    >
+                                        <div>
+                                            <dt>
+                                                {
+                                                    t.cards.billedRevenue
+                                                }
+                                            </dt>
+                                            <dd>
+                                                {formatCurrency(
+                                                    row.billedRevenue,
+                                                    defaultCurrency,
+                                                    locale
+                                                )}
+                                            </dd>
+                                        </div>
+
+                                        <div>
+                                            <dt>
+                                                {
+                                                    t.cards.receivedRevenue
+                                                }
+                                            </dt>
+                                            <dd>
+                                                {formatCurrency(
+                                                    row.receivedRevenue,
+                                                    defaultCurrency,
+                                                    locale
+                                                )}
+                                            </dd>
+                                        </div>
+
+                                        <div>
+                                            <dt>
+                                                {
+                                                    t.cards.expenses
+                                                }
+                                            </dt>
+                                            <dd>
+                                                {formatCurrency(
+                                                    row.expenses,
+                                                    defaultCurrency,
+                                                    locale
+                                                )}
+                                            </dd>
+                                        </div>
+
+                                        <div>
+                                            <dt>
+                                                {
+                                                    t.cards.netProfit
+                                                }
+                                            </dt>
+                                            <dd
+                                                className={
+                                                    styles.mobileAmount
+                                                }
+                                            >
+                                                {formatCurrency(
+                                                    row.profit,
+                                                    defaultCurrency,
+                                                    locale
+                                                )}
+                                            </dd>
+                                        </div>
+
+                                        <div>
+                                            <dt>
+                                                {
+                                                    t.cards.margin
+                                                }
+                                            </dt>
+                                            <dd>
+                                                {new Intl.NumberFormat(
+                                                    locale,
+                                                    {
+                                                        maximumFractionDigits:
+                                                            1,
+                                                    }
+                                                ).format(
+                                                    row.margin
+                                                )}
+                                                %
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                </article>
+                            )
+                        )}
+                    </section>
 
                     <p
                         className={
