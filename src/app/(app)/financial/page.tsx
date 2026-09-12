@@ -7,9 +7,13 @@ import {
 } from "@/shared/database/supabase/server";
 
 import {
-    canManageFinancialData,
     getCurrentOrganizationFinancialContext,
 } from "@/shared/auth/get-current-organization-financial-context";
+
+import {
+    can,
+    getCurrentAccessContext,
+} from "@/shared/auth/permissions";
 
 import {
     SupabaseFinancialRepository,
@@ -43,12 +47,20 @@ export default async function FinancialPage({
             supabase
         );
 
+    const access =
+        await getCurrentAccessContext(
+            supabase
+        );
+
     if (
-        !canManageFinancialData(
-            context.role
+        !can(
+            access,
+            "FINANCIAL_VIEW"
         )
     ) {
-        redirect("/dashboard");
+        redirect(
+            "/dashboard"
+        );
     }
 
     const referenceDate =
@@ -84,10 +96,15 @@ function normalizePeriod(
 ): string {
     if (
         value &&
-        /^\d{4}-\d{2}$/.test(value)
+        /^\d{4}-\d{2}$/.test(
+            value
+        )
     ) {
         const month = Number(
-            value.slice(5, 7)
+            value.slice(
+                5,
+                7
+            )
         );
 
         if (
@@ -114,13 +131,15 @@ function normalizePeriod(
     const year =
         parts.find(
             (part) =>
-                part.type === "year"
+                part.type ===
+                "year"
         )?.value ?? "2026";
 
     const month =
         parts.find(
             (part) =>
-                part.type === "month"
+                part.type ===
+                "month"
         )?.value ?? "01";
 
     return `${year}-${month}-01`;

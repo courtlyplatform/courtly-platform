@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/shared/database/supabase/server";
+import { can, getCurrentAccessContext } from "@/shared/auth/permissions";
 import {
     createCustomer,
 } from "@/modules/customers/actions";
@@ -29,6 +32,10 @@ type NewCustomerPageProps = {
 export default async function NewCustomerPage({
     searchParams,
 }: NewCustomerPageProps) {
+    const supabase = await createClient();
+    const access = await getCurrentAccessContext(supabase);
+    if (!can(access, "CUSTOMERS_CREATE")) redirect("/customers");
+
     const params =
         await searchParams;
 
@@ -103,8 +110,8 @@ export default async function NewCustomerPage({
                         {
                             locale ===
                             "pt-BR"
-                                ? "Cadastre um novo aluno na sua organização."
-                                : "Add a new student to your organization."
+                                ? "Cadastre um novo cliente na sua organização."
+                                : "Add a new client to your organization."
                         }
                     </p>
                 </div>

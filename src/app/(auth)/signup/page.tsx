@@ -45,11 +45,11 @@ export default async function SignUpPage({
             <div className="auth-owner-notice">
                 <strong>
                     Este cadastro não é destinado
-                    a alunos.
+                    a clientes.
                 </strong>
 
                 <span>
-                    Profissionais e alunos serão
+                    Profissionais e clientes serão
                     vinculados posteriormente à
                     organização por fluxos
                     específicos.

@@ -15,6 +15,7 @@ import {
 import {
     getCurrentOrganizationId,
 } from "@/shared/auth/get-current-organization-id";
+import { can, getCurrentAccessContext } from "@/shared/auth/permissions";
 
 import {
     CustomerValidationError,
@@ -135,6 +136,11 @@ export async function createCustomer(
 
     const supabase =
         await createClient();
+
+    const access = await getCurrentAccessContext(supabase);
+    if (!can(access, "CUSTOMERS_CREATE")) {
+        redirect("/customers?error=forbidden");
+    }
 
 
     let organizationId:
@@ -261,6 +267,11 @@ export async function updateCustomer(
 
     const supabase =
         await createClient();
+
+    const access = await getCurrentAccessContext(supabase);
+    if (!can(access, "CUSTOMERS_EDIT")) {
+        redirect(`/customers/${customerId}/edit?error=forbidden`);
+    }
 
 
     let organizationId:

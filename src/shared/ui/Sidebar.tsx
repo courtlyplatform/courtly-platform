@@ -33,6 +33,7 @@ type NavigationItem = {
     label: string;
     ownerOnly?: boolean;
     managerOnly?: boolean;
+    permission?: string | string[];
 };
 
 type SidebarProps = {
@@ -61,6 +62,8 @@ export function Sidebar({
     ] = useState<OrganizationRole | null>(
         null
     );
+
+    const [permissions, setPermissions] = useState<Set<string>>(new Set());
 
     useEffect(
         () => {
@@ -102,6 +105,11 @@ export function Sidebar({
                         membership.role as OrganizationRole
                     );
                 }
+
+                const { data: permissionRows } = await (supabase as any).rpc("get_my_permissions");
+                if (mounted) {
+                    setPermissions(new Set((permissionRows ?? []).filter((row: any) => row.allowed).map((row: any) => row.permission_code)));
+                }
             }
 
             void loadRole();
@@ -139,13 +147,19 @@ export function Sidebar({
                     .services,
         },
         {
+            href: "/professionals",
+            icon: "♙",
+            label: dictionary.navigation.professionals,
+            permission: "PROFESSIONALS_VIEW",
+        },
+        {
             href: "/scheduling",
             icon: "□",
             label:
                 dictionary
                     .navigation
                     .scheduling,
-            managerOnly: true,
+            permission: ["SCHEDULING_VIEW_ALL", "SCHEDULING_VIEW_OWN"],
         },
         {
             href: "/attendance",
@@ -170,7 +184,7 @@ export function Sidebar({
                 dictionary
                     .navigation
                     .financial,
-            ownerOnly: true,
+            permission: "FINANCIAL_VIEW",
         },
     ];
 
@@ -186,9 +200,17 @@ export function Sidebar({
                     role === "OWNER" ||
                     role === "ADMIN";
 
+                const permissionAllowed =
+                    role === "OWNER" ||
+                    !item.permission ||
+                    (Array.isArray(item.permission)
+                        ? item.permission.some((permission) => permissions.has(permission))
+                        : permissions.has(item.permission));
+
                 return (
                     ownerAllowed &&
-                    managerAllowed
+                    managerAllowed &&
+                    permissionAllowed
                 );
             }
         );

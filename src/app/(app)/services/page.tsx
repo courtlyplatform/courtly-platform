@@ -21,6 +21,7 @@ import {
 import {
   createClient,
 } from "@/shared/database/supabase/server";
+import { can, getCurrentAccessContext } from "@/shared/auth/permissions";
 
 export default async function ServicesPage() {
   const supabase =
@@ -34,6 +35,9 @@ export default async function ServicesPage() {
   if (!authData.user) {
     redirect("/login");
   }
+
+  const access = await getCurrentAccessContext(supabase);
+  if (!can(access, "SERVICES_VIEW")) redirect("/dashboard");
 
   const organizationId =
     await getCurrentOrganizationId(

@@ -72,7 +72,7 @@ Promise<CustomerListItem[]> {
     if (customersError) {
 
         throw new Error(
-            `Erro ao buscar alunos: ${customersError.message}`
+            `Erro ao buscar clientes: ${customersError.message}`
         );
     }
 
@@ -134,7 +134,7 @@ Promise<CustomerListItem[]> {
     if (subscriptionError) {
 
         throw new Error(
-            `Erro ao buscar planos ativos dos alunos: ${subscriptionError.message}`
+            `Erro ao buscar planos ativos dos clientes: ${subscriptionError.message}`
         );
     }
 
@@ -210,7 +210,7 @@ Promise<CustomerListItem[]> {
     if (activityError) {
 
         throw new Error(
-            `Erro ao buscar serviços dos alunos: ${activityError.message}`
+            `Erro ao buscar serviços dos clientes: ${activityError.message}`
         );
     }
 
@@ -348,7 +348,7 @@ export async function getCustomerById(
     if (error) {
 
         throw new Error(
-            `Erro ao buscar aluno: ${error.message}`
+            `Erro ao buscar cliente: ${error.message}`
         );
     }
 

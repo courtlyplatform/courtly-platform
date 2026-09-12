@@ -277,6 +277,47 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+          organization_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          organization_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_subscriptions: {
         Row: {
           activity_id: string
@@ -703,6 +744,42 @@ export type Database = {
           },
         ]
       }
+      membership_permission_overrides: {
+        Row: {
+          allowed: boolean
+          membership_id: string
+          permission_code: string
+          updated_at: string
+        }
+        Insert: {
+          allowed: boolean
+          membership_id: string
+          permission_code: string
+          updated_at?: string
+        }
+        Update: {
+          allowed?: boolean
+          membership_id?: string
+          permission_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_permission_overrides_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_permission_overrides_permission_code_fkey"
+            columns: ["permission_code"]
+            isOneToOne: false
+            referencedRelation: "permission_definitions"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       memberships: {
         Row: {
           created_at: string
@@ -839,6 +916,24 @@ export type Database = {
         }
         Relationships: []
       }
+      permission_definitions: {
+        Row: {
+          code: string
+          domain: string
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          domain: string
+          sort_order?: number
+        }
+        Update: {
+          code?: string
+          domain?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       professional_activities: {
         Row: {
           activity_id: string
@@ -875,37 +970,292 @@ export type Database = {
           },
         ]
       }
-      professionals: {
+      professional_availability_rules: {
         Row: {
           active: boolean
           created_at: string
-          email: string | null
+          end_time: string
           id: string
-          name: string
           organization_id: string
-          phone: string | null
+          professional_id: string
+          start_time: string
           updated_at: string
-          user_id: string | null
+          weekday: number
         }
         Insert: {
           active?: boolean
           created_at?: string
-          email?: string | null
+          end_time: string
           id?: string
-          name: string
           organization_id: string
-          phone?: string | null
+          professional_id: string
+          start_time: string
           updated_at?: string
-          user_id?: string | null
+          weekday: number
         }
         Update: {
           active?: boolean
           created_at?: string
-          email?: string | null
+          end_time?: string
+          id?: string
+          organization_id?: string
+          professional_id?: string
+          start_time?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_availability_rul_professional_id_organization_fkey"
+            columns: ["professional_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "professional_availability_rules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_registrations: {
+        Row: {
+          authority: string
+          created_at: string
+          id: string
+          organization_id: string
+          professional_id: string
+          region: string | null
+          registration_number: string
+          updated_at: string
+        }
+        Insert: {
+          authority: string
+          created_at?: string
+          id?: string
+          organization_id: string
+          professional_id: string
+          region?: string | null
+          registration_number: string
+          updated_at?: string
+        }
+        Update: {
+          authority?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          professional_id?: string
+          region?: string | null
+          registration_number?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_registrations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_registrations_professional_id_organization_id_fkey"
+            columns: ["professional_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      professional_specialties: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
           id?: string
           name?: string
           organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_specialties_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_specialty_assignments: {
+        Row: {
+          created_at: string
+          organization_id: string
+          professional_id: string
+          specialty_id: string
+        }
+        Insert: {
+          created_at?: string
+          organization_id: string
+          professional_id: string
+          specialty_id: string
+        }
+        Update: {
+          created_at?: string
+          organization_id?: string
+          professional_id?: string
+          specialty_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_specialty_assign_professional_id_organization_fkey"
+            columns: ["professional_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "professional_specialty_assign_specialty_id_organization_id_fkey"
+            columns: ["specialty_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "professional_specialties"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "professional_specialty_assignments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_unavailability: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          organization_id: string
+          professional_id: string
+          reason: string | null
+          starts_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          organization_id: string
+          professional_id: string
+          reason?: string | null
+          starts_at: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          organization_id?: string
+          professional_id?: string
+          reason?: string | null
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_unavailability_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_unavailability_professional_id_organization_i_fkey"
+            columns: ["professional_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      professionals: {
+        Row: {
+          access_status: Database["public"]["Enums"]["professional_access_status"]
+          active: boolean
+          avatar_path: string | null
+          birth_date: string | null
+          country_code: string | null
+          created_at: string
+          document_number: string | null
+          document_type: string | null
+          email: string | null
+          first_name: string
+          id: string
+          job_title: string | null
+          last_name: string
+          name: string
+          notes: string | null
+          organization_id: string
+          phone: string | null
+          preferred_name: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          access_status?: Database["public"]["Enums"]["professional_access_status"]
+          active?: boolean
+          avatar_path?: string | null
+          birth_date?: string | null
+          country_code?: string | null
+          created_at?: string
+          document_number?: string | null
+          document_type?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          job_title?: string | null
+          last_name: string
+          name: string
+          notes?: string | null
+          organization_id: string
           phone?: string | null
+          preferred_name?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          access_status?: Database["public"]["Enums"]["professional_access_status"]
+          active?: boolean
+          avatar_path?: string | null
+          birth_date?: string | null
+          country_code?: string | null
+          created_at?: string
+          document_number?: string | null
+          document_type?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          job_title?: string | null
+          last_name?: string
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          phone?: string | null
+          preferred_name?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1023,6 +1373,32 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "resource_types"
             referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          allowed: boolean
+          permission_code: string
+          role: Database["public"]["Enums"]["organization_role"]
+        }
+        Insert: {
+          allowed?: boolean
+          permission_code: string
+          role: Database["public"]["Enums"]["organization_role"]
+        }
+        Update: {
+          allowed?: boolean
+          permission_code?: string
+          role?: Database["public"]["Enums"]["organization_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_code_fkey"
+            columns: ["permission_code"]
+            isOneToOne: false
+            referencedRelation: "permission_definitions"
+            referencedColumns: ["code"]
           },
         ]
       }
@@ -1276,6 +1652,13 @@ export type Database = {
         }
         Returns: number
       }
+      get_my_permissions: {
+        Args: never
+        Returns: {
+          allowed: boolean
+          permission_code: string
+        }[]
+      }
       get_scheduling_availability: {
         Args: {
           p_activity_id: string
@@ -1305,6 +1688,13 @@ export type Database = {
         Args: { p_subscription_id: string }
         Returns: number
       }
+      reassign_professional_future_appointments: {
+        Args: { p_from_professional_id: string; p_to_professional_id: string }
+        Returns: {
+          moved: number
+          remaining: number
+        }[]
+      }
       refresh_financial_overdue_statuses: {
         Args: { p_organization_id: string }
         Returns: undefined
@@ -1325,6 +1715,12 @@ export type Database = {
           ended_subscriptions: number
         }[]
       }
+      set_professional_active_status: {
+        Args: { p_active: boolean; p_professional_id: string }
+        Returns: {
+          future_appointments: number
+        }[]
+      }
       set_schedule_rule_status: {
         Args: {
           p_schedule_rule_id: string
@@ -1341,6 +1737,10 @@ export type Database = {
           period_end: string
           period_start: string
         }[]
+      }
+      user_has_permission: {
+        Args: { target_organization_id: string; target_permission: string }
+        Returns: boolean
       }
     }
     Enums: {
@@ -1367,6 +1767,11 @@ export type Database = {
       organization_currency: "BRL" | "USD" | "EUR" | "CAD"
       organization_role: "OWNER" | "ADMIN" | "PROFESSIONAL" | "CUSTOMER"
       organization_status: "ACTIVE" | "INACTIVE"
+      professional_access_status:
+        | "NO_ACCESS"
+        | "INVITED"
+        | "ACTIVE"
+        | "SUSPENDED"
       schedule_generation_conflict_reason: "CAPACITY_CONFLICT"
       schedule_recurrence_type: "WEEKLY"
       schedule_rule_status: "ACTIVE" | "PAUSED" | "ENDED"
@@ -1534,6 +1939,12 @@ export const Constants = {
       organization_currency: ["BRL", "USD", "EUR", "CAD"],
       organization_role: ["OWNER", "ADMIN", "PROFESSIONAL", "CUSTOMER"],
       organization_status: ["ACTIVE", "INACTIVE"],
+      professional_access_status: [
+        "NO_ACCESS",
+        "INVITED",
+        "ACTIVE",
+        "SUSPENDED",
+      ],
       schedule_generation_conflict_reason: ["CAPACITY_CONFLICT"],
       schedule_recurrence_type: ["WEEKLY"],
       schedule_rule_status: ["ACTIVE", "PAUSED", "ENDED"],

@@ -133,7 +133,7 @@ export default async function LoginPage({
             </p>
 
             <p className="auth-customer-note">
-                É aluno ou cliente?
+                É cliente?
                 Utilize o acesso fornecido
                 pela sua organização.
             </p>

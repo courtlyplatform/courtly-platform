@@ -103,7 +103,7 @@ export async function saveCustomerSubscription(
     /*
      * Historical contracts are immutable after they end.
      *
-     * If a student returns later, Courtly creates a new
+     * If a client returns later, Courtly creates a new
      * subscription instead of rewriting the old contract.
      */
     if (

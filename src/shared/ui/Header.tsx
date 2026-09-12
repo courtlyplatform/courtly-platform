@@ -132,7 +132,7 @@ export function Header({
                 return "Profissional";
 
             case "CUSTOMER":
-                return "Aluno";
+                return "Cliente";
 
             default:
                 return "Usuário";

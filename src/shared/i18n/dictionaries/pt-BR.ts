@@ -22,13 +22,14 @@ export const ptBR = {
 
     navigation: {
         overview: "Visão geral",
-        customers: "Alunos",
+        customers: "Clientes",
         services: "Serviços",
         scheduling: "Agenda",
         attendance: "Presenças",
         makeups: "Reposições",
         payments: "Pagamentos",
         financial: "Financeiro",
+        professionals: "Profissionais",
 
         collapseMenu: "Recolher menu",
         expandMenu: "Expandir menu",
@@ -52,16 +53,16 @@ export const ptBR = {
             "Gestão",
 
         title:
-            "Alunos",
+            "Clientes",
 
         description:
-            "Gerencie os alunos da sua organização.",
+            "Gerencie os clientes da sua organização.",
 
         newCustomer:
-            "Novo aluno",
+            "Novo cliente",
 
         customer:
-            "Aluno",
+            "Cliente",
 
         notProvided:
             "Não informado",
@@ -144,7 +145,7 @@ export const ptBR = {
                 "Limpar filtros",
 
             noResults:
-                "Nenhum aluno encontrado com os filtros selecionados.",
+                "Nenhum cliente encontrado com os filtros selecionados.",
         },
 
         status: {
@@ -168,24 +169,24 @@ export const ptBR = {
 
         empty: {
             title:
-                "Nenhum aluno cadastrado",
+                "Nenhum cliente cadastrado",
 
             description:
-                "Cadastre seu primeiro aluno para começar a organizar suas atividades.",
+                "Cadastre seu primeiro cliente para começar a organizar suas atividades.",
 
             action:
-                "Adicionar aluno",
+                "Adicionar cliente",
         },
 
         confirmation: {
             deactivateTitle:
-                "Desativar aluno?",
+                "Desativar cliente?",
 
             deactivateDescription:
-                'Deseja desativar o aluno "{name}"? Todos os planos e serviços ativos ou pausados serão encerrados. O cadastro e o histórico comercial serão preservados.',
+                'Deseja desativar o cliente "{name}"? Todos os planos e serviços ativos ou pausados serão encerrados. O cadastro e o histórico comercial serão preservados.',
 
             confirmDeactivate:
-                "Desativar aluno",
+                "Desativar cliente",
 
             deactivating:
                 "Desativando...",
@@ -194,21 +195,21 @@ export const ptBR = {
         feedback: {
             success: {
                 customerCreated:
-                    "Aluno cadastrado com sucesso.",
+                    "Cliente cadastrado com sucesso.",
 
                 customerUpdated:
-                    "Aluno atualizado com sucesso.",
+                    "Cliente atualizado com sucesso.",
 
                 customerDeactivated:
-                    "Aluno desativado com sucesso. Contratos encerrados: {count}.",
+                    "Cliente desativado com sucesso. Contratos encerrados: {count}.",
 
                 customerReactivated:
-                    "Aluno reativado com sucesso. Os contratos anteriores permanecem encerrados.",
+                    "Cliente reativado com sucesso. Os contratos anteriores permanecem encerrados.",
             },
 
             error: {
                 nameRequired:
-                    "O nome do aluno é obrigatório.",
+                    "O nome do cliente é obrigatório.",
 
                 invalidDocumentType:
                     "Selecione um tipo de documento válido.",
@@ -223,25 +224,25 @@ export const ptBR = {
                     "Não foi possível identificar sua organização.",
 
                 createFailed:
-                    "Não foi possível cadastrar o aluno. Tente novamente.",
+                    "Não foi possível cadastrar o cliente. Tente novamente.",
 
                 updateFailed:
-                    "Não foi possível atualizar o aluno. Tente novamente.",
+                    "Não foi possível atualizar o cliente. Tente novamente.",
 
                 forbidden:
-                    "Você não possui permissão para alterar o status deste aluno.",
+                    "Você não possui permissão para alterar o status deste cliente.",
 
                 statusUpdateFailed:
-                    "Não foi possível alterar o status do aluno. Nenhuma alteração comercial foi concluída.",
+                    "Não foi possível alterar o status do cliente. Nenhuma alteração comercial foi concluída.",
             },
         },
 
         form: {
             createTitle:
-                "Novo aluno",
+                "Novo cliente",
 
             editTitle:
-                "Editar aluno",
+                "Editar cliente",
 
             name:
                 "Nome",
@@ -265,13 +266,13 @@ export const ptBR = {
                 "Observações",
 
             create:
-                "Cadastrar aluno",
+                "Cadastrar cliente",
 
             save:
                 "Salvar alterações",
 
             back:
-                "Voltar para alunos",
+                "Voltar para clientes",
         },
     },
 
@@ -286,7 +287,7 @@ export const ptBR = {
             owner: "Proprietário",
             admin: "Administrador",
             professional: "Profissional",
-            customer: "Aluno",
+            customer: "Cliente",
             user: "Usuário",
         },
 
@@ -591,7 +592,8 @@ export const ptBR = {
                 "Informe um preço válido.",
         },
 
-        scheduling: {
+
+    scheduling: {
             mode: "Uso da agenda",
             modeHelp: "Define se este serviço utiliza agendamento.",
             professional: "Profissional",
@@ -633,6 +635,26 @@ export const ptBR = {
         },
     },
 
+    professionals: {
+    eyebrow: "Equipe",
+    title: "Profissionais",
+    description: "Gerencie profissionais, especialidades, serviços habilitados e acessos ao COURTLY.",
+    notProvided: "Não informado",
+    actions: { new: "Novo profissional", edit: "Editar", access: "Acesso", disable: "Desabilitar", enable: "Habilitar", save: "Salvar", cancel: "Cancelar", addRegistration: "Adicionar registro" },
+    status: { active: "Ativo", inactive: "Inativo" },
+    summary: { all: "Todos", active: "Ativos", inactive: "Inativos" },
+    list: { professional: "Profissional", specialty: "Especialidade", document: "Documento", phone: "Telefone", privilege: "Privilégio", status: "Status", actions: "Ações" },
+    filters: { search: "Buscar", searchPlaceholder: "Nome, registro ou documento", status: "Status", specialty: "Especialidade", registrationAuthority: "Entidade de registro", registrationNumber: "Número de registro", all: "Todos", clear: "Limpar filtros", noResults: "Nenhum profissional encontrado com os filtros selecionados." },
+    fields: { firstName: "Nome", lastName: "Sobrenome", preferredName: "Nome preferido", jobTitle: "Cargo / profissão", email: "E-mail", phone: "Telefone", country: "País", birthDate: "Data de nascimento", age: "Idade", documentType: "Tipo de documento", documentNumber: "Número do documento", specialties: "Especialidades", services: "Serviços habilitados", registrations: "Registros profissionais", registrationAuthority: "Entidade (CRO, CRM, CREA, CREF...)", registrationNumber: "Número do registro", registrationRegion: "UF / Região", notes: "Observações internas", availability: "Disponibilidade semanal" },
+    weekdays: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+    form: { newTitle: "Cadastrar profissional", editTitle: "Editar profissional" },
+    avatar: { change: "Alterar foto", remove: "Remover foto", invalid: "Utilize uma imagem JPG, PNG ou WEBP." },
+    access: { title: "Acesso ao COURTLY", description: "O acesso é opcional. Defina o nível e os privilégios somente quando este profissional precisar entrar no sistema.", level: "Nível de acesso", invite: "Enviar convite", noAccess: "SEM ACESSO" },
+    specialties: { new: "Nova especialidade", manage: "Cadastrar especialidade" },
+    deactivate: { title: "Desabilitar profissional", description: "{name} será marcado como inativo. Se houver compromissos futuros, você pode selecionar um profissional disponível para assumir os atendimentos compatíveis. O histórico será preservado.", replacement: "Profissional substituto", noReplacement: "Manter compromissos para tratamento posterior" },
+    feedback: { saved: "Profissional salvo com sucesso.", saveFailed: "Não foi possível salvar o profissional.", disabled: "Profissional desabilitado com sucesso.", disabledWithAppointments: "Profissional desabilitado. Existem {count} compromissos futuros que precisam ser acompanhados.", statusFailed: "Não foi possível alterar o status do profissional.", reassignFailed: "Nem todos os compromissos puderam ser transferidos. Verifique disponibilidade e serviços habilitados.", invited: "Convite de acesso enviado com sucesso.", inviteFailed: "Não foi possível enviar o convite de acesso.", accessSaved: "Privilégios atualizados com sucesso.", accessFailed: "Não foi possível atualizar os privilégios." },
+    },
+
     scheduling: {
         eyebrow: "Operação",
         title: "Agenda",
@@ -644,11 +666,11 @@ export const ptBR = {
             createAppointment: "Criar compromisso", createRecurrence: "Criar recorrência",
             cancelAppointment: "Cancelar", save: "Salvar", saving: "Salvando...", cancel: "Voltar", close: "Fechar"
         },
-        calendar: { previous: "Período anterior", next: "Próximo período", today: "Hoje", appointmentCount: "{count} compromisso(s)", free: "Sem compromissos", unknownCustomer: "Aluno", unknownService: "Serviço" },
+        calendar: { previous: "Período anterior", next: "Próximo período", today: "Hoje", appointmentCount: "{count} compromisso(s)", free: "Sem compromissos", unknownCustomer: "Cliente", unknownService: "Serviço" },
         capacity: { available: "Disponível", busy: "Ocupado", unavailable: "Indisponível", ready: "Profissional e recursos selecionados estão livres neste horário.", resources: "Recursos", professionals: "Profissionais" },
-        fields: { customer: "Aluno", service: "Serviço", date: "Data", startTime: "Início", endTime: "Fim", professional: "Profissional", resources: "Recursos", subscription: "Plano / serviço contratado", weekday: "Dia da semana", effectiveFrom: "Válido a partir de", effectiveUntil: "Válido até" },
-        placeholders: { selectCustomer: "Selecione o aluno", selectService: "Selecione o serviço", noProfessional: "Sem profissional", selectSubscription: "Selecione um contrato ativo" },
-        appointment: { title: "Novo compromisso", description: "Crie um atendimento avulso respeitando a disponibilidade operacional.", subscriptionTitle: "Vínculo comercial", withoutSubscription: "Sem vínculo com contrato", noSubscription: "Este aluno não possui um contrato ativo compatível. O compromisso pode ser criado sem vínculo comercial quando a operação permitir." },
+        fields: { customer: "Cliente", service: "Serviço", date: "Data", startTime: "Início", endTime: "Fim", professional: "Profissional", resources: "Recursos", subscription: "Plano / serviço contratado", weekday: "Dia da semana", effectiveFrom: "Válido a partir de", effectiveUntil: "Válido até" },
+        placeholders: { selectCustomer: "Selecione o cliente", selectService: "Selecione o serviço", noProfessional: "Sem profissional", selectSubscription: "Selecione um contrato ativo" },
+        appointment: { title: "Novo compromisso", description: "Crie um atendimento avulso respeitando a disponibilidade operacional.", subscriptionTitle: "Vínculo comercial", withoutSubscription: "Sem vínculo com contrato", noSubscription: "Este cliente não possui um contrato ativo compatível. O compromisso pode ser criado sem vínculo comercial quando a operação permitir." },
         recurrence: { title: "Nova recorrência", description: "Crie uma regra semanal vinculada a um contrato ativo.", windowTitle: "Janela móvel", windowDescription: "Os próximos {days} dias são gerados imediatamente e o processo diário mantém essa janela sempre abastecida." },
         recurrences: { eyebrow: "Recorrência", title: "Regras recorrentes", description: "Gerencie horários semanais sem reescrever o histórico já gerado.", pause: "Pausar", resume: "Retomar", end: "Encerrar", empty: "Nenhuma recorrência cadastrada.", conflicts: "{count} ocorrência(s) não puderam ser geradas por conflito de capacidade." },
         ruleStatus: { active: "Ativa", paused: "Pausada", ended: "Encerrada" },
@@ -743,7 +765,7 @@ export const ptBR = {
 
         reactivationNotice: {
             title:
-                "Aluno inativo",
+                "Cliente inativo",
 
             description:
                 "Ao adicionar um novo plano ou serviço, {name} será reativado automaticamente.",
@@ -777,7 +799,7 @@ export const ptBR = {
                 "Adicionar serviço",
 
             editTitle:
-                "Editar serviço do aluno",
+                "Editar serviço do cliente",
 
             close:
                 "Fechar",
@@ -788,7 +810,7 @@ export const ptBR = {
                 "Nenhum serviço contratado",
 
             description:
-                "Este aluno ainda não possui serviços vinculados.",
+                "Este cliente ainda não possui serviços vinculados.",
 
             action:
                 "Adicionar serviço",
@@ -812,10 +834,10 @@ export const ptBR = {
 
             success: {
                 created:
-                    "Serviço vinculado ao aluno com sucesso.",
+                    "Serviço vinculado ao cliente com sucesso.",
 
                 updated:
-                    "Serviço do aluno atualizado com sucesso.",
+                    "Serviço do cliente atualizado com sucesso.",
 
                 paused:
                     "Serviço pausado com sucesso.",
@@ -827,15 +849,15 @@ export const ptBR = {
                     "Serviço encerrado com sucesso.",
                 
                 createdAndReactivated:
-                    "Serviço vinculado com sucesso e aluno reativado automaticamente.",
+                    "Serviço vinculado com sucesso e cliente reativado automaticamente.",
             },
 
             error: {
                 forbidden:
-                    "Você não possui permissão para gerenciar os serviços deste aluno.",
+                    "Você não possui permissão para gerenciar os serviços deste cliente.",
 
                 customerNotFound:
-                    "Não foi possível localizar o aluno.",
+                    "Não foi possível localizar o cliente.",
 
                 activityNotFound:
                     "Não foi possível localizar o serviço selecionado.",
@@ -844,10 +866,10 @@ export const ptBR = {
                     "Não é possível contratar um serviço desativado.",
 
                 duplicateOpenSubscription:
-                    "Este aluno já possui este serviço ativo ou pausado.",
+                    "Este cliente já possui este serviço ativo ou pausado.",
 
                 endedImmutable:
-                    "Um contrato encerrado não pode ser alterado. Crie um novo vínculo se o aluno retornar.",
+                    "Um contrato encerrado não pode ser alterado. Crie um novo vínculo se o cliente retornar.",
 
                 activityRequired:
                     "Selecione um serviço.",
@@ -862,7 +884,7 @@ export const ptBR = {
                     "Verifique os dados informados.",
 
                 saveFailed:
-                    "Não foi possível vincular o serviço ao aluno.",
+                    "Não foi possível vincular o serviço ao cliente.",
 
                 statusUpdateFailed:
                     "Não foi possível alterar o status do serviço.",
@@ -898,7 +920,7 @@ export const ptBR = {
         },
 
         kpis: {
-            activeCustomers: "Alunos com planos ativos",
+            activeCustomers: "Clientes com planos ativos",
             activeSubscriptions: "Assinaturas ativas",
             overdueRevenue: "Em atraso",
             totalExpenses: "Custos do período",
@@ -916,7 +938,7 @@ export const ptBR = {
         revenues: {
             eyebrow: "Receita",
             title: "Receitas",
-            description: "Cobranças geradas pelos planos dos alunos e receitas manuais.",
+            description: "Cobranças geradas pelos planos dos clientes e receitas manuais.",
             newTitle: "Nova receita manual",
             editTitle: "Editar receita manual",
             newAction: "Nova receita",
@@ -925,7 +947,7 @@ export const ptBR = {
 
         revenueFilters: {
             ariaLabel: "Filtros de receitas",
-            customer: "Aluno",
+            customer: "Cliente",
             customerPlaceholder: "Buscar por nome ou documento",
             service: "Serviço",
             servicePlaceholder: "Buscar por serviço",
@@ -965,7 +987,7 @@ export const ptBR = {
 
         table: {
             description: "Descrição",
-            customer: "Aluno",
+            customer: "Cliente",
             service: "Serviço",
             documentType: "Tipo de documento",
             documentNumber: "Número do documento",
@@ -997,7 +1019,7 @@ export const ptBR = {
         },
 
         sources: {
-            subscription: "Plano do aluno",
+            subscription: "Plano do cliente",
             manual: "Manual",
         },
 
@@ -1065,7 +1087,7 @@ export const ptBR = {
             confirmPaid: "Marcar como pago",
             confirmCancel: "Cancelar lançamento",
             goBack: "Voltar",
-            unknownCustomer: "Aluno não identificado",
+            unknownCustomer: "Cliente não identificado",
             documentNotProvided: "não informado",
             serviceNotProvided: "não informado",
         },

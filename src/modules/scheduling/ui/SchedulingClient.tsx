@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { CourtlyAlert } from "@/shared/ui/CourtlyAlert";
 import { saveResourceAction, toggleResourceAction } from "@/modules/resources/application/resource-actions";
-import { saveProfessionalAction } from "@/modules/professionals/application/professional-actions";
 import {
   cancelAppointmentAction,
   changeScheduleRuleStatusAction,
@@ -28,8 +27,8 @@ import type { Activity } from "@/modules/activities/domain/activity";
 import styles from "./scheduling.module.css";
 
 type ViewMode = "day" | "week" | "month";
-type Tab = "calendar" | "recurrences" | "resources" | "professionals" | "settings";
-type Modal = "appointment" | "recurrence" | "resource" | "professional" | null;
+type Tab = "calendar" | "recurrences" | "resources" | "settings";
+type Modal = "appointment" | "recurrence" | "resource" | null;
 
 type Feedback = { type: "success" | "error"; message: string } | null;
 
@@ -93,7 +92,6 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
   }));
 
   const [resourceForm, setResourceForm] = useState({ id: "", name: "", typeName: "" });
-  const [professionalForm, setProfessionalForm] = useState({ name: "", email: "", phone: "" });
   const [windowDays, setWindowDays] = useState(String(initialData.settings.generationWindowDays));
 
   const activeActivities = useMemo(
@@ -313,7 +311,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
       {feedback && <CourtlyAlert type={feedback.type} message={feedback.message} />}
 
       <nav className={styles.tabs} aria-label={t.tabs.label}>
-        {(["calendar", "recurrences", "resources", "professionals", "settings"] as Tab[]).map((item) => (
+        {(["calendar", "recurrences", "resources", "settings"] as Tab[]).map((item) => (
           <button
             key={item}
             type="button"
@@ -443,29 +441,6 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
               setFeedback({
                 type: result.success ? "success" : "error",
                 message: result.success ? t.feedback.requirementUpdated : t.feedback.requirementFailed,
-              });
-              if (result.success) router.refresh();
-            })
-          }
-        />
-      )}
-
-      {tab === "professionals" && (
-        <ProfessionalsPanel
-          data={initialData}
-          t={t}
-          pending={isPending}
-          onNew={() => {
-            setProfessionalForm({ name: "", email: "", phone: "" });
-            setModalError(null);
-            setModal("professional");
-          }}
-          onToggleQualification={(professionalId: string, activityId: string, enabled: boolean) =>
-            startTransition(async () => {
-              const result = await setProfessionalQualificationAction({ professionalId, activityId, enabled });
-              setFeedback({
-                type: result.success ? "success" : "error",
-                message: result.success ? t.feedback.qualificationUpdated : t.feedback.qualificationFailed,
               });
               if (result.success) router.refresh();
             })
@@ -703,46 +678,6 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
 
             {modalError && <CourtlyAlert type="error" message={modalError} />}
             <ModalActions t={t} pending={isPending} onCancel={closeModal} submitLabel={t.actions.createRecurrence} />
-          </form>
-        </Modal>
-      )}
-
-      {modal === "professional" && (
-        <Modal title={t.professionals.newTitle} subtitle={t.professionals.newDescription} closeLabel={t.actions.close} onClose={closeModal}>
-          <form
-            className={styles.form}
-            onSubmit={(event) => {
-              event.preventDefault();
-              setModalError(null);
-              startTransition(async () => {
-                const result = await saveProfessionalAction({
-                  name: professionalForm.name,
-                  email: professionalForm.email || null,
-                  phone: professionalForm.phone || null,
-                });
-                if (!result.success) {
-                  setModalError(t.feedback.professionalSaveFailed);
-                  return;
-                }
-                setModal(null);
-                setFeedback({ type: "success", message: t.feedback.professionalCreated });
-                router.refresh();
-              });
-            }}
-          >
-            <Field label={t.professionals.name}>
-              <input value={professionalForm.name} onChange={(event) => setProfessionalForm((current) => ({ ...current, name: event.target.value }))} />
-            </Field>
-            <div className={styles.formGrid}>
-              <Field label={t.professionals.email}>
-                <input type="email" value={professionalForm.email} onChange={(event) => setProfessionalForm((current) => ({ ...current, email: event.target.value }))} />
-              </Field>
-              <Field label={t.professionals.phone}>
-                <input value={professionalForm.phone} onChange={(event) => setProfessionalForm((current) => ({ ...current, phone: event.target.value }))} />
-              </Field>
-            </div>
-            {modalError && <CourtlyAlert type="error" message={modalError} />}
-            <ModalActions t={t} pending={isPending} onCancel={closeModal} submitLabel={t.professionals.create} />
           </form>
         </Modal>
       )}
@@ -1025,48 +960,6 @@ function RequirementEditor({ activity, existing, resourceTypes, t, onSave }: any
         {t.actions.save}
       </button>
     </div>
-  );
-}
-
-function ProfessionalsPanel({ data, t, pending, onNew, onToggleQualification }: any) {
-  const schedulable = data.activities.filter((activity: Activity) => activity.professionalRequirement !== "NONE");
-  return (
-    <section className={styles.panelCard}>
-      <div className={styles.sectionHeader}>
-        <div>
-          <span className={styles.sectionEyebrow}>{t.professionals.eyebrow}</span>
-          <h2>{t.professionals.title}</h2>
-          <p>{t.professionals.description}</p>
-        </div>
-        <button type="button" className={styles.primaryButton} onClick={onNew}>{t.professionals.new}</button>
-      </div>
-      <div className={styles.professionalGrid}>
-        {data.professionals.map((professional: any) => (
-          <article key={professional.id} className={styles.professionalCard}>
-            <header>
-              <strong>{professional.name}</strong>
-              <span>{professional.active ? t.professionals.active : t.professionals.inactive}</span>
-            </header>
-            <div className={styles.checkList}>
-              {schedulable.map((activity: Activity) => {
-                const checked = professional.activityIds.includes(activity.id);
-                return (
-                  <label key={activity.id}>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      disabled={pending || !professional.active}
-                      onChange={(event) => onToggleQualification(professional.id, activity.id, event.target.checked)}
-                    />
-                    <span>{activity.name}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
   );
 }
 

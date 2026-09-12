@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/shared/database/supabase/server";
 import {
-  canManageCommercialData,
   getCurrentOrganizationCommercialContext,
 } from "@/shared/auth/get-current-organization-commercial-context";
+import { can, getCurrentAccessContext } from "@/shared/auth/permissions";
 import { SupabaseSchedulingRepository } from "../infrastructure/supabase-scheduling-repository";
 
 export type SchedulingActionResult =
@@ -16,7 +16,8 @@ async function getManagerContext() {
   const supabase = await createClient();
   const context = await getCurrentOrganizationCommercialContext(supabase);
 
-  if (!canManageCommercialData(context.role)) {
+  const access = await getCurrentAccessContext(supabase);
+  if (!can(access, "SCHEDULING_EDIT")) {
     throw new Error("forbidden");
   }
 

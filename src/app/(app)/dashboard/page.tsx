@@ -10,7 +10,7 @@ export default function DashboardPage() {
 
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
                 <DashboardCard
-                    label="Alunos ativos"
+                    label="Clientes ativos"
                     value="—"
                 />
 

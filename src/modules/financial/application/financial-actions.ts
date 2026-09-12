@@ -9,9 +9,9 @@ import {
 } from "@/shared/database/supabase/server";
 
 import {
-    canManageFinancialData,
     getCurrentOrganizationFinancialContext,
 } from "@/shared/auth/get-current-organization-financial-context";
+import { can, getCurrentAccessContext } from "@/shared/auth/permissions";
 
 import type {
     CurrencyCode,
@@ -352,14 +352,10 @@ async function getAuthorizedRepository() {
             supabase
         );
 
-    if (
-        !canManageFinancialData(
-            context.role
-        )
-    ) {
-        throw new Error(
-            "FINANCIAL_FORBIDDEN"
-        );
+    const access = await getCurrentAccessContext(supabase);
+
+    if (!can(access, "FINANCIAL_MANAGE")) {
+        throw new Error("FINANCIAL_FORBIDDEN");
     }
 
     return {

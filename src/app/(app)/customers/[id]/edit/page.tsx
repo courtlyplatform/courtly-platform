@@ -1,7 +1,9 @@
+import { can, getCurrentAccessContext } from "@/shared/auth/permissions";
 import Link from "next/link";
 
 import {
     notFound,
+    redirect
 } from "next/navigation";
 
 import {
@@ -170,6 +172,11 @@ export default async function EditCustomerPage({
     const supabase =
         await createClient();
 
+    const access = await getCurrentAccessContext(supabase);
+    if (!can(access, "CUSTOMERS_EDIT")) {
+        redirect("/customers");
+    }
+
 
     const commercialContext =
         await getCurrentOrganizationCommercialContext(
@@ -290,8 +297,8 @@ export default async function EditCustomerPage({
                 aria-label={
                     locale ===
                     "pt-BR"
-                        ? "Seções do aluno"
-                        : "Student sections"
+                        ? "Seções do cliente"
+                        : "Client sections"
                 }
             >
                 <Link

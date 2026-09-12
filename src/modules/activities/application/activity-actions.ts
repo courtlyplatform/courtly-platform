@@ -23,6 +23,7 @@ import {
 import {
   getCurrentOrganizationId,
 } from "@/shared/auth/get-current-organization-id";
+import { can, getCurrentAccessContext } from "@/shared/auth/permissions";
 
 /*
  * IMPORTANT:
@@ -61,6 +62,11 @@ export async function saveActivityAction(
       await getCurrentOrganizationId(
         supabase
       );
+
+    const access = await getCurrentAccessContext(supabase);
+    if (!can(access, request.id ? "SERVICES_EDIT" : "SERVICES_CREATE")) {
+      return { success: false, error: "forbidden" };
+    }
 
     const repository =
       new SupabaseActivityRepository(
@@ -161,6 +167,11 @@ export async function toggleActivityAction(
       await getCurrentOrganizationId(
         supabase
       );
+
+    const access = await getCurrentAccessContext(supabase);
+    if (!can(access, "SERVICES_DEACTIVATE")) {
+      return { success: false, error: "forbidden" };
+    }
 
     const repository =
       new SupabaseActivityRepository(

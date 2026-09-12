@@ -42,13 +42,14 @@ export const enUS = {
 
     navigation: {
         overview: "Overview",
-        customers: "Students",
+        customers: "Clients",
         services: "Services",
         scheduling: "Schedule",
         attendance: "Attendance",
         makeups: "Makeups",
         payments: "Payments",
         financial: "Finance",
+        professionals: "Professionals",
 
         collapseMenu: "Collapse menu",
         expandMenu: "Expand menu",
@@ -72,16 +73,16 @@ export const enUS = {
             "Management",
 
         title:
-            "Students",
+            "Clients",
 
         description:
-            "Manage your organization's students.",
+            "Manage your organization's clients.",
 
         newCustomer:
-            "New student",
+            "New client",
 
         customer:
-            "Student",
+            "Client",
 
         notProvided:
             "Not provided",
@@ -164,7 +165,7 @@ export const enUS = {
                 "Clear filters",
 
             noResults:
-                "No students found with the selected filters.",
+                "No clients found with the selected filters.",
         },
 
         status: {
@@ -188,24 +189,24 @@ export const enUS = {
 
         empty: {
             title:
-                "No students yet",
+                "No clients yet",
 
             description:
-                "Add your first student to start organizing your activities.",
+                "Add your first client to start organizing your activities.",
 
             action:
-                "Add student",
+                "Add client",
         },
 
         confirmation: {
             deactivateTitle:
-                "Deactivate student?",
+                "Deactivate client?",
 
             deactivateDescription:
-                'Do you want to deactivate "{name}"? All active or paused plans and services will be ended. The student record and commercial history will be preserved.',
+                'Do you want to deactivate "{name}"? All active or paused plans and services will be ended. The client record and commercial history will be preserved.',
 
             confirmDeactivate:
-                "Deactivate student",
+                "Deactivate client",
 
             deactivating:
                 "Deactivating...",
@@ -214,21 +215,21 @@ export const enUS = {
         feedback: {
             success: {
                 customerCreated:
-                    "Student created successfully.",
+                    "Client created successfully.",
 
                 customerUpdated:
-                    "Student updated successfully.",
+                    "Client updated successfully.",
 
                 customerDeactivated:
-                    "Student deactivated successfully. Agreements ended: {count}.",
+                    "Client deactivated successfully. Agreements ended: {count}.",
 
                 customerReactivated:
-                    "Student reactivated successfully. Previous agreements remain ended.",
+                    "Client reactivated successfully. Previous agreements remain ended.",
             },
 
             error: {
                 nameRequired:
-                    "Student name is required.",
+                    "Client name is required.",
 
                 invalidDocumentType:
                     "Select a valid document type.",
@@ -243,25 +244,25 @@ export const enUS = {
                     "We could not identify your organization.",
 
                 createFailed:
-                    "We could not create the student. Please try again.",
+                    "We could not create the client. Please try again.",
 
                 updateFailed:
-                    "We could not update the student. Please try again.",
+                    "We could not update the client. Please try again.",
 
                 forbidden:
-                    "You don't have permission to change this student's status.",
+                    "You don't have permission to change this client's status.",
 
                 statusUpdateFailed:
-                    "We could not change the student's status. No commercial changes were completed.",
+                    "We could not change the client's status. No commercial changes were completed.",
             },
         },
 
         form: {
             createTitle:
-                "New student",
+                "New client",
 
             editTitle:
-                "Edit student",
+                "Edit client",
 
             name:
                 "Name",
@@ -285,13 +286,13 @@ export const enUS = {
                 "Notes",
 
             create:
-                "Add student",
+                "Add client",
 
             save:
                 "Save changes",
 
             back:
-                "Back to students",
+                "Back to clients",
         },
     },
 
@@ -306,7 +307,7 @@ export const enUS = {
             owner: "Owner",
             admin: "Administrator",
             professional: "Professional",
-            customer: "Student",
+            customer: "Client",
             user: "User",
         },
 
@@ -611,7 +612,8 @@ export const enUS = {
                 "Enter a valid price.",
         },
 
-        scheduling: {
+
+    scheduling: {
             mode: "Scheduling",
             modeHelp: "Defines whether this service uses scheduling.",
             professional: "Professional",
@@ -651,6 +653,26 @@ export const enUS = {
                     "We couldn't complete the operation.",
             },
         },
+    },
+
+    professionals: {
+    eyebrow: "Team",
+    title: "Professionals",
+    description: "Manage professionals, specialties, qualified services and COURTLY access.",
+    notProvided: "Not provided",
+    actions: { new: "New professional", edit: "Edit", access: "Access", disable: "Disable", enable: "Enable", save: "Save", cancel: "Cancel", addRegistration: "Add registration" },
+    status: { active: "Active", inactive: "Inactive" },
+    summary: { all: "All", active: "Active", inactive: "Inactive" },
+    list: { professional: "Professional", specialty: "Specialty", document: "Document", phone: "Phone", privilege: "Privilege", status: "Status", actions: "Actions" },
+    filters: { search: "Search", searchPlaceholder: "Name, registration or document", status: "Status", specialty: "Specialty", registrationAuthority: "Registration authority", registrationNumber: "Registration number", all: "All", clear: "Clear filters", noResults: "No professionals found with the selected filters." },
+    fields: { firstName: "First name", lastName: "Last name", preferredName: "Preferred name", jobTitle: "Job title / profession", email: "Email", phone: "Phone", country: "Country", birthDate: "Date of birth", age: "Age", documentType: "Document type", documentNumber: "Document number", specialties: "Specialties", services: "Qualified services", registrations: "Professional registrations", registrationAuthority: "Authority (CRO, CRM, CREA, CREF...)", registrationNumber: "Registration number", registrationRegion: "State / Region", notes: "Internal notes", availability: "Weekly availability" },
+    weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    form: { newTitle: "Create professional", editTitle: "Edit professional" },
+    avatar: { change: "Change photo", remove: "Remove photo", invalid: "Use a JPG, PNG or WEBP image." },
+    access: { title: "COURTLY access", description: "System access is optional. Choose an access level and privileges only when this professional needs to sign in.", level: "Access level", invite: "Send invitation", noAccess: "NO ACCESS" },
+    specialties: { new: "New specialty", manage: "Create specialty" },
+    deactivate: { title: "Disable professional", description: "{name} will become inactive. If there are future appointments, you can choose an available professional to take compatible appointments. History is preserved.", replacement: "Replacement professional", noReplacement: "Keep appointments for later handling" },
+    feedback: { saved: "Professional saved successfully.", saveFailed: "We couldn't save the professional.", disabled: "Professional disabled successfully.", disabledWithAppointments: "Professional disabled. There are {count} future appointments that still need attention.", statusFailed: "We couldn't change the professional status.", reassignFailed: "Not every appointment could be reassigned. Check availability and qualified services.", invited: "Access invitation sent successfully.", inviteFailed: "We couldn't send the access invitation.", accessSaved: "Privileges updated successfully.", accessFailed: "We couldn't update privileges." },
     },
 
     scheduling: {
@@ -757,7 +779,7 @@ export const enUS = {
 
         reactivationNotice: {
             title:
-                "Inactive student",
+                "Inactive client",
 
             description:
                 "Adding a new plan or service will automatically reactivate {name}.",
@@ -791,7 +813,7 @@ export const enUS = {
                 "Add service",
 
             editTitle:
-                "Edit student service",
+                "Edit client service",
 
             close:
                 "Close",
@@ -802,7 +824,7 @@ export const enUS = {
                 "No contracted services",
 
             description:
-                "This student does not have any services yet.",
+                "This client does not have any services yet.",
 
             action:
                 "Add service",
@@ -826,10 +848,10 @@ export const enUS = {
 
             success: {
                 created:
-                    "Service successfully assigned to the student.",
+                    "Service successfully assigned to the client.",
 
                 updated:
-                    "Student service successfully updated.",
+                    "Client service successfully updated.",
 
                 paused:
                     "Service successfully paused.",
@@ -841,15 +863,15 @@ export const enUS = {
                     "Service successfully ended.",
 
                 createdAndReactivated:
-                    "Service successfully assigned and student automatically reactivated.",
+                    "Service successfully assigned and client automatically reactivated.",
             },
 
             error: {
                 forbidden:
-                    "You don't have permission to manage this student's services.",
+                    "You don't have permission to manage this client's services.",
 
                 customerNotFound:
-                    "We couldn't find the student.",
+                    "We couldn't find the client.",
 
                 activityNotFound:
                     "We couldn't find the selected service.",
@@ -858,10 +880,10 @@ export const enUS = {
                     "An inactive service cannot be contracted.",
 
                 duplicateOpenSubscription:
-                    "This student already has this service active or paused.",
+                    "This client already has this service active or paused.",
 
                 endedImmutable:
-                    "An ended agreement cannot be changed. Create a new subscription if the student returns.",
+                    "An ended agreement cannot be changed. Create a new subscription if the client returns.",
 
                 activityRequired:
                     "Select a service.",
@@ -876,7 +898,7 @@ export const enUS = {
                     "Check the information provided.",
 
                 saveFailed:
-                    "We couldn't assign the service to the student.",
+                    "We couldn't assign the service to the client.",
 
                 statusUpdateFailed:
                     "We couldn't change the service status.",
@@ -912,7 +934,7 @@ export const enUS = {
         },
 
         kpis: {
-            activeCustomers: "Students with active plans",
+            activeCustomers: "Clients with active plans",
             activeSubscriptions: "Active subscriptions",
             overdueRevenue: "Overdue",
             totalExpenses: "Period costs",
@@ -930,7 +952,7 @@ export const enUS = {
         revenues: {
             eyebrow: "Revenue",
             title: "Revenue",
-            description: "Charges generated from student plans and manual revenue entries.",
+            description: "Charges generated from client plans and manual revenue entries.",
             newTitle: "New manual revenue",
             editTitle: "Edit manual revenue",
             newAction: "New revenue",
@@ -939,7 +961,7 @@ export const enUS = {
 
         revenueFilters: {
             ariaLabel: "Revenue filters",
-            customer: "Student",
+            customer: "Client",
             customerPlaceholder: "Search by name or document",
             service: "Service",
             servicePlaceholder: "Search by service",
@@ -979,7 +1001,7 @@ export const enUS = {
 
         table: {
             description: "Description",
-            customer: "Student",
+            customer: "Client",
             service: "Service",
             documentType: "Document type",
             documentNumber: "Document number",
@@ -1011,7 +1033,7 @@ export const enUS = {
         },
 
         sources: {
-            subscription: "Student plan",
+            subscription: "Client plan",
             manual: "Manual",
         },
 
@@ -1079,7 +1101,7 @@ export const enUS = {
             confirmPaid: "Mark as paid",
             confirmCancel: "Cancel entry",
             goBack: "Go back",
-            unknownCustomer: "Unidentified student",
+            unknownCustomer: "Unidentified client",
             documentNotProvided: "not provided",
             serviceNotProvided: "not provided",
         },
