@@ -126,6 +126,15 @@ function getValidationErrorCode(
 }
 
 
+
+function getSafeReturnTo(formData: FormData): string | null {
+    const value = formData.get("returnTo");
+    if (typeof value !== "string") return null;
+    const trimmed = value.trim();
+    if (!trimmed.startsWith("/") || trimmed.startsWith("//")) return null;
+    return trimmed;
+}
+
 /* ============================================================
    CREATE CUSTOMER
    ============================================================ */
@@ -133,6 +142,8 @@ function getValidationErrorCode(
 export async function createCustomer(
     formData: FormData
 ): Promise<void> {
+
+    const returnTo = getSafeReturnTo(formData);
 
     const supabase =
         await createClient();
@@ -163,7 +174,7 @@ export async function createCustomer(
 
 
         redirect(
-            "/customers/new?error=organizationNotFound"
+            `/customers/new?error=organizationNotFound${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ""}`
         );
     }
 
@@ -187,14 +198,13 @@ export async function createCustomer(
 
 
         redirect(
-            `/customers/new?error=${encodeURIComponent(
-                errorCode
-            )}`
+            `/customers/new?error=${encodeURIComponent(errorCode)}${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ""}`
         );
     }
 
 
     const {
+        data: createdCustomer,
         error,
     } =
         await supabase
@@ -228,7 +238,9 @@ export async function createCustomer(
 
                 active:
                     true,
-            });
+            })
+            .select("id")
+            .single();
 
 
     if (error) {
@@ -240,7 +252,7 @@ export async function createCustomer(
 
 
         redirect(
-            "/customers/new?error=createFailed"
+            `/customers/new?error=createFailed${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ""}`
         );
     }
 
@@ -249,6 +261,11 @@ export async function createCustomer(
         "/customers"
     );
 
+
+    if (returnTo) {
+        const separator = returnTo.includes("?") ? "&" : "?";
+        redirect(`${returnTo}${separator}customerCreated=1&openAppointment=1&customerId=${createdCustomer?.id ?? ""}`);
+    }
 
     redirect(
         "/customers?success=customerCreated"

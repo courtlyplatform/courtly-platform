@@ -30,10 +30,11 @@ import {
 } from '../application/professional-actions';
 
 import { ProfessionalAvatarEditor } from './ProfessionalAvatarEditor';
+import { ProfessionalExceptionsPanel } from './ProfessionalExceptionsPanel';
 
 import styles from './professionals.module.css';
 
-type Tab = 'professionals' | 'specialties';
+type Tab = 'professionals' | 'specialties' | 'exceptions';
 
 type Modal =
   | 'form'
@@ -150,7 +151,7 @@ export function ProfessionalsClient({
 }: {
   initialData: ProfessionalPageData;
 }) {
-  const { dictionary } = useI18n();
+  const { dictionary, locale } = useI18n();
 
   const t = dictionary.professionals;
 
@@ -717,6 +718,17 @@ export function ProfessionalsClient({
         >
           {t.tabs.specialties}
         </button>
+
+        <button
+          className={
+            tab === 'exceptions'
+              ? styles.tabActive
+              : ''
+          }
+          onClick={() => setTab('exceptions')}
+        >
+          {locale === 'pt-BR' ? 'Exceções' : 'Exceptions'}
+        </button>
       </nav>
 
       {feedback && (
@@ -1230,6 +1242,10 @@ export function ProfessionalsClient({
             )}
           </section>
         </>
+      )}
+
+      {tab === 'exceptions' && (
+        <ProfessionalExceptionsPanel initialData={initialData} />
       )}
 
       {tab === 'specialties' && (

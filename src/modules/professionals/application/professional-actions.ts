@@ -346,3 +346,70 @@ export async function removeProfessionalAvatarAction(
     return { success: false, error: 'avatarRemoveFailed' };
   }
 }
+
+export async function saveProfessionalScheduleExceptionAction(input: {
+  id?: string;
+  professionalId: string;
+  exceptionType: 'ABSENCE' | 'PRESENCE';
+  startsAt: string;
+  endsAt: string;
+  reason: 'PERSONAL' | 'HEALTH' | 'VACATION' | 'TRAINING' | 'EVENT' | 'EXTRA_SHIFT' | 'COVERAGE' | 'OTHER';
+  reasonDetails?: string | null;
+}): Promise<ProfessionalActionResult> {
+  try {
+    const supabase = await createClient();
+    const context = await getCurrentAccessContext(supabase);
+    if (!can(context, 'PROFESSIONALS_EDIT')) return { success: false, error: 'forbidden' };
+
+    if (!input.professionalId || !input.startsAt || !input.endsAt || new Date(input.endsAt) <= new Date(input.startsAt)) {
+      return { success: false, error: 'invalidData' };
+    }
+    if (input.reason === 'OTHER' && !clean(input.reasonDetails)) {
+      return { success: false, error: 'reasonDetailsRequired' };
+    }
+
+    const payload = {
+      organization_id: context.organizationId,
+      professional_id: input.professionalId,
+      exception_type: input.exceptionType,
+      starts_at: input.startsAt,
+      ends_at: input.endsAt,
+      reason: input.reason,
+      reason_details: clean(input.reasonDetails),
+      active: true,
+    };
+    const db = supabase as any;
+    const query = input.id
+      ? db.from('professional_schedule_exceptions').update(payload).eq('id', input.id).eq('organization_id', context.organizationId)
+      : db.from('professional_schedule_exceptions').insert(payload);
+    const { error } = await query;
+    if (error) throw error;
+
+    revalidatePath('/professionals');
+    revalidatePath('/scheduling');
+    return { success: true };
+  } catch (e) {
+    console.error('[PROFESSIONALS] schedule exception save failed', e);
+    return { success: false, error: 'saveFailed' };
+  }
+}
+
+export async function setProfessionalScheduleExceptionActiveAction(
+  exceptionId: string,
+  active: boolean,
+): Promise<ProfessionalActionResult> {
+  try {
+    const supabase = await createClient();
+    const context = await getCurrentAccessContext(supabase);
+    if (!can(context, 'PROFESSIONALS_EDIT')) return { success: false, error: 'forbidden' };
+    const { error } = await (supabase as any).from('professional_schedule_exceptions')
+      .update({ active }).eq('id', exceptionId).eq('organization_id', context.organizationId);
+    if (error) throw error;
+    revalidatePath('/professionals');
+    revalidatePath('/scheduling');
+    return { success: true };
+  } catch (e) {
+    console.error('[PROFESSIONALS] schedule exception status failed', e);
+    return { success: false, error: 'statusFailed' };
+  }
+}

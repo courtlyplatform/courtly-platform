@@ -86,25 +86,41 @@ export async function signUp(
         );
     }
 
-    const {
-        error,
-    } =
-        await supabase.auth.signUp({
-            email,
-            password,
+    let signUpError: { message: string } | null = null;
 
-            options: {
-                data: {
-                    full_name:
-                        fullName,
+    try {
+        const { error } =
+            await supabase.auth.signUp({
+                email,
+                password,
+
+                options: {
+                    data: {
+                        full_name:
+                            fullName,
+                    },
                 },
-            },
-        });
+            });
 
-    if (error) {
+        signUpError = error;
+    } catch (error) {
+        console.error(
+            "[auth/signUp] Unable to reach Supabase Auth:",
+            error
+        );
+
+        redirect(
+            "/signup?error=" +
+                encodeURIComponent(
+                    "Não foi possível conectar ao Supabase. Verifique NEXT_PUBLIC_SUPABASE_URL e a chave pública no .env.local e confirme se o projeto Supabase está acessível."
+                )
+        );
+    }
+
+    if (signUpError) {
         redirect(
             `/signup?error=${encodeURIComponent(
-                error.message
+                signUpError.message
             )}`
         );
     }

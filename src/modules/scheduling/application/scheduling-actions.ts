@@ -187,3 +187,22 @@ export async function updateSchedulingSettingsAction(input: {
     return { success: false, error: "settingsFailed" };
   }
 }
+
+export async function setActivitySpecialtyAction(input: { activityId: string; specialtyId: string | null }): Promise<SchedulingActionResult> {
+  try {
+    const supabase = await createClient();
+    const context = await getCurrentOrganizationCommercialContext(supabase);
+    const access = await getCurrentAccessContext(supabase);
+    if (!can(access, "SERVICES_EDIT")) return { success: false, error: "forbidden" };
+    const { error } = await (supabase as any).from("activities")
+      .update({ specialty_id: input.specialtyId })
+      .eq("id", input.activityId).eq("organization_id", context.organizationId);
+    if (error) throw error;
+    revalidatePath("/scheduling");
+    revalidatePath("/services");
+    return { success: true };
+  } catch (error) {
+    console.error("[SCHEDULING] Failed to set activity specialty", error);
+    return { success: false, error: "specialtyFailed" };
+  }
+}

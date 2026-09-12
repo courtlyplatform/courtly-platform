@@ -45,6 +45,28 @@ export type ProfessionalUnavailability = {
   reason: string | null;
 };
 
+export type ProfessionalScheduleExceptionType = 'ABSENCE' | 'PRESENCE';
+export type ProfessionalScheduleExceptionReason =
+  | 'PERSONAL'
+  | 'HEALTH'
+  | 'VACATION'
+  | 'TRAINING'
+  | 'EVENT'
+  | 'EXTRA_SHIFT'
+  | 'COVERAGE'
+  | 'OTHER';
+
+export type ProfessionalScheduleException = {
+  id: string;
+  exceptionType: ProfessionalScheduleExceptionType;
+  startsAt: string;
+  endsAt: string;
+  reason: ProfessionalScheduleExceptionReason;
+  reasonDetails: string | null;
+  active: boolean;
+  createdAt: string;
+};
+
 export type Professional = {
   id: string;
   organizationId: string;
@@ -72,6 +94,7 @@ export type Professional = {
   permissions: PermissionCode[];
   availabilityRules: ProfessionalAvailabilityRule[];
   unavailability: ProfessionalUnavailability[];
+  scheduleExceptions: ProfessionalScheduleException[];
 };
 
 export type ProfessionalListFilters = {

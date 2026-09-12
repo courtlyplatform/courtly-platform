@@ -10,6 +10,24 @@ export type SchedulingSettings = {
 export type SchedulingCustomer = {
   id: string;
   name: string;
+  documentType: string | null;
+  documentNumber: string | null;
+  active: boolean;
+};
+
+export type ProfessionalAvailabilityRule = {
+  id: string;
+  weekday: number;
+  startTime: string;
+  endTime: string;
+  active: boolean;
+};
+
+export type ProfessionalScheduleException = {
+  id: string;
+  exceptionType: "ABSENCE" | "PRESENCE";
+  startsAt: string;
+  endsAt: string;
   active: boolean;
 };
 
@@ -18,14 +36,22 @@ export type SchedulingProfessional = {
   name: string;
   active: boolean;
   activityIds: string[];
+  availabilityRules: ProfessionalAvailabilityRule[];
+  scheduleExceptions: ProfessionalScheduleException[];
+};
+
+export type SchedulingResourceType = {
+  id: string;
+  name: string;
+  active: boolean;
 };
 
 export type SchedulingResource = {
   id: string;
   name: string;
   active: boolean;
-  resourceTypeId: string;
-  resourceTypeName: string;
+  resourceTypeId: string | null;
+  resourceTypeName: string | null;
 };
 
 export type SchedulingSubscription = {
@@ -87,7 +113,9 @@ export type SchedulingPageData = {
   settings: SchedulingSettings;
   customers: SchedulingCustomer[];
   activities: import("@/modules/activities/domain/activity").Activity[];
+  specialties: { id: string; name: string; color: string; active: boolean }[];
   professionals: SchedulingProfessional[];
+  resourceTypes: SchedulingResourceType[];
   resources: SchedulingResource[];
   activityResourceRequirements: ActivityResourceRequirement[];
   subscriptions: SchedulingSubscription[];

@@ -2,20 +2,23 @@
 
 import {
   type FormEvent,
+  useEffect,
   useMemo,
   useState,
   useTransition,
 } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { CourtlyAlert } from "@/shared/ui/CourtlyAlert";
-import { saveResourceAction, toggleResourceAction } from "@/modules/resources/application/resource-actions";
+import { saveResourceAction, saveResourceTypeAction, toggleResourceAction } from "@/modules/resources/application/resource-actions";
 import {
   cancelAppointmentAction,
   changeScheduleRuleStatusAction,
   createAppointmentAction,
   createScheduleRuleAction,
   setActivityResourceRequirementAction,
+  setActivitySpecialtyAction,
   setProfessionalQualificationAction,
   updateSchedulingSettingsAction,
 } from "../application/scheduling-actions";
@@ -58,6 +61,7 @@ const todayIso = () => formatLocalDate(new Date());
 
 export function SchedulingClient({ initialData }: { initialData: SchedulingPageData }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { dictionary, locale } = useI18n();
   const t = dictionary.scheduling;
 
@@ -91,8 +95,26 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
     resourceIds: [],
   }));
 
-  const [resourceForm, setResourceForm] = useState({ id: "", name: "", typeName: "" });
+  const [resourceForm, setResourceForm] = useState({ id: "", name: "", resourceTypeId: "" });
+  const [resourceTypeForm, setResourceTypeForm] = useState("");
+  const [now, setNow] = useState(() => new Date());
   const [windowDays, setWindowDays] = useState(String(initialData.settings.generationWindowDays));
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (searchParams.get("openAppointment") !== "1") return;
+    const customerId = searchParams.get("customerId") ?? "";
+    const date = searchParams.get("date") ?? todayIso();
+    const startTime = searchParams.get("startTime") ?? "09:00";
+    const endTime = searchParams.get("endTime") ?? "10:00";
+    const activityId = searchParams.get("activityId") ?? "";
+    setAppointmentForm((current) => ({ ...current, customerId, date, startTime, endTime, activityId }));
+    setModal("appointment");
+  }, [searchParams]);
 
   const activeActivities = useMemo(
     () => initialData.activities.filter((activity) => activity.active && activity.schedulingMode !== "NONE"),
@@ -368,6 +390,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
               data={initialData}
               locale={locale}
               t={t}
+              now={now}
               onSelectDay={(date: Date) => {
                 setCursor(date);
                 setView("day");
@@ -380,6 +403,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
               data={initialData}
               locale={locale}
               t={t}
+              now={now}
               onCancel={(appointmentId: string) =>
                 startTransition(async () => {
                   const result = await cancelAppointmentAction(appointmentId);
@@ -400,6 +424,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
         <RecurrencesPanel
           data={initialData}
           t={t}
+          locale={locale}
           pending={isPending}
           onNew={openRecurrence}
           onStatus={(ruleId: string, status: "ACTIVE" | "PAUSED" | "ENDED") =>
@@ -419,9 +444,15 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
         <ResourcesPanel
           data={initialData}
           t={t}
+          locale={locale}
           pending={isPending}
           onNew={() => {
-            setResourceForm({ id: "", name: "", typeName: "" });
+            setResourceForm({ id: "", name: "", resourceTypeId: "" });
+            setModalError(null);
+            setModal("resource");
+          }}
+          onEdit={(resource: any) => {
+            setResourceForm({ id: resource.id, name: resource.name, resourceTypeId: resource.resourceTypeId ?? "" });
             setModalError(null);
             setModal("resource");
           }}
@@ -441,6 +472,16 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
               setFeedback({
                 type: result.success ? "success" : "error",
                 message: result.success ? t.feedback.requirementUpdated : t.feedback.requirementFailed,
+              });
+              if (result.success) router.refresh();
+            })
+          }
+          onSpecialty={(activityId: string, specialtyId: string | null) =>
+            startTransition(async () => {
+              const result = await setActivitySpecialtyAction({ activityId, specialtyId });
+              setFeedback({
+                type: result.success ? "success" : "error",
+                message: result.success ? (locale === "pt-BR" ? "Especialidade do serviço atualizada." : "Service specialty updated.") : t.feedback.requirementFailed,
               });
               if (result.success) router.refresh();
             })
@@ -496,24 +537,22 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
           <form className={styles.form} onSubmit={handleAppointmentSubmit}>
             <div className={styles.formGrid}>
               <Field label={t.fields.customer}>
-                <select
-                  value={appointmentForm.customerId}
-                  onChange={(event) =>
+                <CustomerSearchField
+                  customers={initialData.customers.filter((customer) => customer.active)}
+                  selectedId={appointmentForm.customerId}
+                  onSelect={(customerId: string) =>
                     setAppointmentForm((current) => ({
                       ...current,
-                      customerId: event.target.value,
+                      customerId,
                       activityId: "",
                       subscriptionId: "",
                       professionalId: "",
                       resourceIds: [],
                     }))
                   }
-                >
-                  <option value="">{t.placeholders.selectCustomer}</option>
-                  {initialData.customers.filter((customer) => customer.active).map((customer) => (
-                    <option key={customer.id} value={customer.id}>{customer.name}</option>
-                  ))}
-                </select>
+                  createHref={buildCustomerCreateHref(appointmentForm)}
+                  locale={locale}
+                />
               </Field>
 
               <Field label={t.fields.service}>
@@ -564,7 +603,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
                   onChange={(event) => setAppointmentForm((current) => ({ ...current, professionalId: event.target.value }))}
                 >
                   <option value="">{t.placeholders.noProfessional}</option>
-                  {getCompatibleProfessionals(appointmentActivity, initialData).map((professional) => (
+                  {getAvailableProfessionalsForSlot(appointmentActivity, appointmentForm.date, appointmentForm.startTime, appointmentForm.endTime, initialData).map((professional) => (
                     <option key={professional.id} value={professional.id}>{professional.name}</option>
                   ))}
                 </select>
@@ -585,7 +624,11 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
               selected={appointmentForm.resourceIds}
               data={initialData}
               t={t}
+              locale={locale}
               onChange={(resourceIds: string[]) => setAppointmentForm((current) => ({ ...current, resourceIds }))}
+              date={appointmentForm.date}
+              startTime={appointmentForm.startTime}
+              endTime={appointmentForm.endTime}
             />
 
             {appointmentActivity && appointmentForm.date && (
@@ -668,6 +711,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
               selected={recurrenceForm.resourceIds}
               data={initialData}
               t={t}
+              locale={locale}
               onChange={(resourceIds: string[]) => setRecurrenceForm((current) => ({ ...current, resourceIds }))}
             />
 
@@ -683,7 +727,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
       )}
 
       {modal === "resource" && (
-        <Modal title={t.resources.newTitle} subtitle={t.resources.newDescription} closeLabel={t.actions.close} onClose={closeModal}>
+        <Modal title={resourceForm.id ? (locale === "pt-BR" ? "Editar recurso" : "Edit resource") : t.resources.newTitle} subtitle={t.resources.newDescription} closeLabel={t.actions.close} onClose={closeModal}>
           <form
             className={styles.form}
             onSubmit={(event) => {
@@ -693,7 +737,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
                 const result = await saveResourceAction({
                   id: resourceForm.id || undefined,
                   name: resourceForm.name,
-                  typeName: resourceForm.typeName,
+                  resourceTypeId: resourceForm.resourceTypeId || null,
                 });
                 if (!result.success) {
                   setModalError(t.feedback.resourceFailed);
@@ -706,12 +750,38 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
             }}
           >
             <Field label={t.resources.type}>
-              <input
-                value={resourceForm.typeName}
-                placeholder={t.resources.typePlaceholder}
-                onChange={(event) => setResourceForm((current) => ({ ...current, typeName: event.target.value }))}
-              />
+              <select
+                value={resourceForm.resourceTypeId}
+                onChange={(event) => setResourceForm((current) => ({ ...current, resourceTypeId: event.target.value }))}
+              >
+                <option value="">{locale === "pt-BR" ? "Sem requisito/tipo vinculado" : "No linked requirement/type"}</option>
+                {initialData.resourceTypes.filter((item) => item.active).map((item) => (
+                  <option key={item.id} value={item.id}>{item.name}</option>
+                ))}
+              </select>
             </Field>
+            <div className={styles.inlineTypeCreator}>
+              <input
+                value={resourceTypeForm}
+                placeholder={locale === "pt-BR" ? "Novo tipo/requisito (ex.: Quadra de Tennis)" : "New requirement/type"}
+                onChange={(event) => setResourceTypeForm(event.target.value)}
+              />
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                disabled={!resourceTypeForm.trim() || isPending}
+                onClick={() => startTransition(async () => {
+                  const result = await saveResourceTypeAction({ name: resourceTypeForm });
+                  if (result.success) {
+                    setResourceTypeForm("");
+                    if (result.id) setResourceForm((current) => ({ ...current, resourceTypeId: result.id! }));
+                    router.refresh();
+                  }
+                })}
+              >
+                {locale === "pt-BR" ? "Criar tipo" : "Create type"}
+              </button>
+            </div>
             <Field label={t.resources.name}>
               <input
                 value={resourceForm.name}
@@ -728,50 +798,36 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
   );
 }
 
-function DayWeekCalendar({ days, appointments, data, locale, t, onCancel }: any) {
+function DayWeekCalendar({ days, appointments, data, locale, t, onCancel, now }: any) {
+  const hours = Array.from({ length: 15 }, (_, index) => index + 7);
+  const nowHour = now.getHours();
+  const nowMinute = now.getMinutes();
+
   return (
     <div className={styles.dayWeekGrid} style={{ gridTemplateColumns: `84px repeat(${days.length}, minmax(170px, 1fr))` }}>
       <div className={styles.cornerCell} />
       {days.map((day: Date) => (
-        <div key={day.toISOString()} className={styles.dayHeader}>
+        <div key={day.toISOString()} className={`${styles.dayHeader} ${isSameDate(day, now) ? styles.dayHeaderToday : ""}`}>
           <span>{new Intl.DateTimeFormat(locale, { weekday: "short" }).format(day)}</span>
           <strong>{new Intl.DateTimeFormat(locale, { day: "2-digit", month: "2-digit" }).format(day)}</strong>
         </div>
       ))}
 
-      {Array.from({ length: 15 }, (_, index) => index + 7).flatMap((hour) => [
+      {hours.flatMap((hour) => [
         <div key={`hour-${hour}`} className={styles.timeCell}>{String(hour).padStart(2, "0")}:00</div>,
         ...days.map((day: Date) => {
           const cellAppointments = appointments.filter((appointment: Appointment) => {
             const date = new Date(appointment.startsAt);
             return isSameDate(date, day) && date.getHours() === hour;
           });
-
-          const activeResources = data.resources.filter((resource: any) => resource.active);
-          const activeProfessionals = data.professionals.filter((professional: any) => professional.active);
-          const usedResources = new Set(cellAppointments.flatMap((appointment: Appointment) => appointment.resourceIds));
-          const usedProfessionals = new Set(
-            cellAppointments
-              .map((appointment: Appointment) => appointment.professionalId)
-              .filter(Boolean)
-          );
-          const globallyFull =
-            (activeResources.length > 0 && usedResources.size >= activeResources.length) ||
-            (activeProfessionals.length > 0 && usedProfessionals.size >= activeProfessionals.length);
+          const nowInThisCell = isSameDate(day, now) && nowHour === hour;
+          const top = `${Math.max(0, Math.min(100, (nowMinute / 60) * 100))}%`;
 
           return (
-            <div
-              key={`${day.toISOString()}-${hour}`}
-              className={`${styles.slotCell} ${globallyFull ? styles.slotFull : ""}`}
-            >
-              {(activeResources.length > 0 || activeProfessionals.length > 0) && (
-                <div className={styles.slotOccupancy}>
-                  {activeResources.length > 0 && (
-                    <span>{t.capacity.resources}: {usedResources.size}/{activeResources.length}</span>
-                  )}
-                  {activeProfessionals.length > 0 && (
-                    <span>{t.capacity.professionals}: {usedProfessionals.size}/{activeProfessionals.length}</span>
-                  )}
+            <div key={`${day.toISOString()}-${hour}`} className={styles.slotCell}>
+              {nowInThisCell && (
+                <div className={styles.currentTimeLine} style={{ top }}>
+                  <span>{formatTime(now.toISOString(), locale)}</span>
                 </div>
               )}
               {cellAppointments.map((appointment: Appointment) => (
@@ -785,25 +841,28 @@ function DayWeekCalendar({ days, appointments, data, locale, t, onCancel }: any)
   );
 }
 
-function MonthCalendar({ days, cursor, appointments, data, locale, t, onSelectDay }: any) {
+function MonthCalendar({ days, cursor, appointments, data, locale, t, onSelectDay, now }: any) {
+  const today = startOfDay(now);
   return (
     <div className={styles.monthGrid}>
       {t.weekdaysShort.map((label: string) => <div key={label} className={styles.monthWeekday}>{label}</div>)}
       {days.map((day: Date) => {
         const dayAppointments = appointments.filter((appointment: Appointment) => isSameDate(new Date(appointment.startsAt), day));
         const currentMonth = day.getMonth() === cursor.getMonth();
+        const isToday = isSameDate(day, today);
+        const isPast = startOfDay(day).getTime() < today.getTime();
         return (
           <button
             key={day.toISOString()}
             type="button"
-            className={`${styles.monthDay} ${!currentMonth ? styles.monthDayMuted : ""}`}
+            className={`${styles.monthDay} ${!currentMonth ? styles.monthDayMuted : ""} ${isPast ? styles.monthDayPast : ""} ${isToday ? styles.monthDayToday : ""}`}
             onClick={() => onSelectDay(day)}
           >
-            <strong>{day.getDate()}</strong>
+            <strong className={styles.monthDateNumber}>{day.getDate()}{isToday && <i className={styles.todayDot} />}</strong>
             <span>{dayAppointments.length ? t.calendar.appointmentCount.replace("{count}", String(dayAppointments.length)) : t.calendar.free}</span>
             {dayAppointments.slice(0, 3).map((appointment: Appointment) => {
               const activity = data.activities.find((item: Activity) => item.id === appointment.activityId);
-              return <i key={appointment.id}>{formatTime(appointment.startsAt, locale)} · {activity?.name}</i>;
+              return <i key={appointment.id} style={{ color: activity?.specialtyColor ?? undefined }}>{formatTime(appointment.startsAt, locale)} · {activity?.name}</i>;
             })}
           </button>
         );
@@ -817,12 +876,14 @@ function AppointmentCard({ appointment, data, locale, t, onCancel }: any) {
   const customer = data.customers.find((item: any) => item.id === appointment.customerId);
   const professional = data.professionals.find((item: any) => item.id === appointment.professionalId);
   const resources = data.resources.filter((item: any) => appointment.resourceIds.includes(item.id));
+  const color = activity?.specialtyColor ?? "var(--courtly-green)";
 
   return (
-    <article className={styles.appointmentCard}>
-      <div className={styles.appointmentTime}>{formatTime(appointment.startsAt, locale)}–{formatTime(appointment.endsAt, locale)}</div>
+    <article className={styles.appointmentCard} style={{ borderLeftColor: color, background: `color-mix(in srgb, ${color} 9%, var(--surface))` }}>
+      <div className={styles.appointmentTime} style={{ color }}>{formatTime(appointment.startsAt, locale)}–{formatTime(appointment.endsAt, locale)}</div>
       <strong>{customer?.name ?? t.calendar.unknownCustomer}</strong>
       <span>{activity?.name ?? t.calendar.unknownService}</span>
+      {activity?.specialtyName && <small>{activity.specialtyName}</small>}
       {professional && <small>{professional.name}</small>}
       {resources.length > 0 && <small>{resources.map((resource: any) => resource.name).join(", ")}</small>}
       <div className={styles.appointmentFooter}>
@@ -892,10 +953,10 @@ function RecurrencesPanel({ data, t, pending, onNew, onStatus }: any) {
   );
 }
 
-function ResourcesPanel({ data, t, pending, onNew, onToggle, onRequirement }: any) {
-  const resourceTypes = Array.from(
-    new Map(data.resources.map((resource: any) => [resource.resourceTypeId, resource.resourceTypeName])).entries()
-  ) as [string, string][];
+function ResourcesPanel({ data, t, locale, pending, onNew, onEdit, onToggle, onRequirement, onSpecialty }: any) {
+  const resourceTypes = data.resourceTypes
+    .filter((item: any) => item.active)
+    .map((item: any) => [item.id, item.name]) as [string, string][];
 
   return (
     <section className={styles.panelCard}>
@@ -912,12 +973,15 @@ function ResourcesPanel({ data, t, pending, onNew, onToggle, onRequirement }: an
         {data.resources.map((resource: any) => (
           <article key={resource.id} className={styles.resourceCard}>
             <div>
-              <span>{resource.resourceTypeName}</span>
+              <span>{resource.resourceTypeName ?? (locale === "pt-BR" ? "Sem requisito vinculado" : "No linked requirement")}</span>
               <strong>{resource.name}</strong>
             </div>
-            <button type="button" disabled={pending} onClick={() => onToggle(resource.id, !resource.active)}>
-              {resource.active ? t.resources.deactivate : t.resources.activate}
-            </button>
+            <div className={styles.resourceCardActions}>
+              <button type="button" disabled={pending} onClick={() => onEdit(resource)}>{locale === "pt-BR" ? "Editar" : "Edit"}</button>
+              <button type="button" disabled={pending} onClick={() => onToggle(resource.id, !resource.active)}>
+                {resource.active ? t.resources.deactivate : t.resources.activate}
+              </button>
+            </div>
           </article>
         ))}
         {data.resources.length === 0 && <p className={styles.emptyText}>{t.resources.empty}</p>}
@@ -929,16 +993,25 @@ function ResourcesPanel({ data, t, pending, onNew, onToggle, onRequirement }: an
         {data.activities.filter((activity: Activity) => activity.resourceRequirement !== "NONE").map((activity: Activity) => {
           const existing = data.activityResourceRequirements.find((item: any) => item.activityId === activity.id);
           return (
-            <RequirementEditor
-              key={activity.id}
-              activity={activity}
-              existing={existing}
-              resourceTypes={resourceTypes}
-              t={t}
-              onSave={onRequirement}
-            />
+            <RequirementEditor key={activity.id} activity={activity} existing={existing} resourceTypes={resourceTypes} t={t} onSave={onRequirement} />
           );
         })}
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>{locale === "pt-BR" ? "Cor por especialidade" : "Specialty color"}</h3>
+        <p>{locale === "pt-BR" ? "Vincule opcionalmente cada serviço a uma especialidade. A agenda usará a cor dessa especialidade no compromisso." : "Optionally link each service to a specialty. The calendar will use that specialty color for appointments."}</p>
+        {data.activities.filter((activity: Activity) => activity.schedulingMode !== "NONE").map((activity: Activity) => (
+          <div className={styles.requirementRow} key={`specialty-${activity.id}`}>
+            <strong>{activity.name}</strong>
+            <select value={activity.specialtyId ?? ""} onChange={(event) => onSpecialty(activity.id, event.target.value || null)}>
+              <option value="">{locale === "pt-BR" ? "Cor padrão" : "Default color"}</option>
+              {data.specialties.filter((item: any) => item.active).map((item: any) => (
+                <option key={item.id} value={item.id}>{item.name} · {item.color}</option>
+              ))}
+            </select>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -985,13 +1058,13 @@ function SubscriptionHint({ customerId, activityId, selectedId, data, t, onChang
   );
 }
 
-function ResourceSelector({ activity, selected, data, t, onChange }: any) {
+function ResourceSelector({ activity, selected, data, t, locale, onChange, date, startTime, endTime }: any) {
   if (!activity || activity.resourceRequirement === "NONE") return null;
   const requirements = getRequiredResources(activity, data);
   const allowedTypeIds = new Set(requirements.map((item: any) => item.resourceTypeId));
-  const resources = data.resources.filter(
-    (resource: any) => resource.active && (allowedTypeIds.size === 0 || allowedTypeIds.has(resource.resourceTypeId))
-  );
+  const startsAt = date && startTime ? localDateTimeToIso(date, startTime) : null;
+  const endsAt = date && endTime ? localDateTimeToIso(date, endTime) : null;
+  const resources = data.resources.filter((resource: any) => resource.active && (allowedTypeIds.size === 0 || (resource.resourceTypeId && allowedTypeIds.has(resource.resourceTypeId))));
 
   return (
     <div className={styles.resourceSelector}>
@@ -1000,21 +1073,23 @@ function ResourceSelector({ activity, selected, data, t, onChange }: any) {
         <p>{activity.resourceRequirement === "REQUIRED" ? t.resources.requiredHelp : t.resources.optionalHelp}</p>
       </div>
       <div className={styles.resourceOptions}>
-        {resources.map((resource: any) => (
-          <label key={resource.id}>
-            <input
-              type="checkbox"
-              checked={selected.includes(resource.id)}
-              onChange={(event) => {
-                const next = event.target.checked
-                  ? [...selected, resource.id]
-                  : selected.filter((id: string) => id !== resource.id);
-                onChange(next);
-              }}
-            />
-            <span>{resource.name}<small>{resource.resourceTypeName}</small></span>
-          </label>
-        ))}
+        {resources.map((resource: any) => {
+          const busy = startsAt && endsAt ? isResourceBusy(resource.id, startsAt, endsAt, data) : false;
+          return (
+            <label key={resource.id} className={busy ? styles.resourceOptionBusy : ""}>
+              <input
+                type="checkbox"
+                disabled={busy}
+                checked={selected.includes(resource.id)}
+                onChange={(event) => {
+                  const next = event.target.checked ? [...selected, resource.id] : selected.filter((id: string) => id !== resource.id);
+                  onChange(next);
+                }}
+              />
+              <span>{resource.name}<small>{resource.resourceTypeName ?? (locale === "pt-BR" ? "Sem tipo" : "No type")} · {busy ? (locale === "pt-BR" ? "Ocupado" : "Busy") : (locale === "pt-BR" ? "Disponível" : "Available")}</small></span>
+            </label>
+          );
+        })}
       </div>
     </div>
   );
@@ -1038,6 +1113,59 @@ function AvailabilityPreview({ activity, form, data, t }: any) {
       <p>{availability.reason ?? t.capacity.ready}</p>
     </div>
   );
+}
+
+function CustomerSearchField({ customers, selectedId, onSelect, createHref, locale }: any) {
+  const selected = customers.find((customer: any) => customer.id === selectedId);
+  const [query, setQuery] = useState(selected ? customerLabel(selected) : "");
+  const [open, setOpen] = useState(false);
+  const normalized = normalizeSearch(query);
+  const filtered = customers.filter((customer: any) => {
+    if (!normalized) return true;
+    const name = normalizeSearch(customer.name);
+    const doc = String(customer.documentNumber ?? "").replace(/\D/g, "");
+    const queryDigits = query.replace(/\D/g, "");
+    return name.includes(normalized) || (queryDigits && doc.includes(queryDigits));
+  }).slice(0, 12);
+
+  useEffect(() => {
+    if (selected) setQuery(customerLabel(selected));
+  }, [selectedId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className={styles.customerSearch}>
+      <input
+        value={query}
+        placeholder={locale === "pt-BR" ? "Buscar por nome ou CPF" : "Search by name or document"}
+        onFocus={() => setOpen(true)}
+        onChange={(event) => { setQuery(event.target.value); setOpen(true); if (selectedId) onSelect(""); }}
+      />
+      {open && (
+        <div className={styles.customerSearchMenu}>
+          {filtered.map((customer: any) => (
+            <button key={customer.id} type="button" onClick={() => { onSelect(customer.id); setQuery(customerLabel(customer)); setOpen(false); }}>
+              <strong>{customer.name}</strong>
+              <span>{customer.documentNumber ? `${customer.documentType ?? ""} ${customer.documentNumber}` : (locale === "pt-BR" ? "Sem documento" : "No document")}</span>
+            </button>
+          ))}
+          {filtered.length === 0 && <div className={styles.customerSearchEmpty}>{locale === "pt-BR" ? "Nenhum cliente encontrado." : "No client found."}</div>}
+          <Link className={styles.customerCreateLink} href={createHref}>{locale === "pt-BR" ? "+ Cliente não cadastrado? Cadastrar cliente" : "+ Client not registered? Create client"}</Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function customerLabel(customer: any) {
+  return customer.documentNumber ? `${customer.name} · ${customer.documentNumber}` : customer.name;
+}
+function normalizeSearch(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+function buildCustomerCreateHref(form: AppointmentForm) {
+  const params = new URLSearchParams({ openAppointment: "1", date: form.date, startTime: form.startTime, endTime: form.endTime });
+  if (form.activityId) params.set("activityId", form.activityId);
+  return `/customers/new?returnTo=${encodeURIComponent(`/scheduling?${params.toString()}`)}`;
 }
 
 function Modal({ title, subtitle, closeLabel, onClose, children }: any) {
@@ -1076,6 +1204,35 @@ function getCompatibleProfessionals(activity: Activity | null, data: SchedulingP
   });
 }
 
+function getAvailableProfessionalsForSlot(activity: Activity | null, date: string, startTime: string, endTime: string, data: SchedulingPageData) {
+  if (!activity || !date || !startTime || !endTime || endTime <= startTime) return [];
+  const startsAt = localDateTimeToIso(date, startTime);
+  const endsAt = localDateTimeToIso(date, endTime);
+  return getCompatibleProfessionals(activity, data).filter((professional) => isProfessionalAvailable(professional, activity.id, startsAt, endsAt, data));
+}
+
+function isProfessionalAvailable(professional: SchedulingPageData["professionals"][number], activityId: string, startsAt: string, endsAt: string, data: SchedulingPageData) {
+  if (!professional.active || !professional.activityIds.includes(activityId)) return false;
+  if (data.appointments.some((appointment) => appointment.status === "SCHEDULED" && appointment.professionalId === professional.id && overlaps(startsAt, endsAt, appointment.startsAt, appointment.endsAt))) return false;
+
+  const absence = professional.scheduleExceptions.some((exception) => exception.active && exception.exceptionType === "ABSENCE" && overlaps(startsAt, endsAt, exception.startsAt, exception.endsAt));
+  if (absence) return false;
+
+  const presence = professional.scheduleExceptions.some((exception) => exception.active && exception.exceptionType === "PRESENCE" && new Date(exception.startsAt) <= new Date(startsAt) && new Date(exception.endsAt) >= new Date(endsAt));
+  if (presence) return true;
+
+  const start = new Date(startsAt);
+  const end = new Date(endsAt);
+  const weekday = start.getDay();
+  const localStart = `${String(start.getHours()).padStart(2,"0")}:${String(start.getMinutes()).padStart(2,"0")}`;
+  const localEnd = `${String(end.getHours()).padStart(2,"0")}:${String(end.getMinutes()).padStart(2,"0")}`;
+  return professional.availabilityRules.some((rule) => rule.active && rule.weekday === weekday && rule.startTime.slice(0,5) <= localStart && rule.endTime.slice(0,5) >= localEnd);
+}
+
+function isResourceBusy(resourceId: string, startsAt: string, endsAt: string, data: SchedulingPageData) {
+  return data.appointments.some((appointment) => appointment.status === "SCHEDULED" && appointment.resourceIds.includes(resourceId) && overlaps(startsAt, endsAt, appointment.startsAt, appointment.endsAt));
+}
+
 function getRequiredResources(activity: Activity, data: SchedulingPageData) {
   return data.activityResourceRequirements.filter((item) => item.activityId === activity.id);
 }
@@ -1098,12 +1255,10 @@ function getClientAvailability({ activity, startsAt, endsAt, professionalId, res
   }
 
   if (professionalId) {
-    const conflict = data.appointments.some((appointment: Appointment) =>
-      appointment.status === "SCHEDULED" &&
-      appointment.professionalId === professionalId &&
-      overlaps(startsAt, endsAt, appointment.startsAt, appointment.endsAt)
-    );
-    if (conflict) return { available: false, reason: "Professional is already booked in this interval." };
+    const professional = data.professionals.find((item: any) => item.id === professionalId);
+    if (!professional || !isProfessionalAvailable(professional, activity.id, startsAt, endsAt, data)) {
+      return { available: false, reason: "Professional is not available for this service/date/time." };
+    }
   }
 
   const requirements = getRequiredResources(activity, data);

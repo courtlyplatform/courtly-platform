@@ -23,6 +23,7 @@ export class SupabaseProfessionalRepository implements ProfessionalRepository {
       rolePermissionsResult,
       availabilityResult,
       unavailabilityResult,
+      scheduleExceptionsResult,
       permissionsResult,
     ] = await Promise.all([
       db.from('professionals')
@@ -53,15 +54,18 @@ export class SupabaseProfessionalRepository implements ProfessionalRepository {
       db.from('professional_unavailability')
         .select('id,professional_id,starts_at,ends_at,reason')
         .eq('organization_id', organizationId)
-        .gte('ends_at', new Date().toISOString())
-        .order('starts_at'),
+        .order('starts_at', { ascending: false }),
+      db.from('professional_schedule_exceptions')
+        .select('id,professional_id,exception_type,starts_at,ends_at,reason,reason_details,active,created_at')
+        .eq('organization_id', organizationId)
+        .order('starts_at', { ascending: false }),
       db.rpc('get_my_permissions'),
     ]);
 
     const failure = [
       professionalsResult, specialtiesResult, assignmentsResult, registrationsResult,
       activitiesResult, qualificationsResult, membershipsResult, overridesResult,
-      rolePermissionsResult, availabilityResult, unavailabilityResult, permissionsResult,
+      rolePermissionsResult, availabilityResult, unavailabilityResult, scheduleExceptionsResult, permissionsResult,
     ].find((result: any) => result.error);
     if (failure?.error) throw failure.error;
 
@@ -142,6 +146,18 @@ export class SupabaseProfessionalRepository implements ProfessionalRepository {
         unavailability: (unavailabilityResult.data ?? [])
           .filter((item: any) => item.professional_id === row.id)
           .map((item: any) => ({ id: item.id, startsAt: item.starts_at, endsAt: item.ends_at, reason: item.reason })),
+        scheduleExceptions: (scheduleExceptionsResult.data ?? [])
+          .filter((item: any) => item.professional_id === row.id)
+          .map((item: any) => ({
+            id: item.id,
+            exceptionType: item.exception_type,
+            startsAt: item.starts_at,
+            endsAt: item.ends_at,
+            reason: item.reason,
+            reasonDetails: item.reason_details,
+            active: item.active,
+            createdAt: item.created_at,
+          })),
       };
     });
 

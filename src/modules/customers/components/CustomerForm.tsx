@@ -51,6 +51,8 @@ type CustomerFormProps = {
 
     mode?:
         "create" | "edit";
+
+    returnTo?: string | null;
 };
 
 function onlyPhoneDigits(
@@ -65,6 +67,7 @@ export function CustomerForm({
     action,
     customer,
     mode = "create",
+    returnTo = null,
 }: CustomerFormProps) {
     const {
         dictionary,
@@ -126,6 +129,7 @@ export function CustomerForm({
             action={action}
             className="customer-form"
         >
+            {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
             {/* =====================================
                 NAME — FULL WIDTH
                ===================================== */}

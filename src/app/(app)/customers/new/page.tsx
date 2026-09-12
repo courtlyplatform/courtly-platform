@@ -25,6 +25,7 @@ import {
 type NewCustomerPageProps = {
     searchParams: Promise<{
         error?: string;
+        returnTo?: string;
     }>;
 };
 
@@ -129,10 +130,9 @@ export default async function NewCustomerPage({
 
 
             <CustomerForm
-                action={
-                    createCustomer
-                }
+                action={createCustomer}
                 mode="create"
+                returnTo={params.returnTo?.startsWith("/") && !params.returnTo.startsWith("//") ? params.returnTo : null}
             />
         </div>
     );

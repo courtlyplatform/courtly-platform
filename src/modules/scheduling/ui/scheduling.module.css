@@ -794,3 +794,28 @@
   font-size: .72rem;
   font-weight: 800;
 }
+
+/* ===== Scheduling evolution ===== */
+.customerSearch { position:relative; }
+.customerSearch > input { width:100%; }
+.customerSearchMenu { position:absolute; z-index:30; left:0; right:0; top:calc(100% + 6px); max-height:300px; overflow:auto; border:1px solid var(--border); border-radius:12px; background:var(--surface); box-shadow:var(--shadow-md); padding:6px; }
+.customerSearchMenu button { display:block; width:100%; border:0; background:transparent; color:var(--text); text-align:left; padding:9px 10px; border-radius:9px; cursor:pointer; }
+.customerSearchMenu button:hover { background:var(--surface-secondary); }
+.customerSearchMenu strong,.customerSearchMenu span { display:block; }
+.customerSearchMenu span { margin-top:2px; color:var(--text-secondary); font-size:.76rem; }
+.customerSearchEmpty { padding:12px 10px; color:var(--text-secondary); font-size:.82rem; }
+.customerCreateLink { display:block; margin-top:4px; padding:10px; border-top:1px solid var(--border); color:var(--courtly-green); font-weight:800; text-decoration:none; }
+.dayHeaderToday { background:color-mix(in srgb,var(--courtly-green) 8%,var(--surface)); }
+.slotCell { position:relative; }
+.currentTimeLine { position:absolute; z-index:8; left:0; right:0; height:2px; background:#d94a4a; pointer-events:none; }
+.currentTimeLine::before { content:""; position:absolute; left:-4px; top:-4px; width:10px; height:10px; border-radius:50%; background:#d94a4a; }
+.currentTimeLine span { position:absolute; left:4px; top:-18px; padding:1px 4px; border-radius:4px; background:#d94a4a; color:white; font-size:.64rem; font-weight:800; }
+.monthDayPast { background:color-mix(in srgb,var(--text) 5%,var(--surface)); }
+.monthDayToday { box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--courtly-green) 55%,transparent); }
+.monthDateNumber { display:inline-flex !important; align-items:center; gap:6px; }
+.todayDot { width:7px; height:7px; border-radius:50%; background:var(--courtly-green); }
+.resourceCardActions { display:flex; gap:7px; flex-wrap:wrap; justify-content:flex-end; }
+.inlineTypeCreator { display:flex; gap:8px; align-items:center; }
+.inlineTypeCreator input { flex:1; min-height:42px; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); padding:0 10px; }
+.resourceOptionBusy { opacity:.55; }
+.resourceOptionBusy input { cursor:not-allowed; }

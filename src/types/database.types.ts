@@ -47,6 +47,7 @@ export type Database = {
           professional_requirement: Database["public"]["Enums"]["scheduling_requirement"]
           resource_requirement: Database["public"]["Enums"]["scheduling_requirement"]
           scheduling_mode: Database["public"]["Enums"]["activity_scheduling_mode"]
+          specialty_id: string | null
           updated_at: string
         }
         Insert: {
@@ -61,6 +62,7 @@ export type Database = {
           professional_requirement?: Database["public"]["Enums"]["scheduling_requirement"]
           resource_requirement?: Database["public"]["Enums"]["scheduling_requirement"]
           scheduling_mode?: Database["public"]["Enums"]["activity_scheduling_mode"]
+          specialty_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -75,6 +77,7 @@ export type Database = {
           professional_requirement?: Database["public"]["Enums"]["scheduling_requirement"]
           resource_requirement?: Database["public"]["Enums"]["scheduling_requirement"]
           scheduling_mode?: Database["public"]["Enums"]["activity_scheduling_mode"]
+          specialty_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -84,6 +87,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_activities_specialty"
+            columns: ["specialty_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "professional_specialties"
+            referencedColumns: ["id", "organization_id"]
           },
         ]
       }
@@ -1069,6 +1079,63 @@ export type Database = {
           },
         ]
       }
+      professional_schedule_exceptions: {
+        Row: {
+          active: boolean
+          created_at: string
+          ends_at: string
+          exception_type: Database["public"]["Enums"]["professional_schedule_exception_type"]
+          id: string
+          organization_id: string
+          professional_id: string
+          reason: Database["public"]["Enums"]["professional_schedule_exception_reason"]
+          reason_details: string | null
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          ends_at: string
+          exception_type: Database["public"]["Enums"]["professional_schedule_exception_type"]
+          id?: string
+          organization_id: string
+          professional_id: string
+          reason: Database["public"]["Enums"]["professional_schedule_exception_reason"]
+          reason_details?: string | null
+          starts_at: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          ends_at?: string
+          exception_type?: Database["public"]["Enums"]["professional_schedule_exception_type"]
+          id?: string
+          organization_id?: string
+          professional_id?: string
+          reason?: Database["public"]["Enums"]["professional_schedule_exception_reason"]
+          reason_details?: string | null
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_professional_schedule_exception_professional"
+            columns: ["professional_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "professional_schedule_exceptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_specialties: {
         Row: {
           active: boolean
@@ -1344,7 +1411,7 @@ export type Database = {
           id: string
           name: string
           organization_id: string
-          resource_type_id: string
+          resource_type_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1353,7 +1420,7 @@ export type Database = {
           id?: string
           name: string
           organization_id: string
-          resource_type_id: string
+          resource_type_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1362,7 +1429,7 @@ export type Database = {
           id?: string
           name?: string
           organization_id?: string
-          resource_type_id?: string
+          resource_type_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1686,6 +1753,23 @@ export type Database = {
         Args: { target_organization_id: string }
         Returns: boolean
       }
+      list_available_professionals: {
+        Args: { p_activity_id: string; p_ends_at: string; p_starts_at: string }
+        Returns: {
+          professional_id: string
+        }[]
+      }
+      professional_is_available: {
+        Args: {
+          p_activity_id: string
+          p_ends_at: string
+          p_ignore_appointment_id?: string
+          p_organization_id: string
+          p_professional_id: string
+          p_starts_at: string
+        }
+        Returns: boolean
+      }
       reactivate_rule_pause_appointments: {
         Args: { p_schedule_rule_id: string }
         Returns: number
@@ -1778,6 +1862,16 @@ export type Database = {
         | "INVITED"
         | "ACTIVE"
         | "SUSPENDED"
+      professional_schedule_exception_reason:
+        | "PERSONAL"
+        | "HEALTH"
+        | "VACATION"
+        | "TRAINING"
+        | "EVENT"
+        | "EXTRA_SHIFT"
+        | "COVERAGE"
+        | "OTHER"
+      professional_schedule_exception_type: "ABSENCE" | "PRESENCE"
       professional_specialty_area:
         | "HEALTHCARE"
         | "DENTISTRY"
@@ -1961,6 +2055,17 @@ export const Constants = {
         "ACTIVE",
         "SUSPENDED",
       ],
+      professional_schedule_exception_reason: [
+        "PERSONAL",
+        "HEALTH",
+        "VACATION",
+        "TRAINING",
+        "EVENT",
+        "EXTRA_SHIFT",
+        "COVERAGE",
+        "OTHER",
+      ],
+      professional_schedule_exception_type: ["ABSENCE", "PRESENCE"],
       professional_specialty_area: [
         "HEALTHCARE",
         "DENTISTRY",
