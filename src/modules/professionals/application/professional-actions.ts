@@ -181,26 +181,121 @@ export async function saveProfessionalAccessAction(input: { professionalId: stri
 
 export async function inviteProfessionalAction(professionalId: string, email: string, role: 'ADMIN' | 'PROFESSIONAL'): Promise<ProfessionalActionResult> {
   try {
-    const supabase = await createClient(); const context = await getCurrentAccessContext(supabase);
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) return { success: false, error: 'invalidEmail' };
+
+    const supabase = await createClient();
+    const context = await getCurrentAccessContext(supabase);
     if (!can(context, 'PROFESSIONALS_MANAGE_ACCESS')) return { success: false, error: 'forbidden' };
+
     const db = supabase as any;
-    const { data: professional, error } = await db.from('professionals').select('id,first_name,last_name,user_id').eq('id', professionalId).eq('organization_id', context.organizationId).single();
+    const { data: professional, error } = await db
+      .from('professionals')
+      .select('id,first_name,last_name,user_id')
+      .eq('id', professionalId)
+      .eq('organization_id', context.organizationId)
+      .single();
+
     if (error || !professional) return { success: false, error: 'notFound' };
     if (professional.user_id) return { success: false, error: 'alreadyHasAccess' };
+
     const admin = createAdminClient();
-    const redirectTo = process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/reset-password` : undefined;
-    const invited = await admin.auth.admin.inviteUserByEmail(email, { redirectTo, data: { full_name: `${professional.first_name} ${professional.last_name}`.trim() } });
-    if (invited.error || !invited.data.user) throw invited.error ?? new Error('invite failed');
-    const userId = invited.data.user.id;
     const adminDb = admin as any;
-    const { error: membershipError } = await adminDb.from('memberships').insert({ organization_id: context.organizationId, user_id: userId, role });
-    if (membershipError) throw membershipError;
-    const { error: updateError } = await adminDb.from('professionals').update({ user_id: userId, email, access_status: 'INVITED' }).eq('id', professionalId);
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+    const redirectTo = `${appUrl}/reset-password`;
+    const fullName = `${professional.first_name ?? ''} ${professional.last_name ?? ''}`.trim();
+
+    let userId: string;
+    let invitationLink: string | null = null;
+
+    // When Resend is configured, generate the Supabase invite link without asking
+    // Supabase to deliver the message, then send a branded real email ourselves.
+    // This also works with local Supabase because email delivery is external.
+    if (process.env.RESEND_API_KEY && process.env.COURTLY_FROM_EMAIL) {
+      const generated = await admin.auth.admin.generateLink({
+        type: 'invite',
+        email: normalizedEmail,
+        options: {
+          redirectTo,
+          data: { full_name: fullName },
+        },
+      });
+      if (generated.error || !generated.data.user || !generated.data.properties?.action_link) {
+        throw generated.error ?? new Error('Could not generate invitation link');
+      }
+
+      userId = generated.data.user.id;
+      const tokenHash = generated.data.properties.hashed_token;
+      if (!tokenHash) throw new Error('Supabase did not return an invitation token');
+      invitationLink = `${appUrl}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=invite&next=${encodeURIComponent('/reset-password')}`;
+
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: process.env.COURTLY_FROM_EMAIL,
+          to: [normalizedEmail],
+          subject: 'Seu acesso ao COURTLY',
+          html: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#18251f">
+              <h2 style="margin-bottom:8px">Você recebeu acesso ao COURTLY</h2>
+              <p>Olá${fullName ? `, ${escapeHtml(fullName)}` : ''}.</p>
+              <p>Seu acesso foi criado com o nível <strong>${role}</strong>. Use o botão abaixo para definir sua senha e entrar no portal.</p>
+              <p style="margin:28px 0"><a href="${escapeHtml(invitationLink)}" style="background:#1f7a5f;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;display:inline-block;font-weight:700">Definir minha senha</a></p>
+              <p style="font-size:12px;color:#66756e">Se você não esperava este convite, ignore esta mensagem.</p>
+            </div>`,
+        }),
+      });
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Resend delivery failed: ${response.status} ${body}`);
+      }
+    } else {
+      // Production Supabase projects can deliver this through their configured SMTP.
+      // For local Supabase, configure RESEND_API_KEY + COURTLY_FROM_EMAIL to receive
+      // the invitation in a real inbox instead of the local mail catcher.
+      const invited = await admin.auth.admin.inviteUserByEmail(normalizedEmail, {
+        redirectTo,
+        data: { full_name: fullName },
+      });
+      if (invited.error || !invited.data.user) throw invited.error ?? new Error('invite failed');
+      userId = invited.data.user.id;
+    }
+
+    const { error: membershipError } = await adminDb.from('memberships').insert({
+      organization_id: context.organizationId,
+      user_id: userId,
+      role,
+    });
+    if (membershipError && membershipError.code !== '23505') throw membershipError;
+
+    const { error: updateError } = await adminDb.from('professionals').update({
+      user_id: userId,
+      email: normalizedEmail,
+      access_status: 'INVITED',
+    }).eq('id', professionalId).eq('organization_id', context.organizationId);
     if (updateError) throw updateError;
+
     revalidatePath('/professionals');
     return { success: true };
-  } catch (e) { console.error(e); return { success: false, error: 'inviteFailed' }; }
+  } catch (e) {
+    console.error('[PROFESSIONALS] Invitation failed', e);
+    return { success: false, error: e instanceof Error ? e.message : 'inviteFailed' };
+  }
 }
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
 
 
 export async function uploadProfessionalAvatarAction(

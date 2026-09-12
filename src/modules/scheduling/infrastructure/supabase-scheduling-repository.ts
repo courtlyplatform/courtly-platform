@@ -20,8 +20,8 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
       appointmentResourcesResult,
     ] = await Promise.all([
       listActivities(activityRepository, organizationId),
-      db.from("organization_scheduling_settings").select("scheduling_enabled,generation_window_days").eq("organization_id", organizationId).single(),
-      db.from("customers").select("id,name,document_type,document_number,active").eq("organization_id", organizationId).order("name"),
+      db.from("organization_scheduling_settings").select("scheduling_enabled,generation_window_days,late_cancellation_window_minutes").eq("organization_id", organizationId).single(),
+      db.from("customers").select("id,name,document_type,document_number,email,phone,active").eq("organization_id", organizationId).order("name"),
       db.from("professional_specialties").select("id,name,color,active").eq("organization_id", organizationId).order("name"),
       db.from("professionals").select("id,name,active").eq("organization_id", organizationId).order("name"),
       db.from("professional_activities").select("professional_id,activity_id").eq("organization_id", organizationId),
@@ -34,7 +34,7 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
       db.from("schedule_rules").select("id,customer_id,customer_subscription_id,activity_id,professional_id,weekday,start_time,end_time,effective_from,effective_until,status").eq("organization_id", organizationId),
       db.from("schedule_generation_conflicts").select("id,schedule_rule_id,starts_at,ends_at,reason").eq("organization_id", organizationId).is("resolved_at", null).order("starts_at"),
       db.from("schedule_rule_resources").select("schedule_rule_id,resource_id").eq("organization_id", organizationId),
-      db.from("appointments").select("id,schedule_rule_id,customer_id,customer_subscription_id,activity_id,professional_id,starts_at,ends_at,status,source,cancellation_reason").eq("organization_id", organizationId).gte("starts_at", rangeStart.toISOString()).lte("starts_at", rangeEnd.toISOString()).order("starts_at"),
+      db.from("appointments").select("id,schedule_rule_id,customer_id,customer_subscription_id,activity_id,professional_id,starts_at,ends_at,status,source,cancellation_reason,attendance_status").eq("organization_id", organizationId).gte("starts_at", rangeStart.toISOString()).lte("starts_at", rangeEnd.toISOString()).order("starts_at"),
       db.from("appointment_resources").select("appointment_id,resource_id").eq("organization_id", organizationId),
     ]);
 
@@ -64,14 +64,15 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
       customerSubscriptionId: row.customer_subscription_id, activityId: row.activity_id,
       professionalId: row.professional_id, startsAt: row.starts_at, endsAt: row.ends_at,
       status: row.status, source: row.source, cancellationReason: row.cancellation_reason,
+      attendanceStatus: row.attendance_status ?? (row.status === "CANCELLED" ? "CANCELLED" : "PENDING"),
       resourceIds: appointmentResourceMap.get(row.id) ?? [],
     }));
 
     return {
-      settings: { schedulingEnabled: settingsResult.data.scheduling_enabled, generationWindowDays: settingsResult.data.generation_window_days },
+      settings: { schedulingEnabled: settingsResult.data.scheduling_enabled, generationWindowDays: settingsResult.data.generation_window_days, cancellationWindowMinutes: settingsResult.data.late_cancellation_window_minutes ?? 120 },
       activities,
       specialties: (specialtiesResult.data ?? []).map((r: any) => ({ id: r.id, name: r.name, color: r.color, active: r.active })),
-      customers: (customersResult.data ?? []).map((r: any) => ({ id: r.id, name: r.name, documentType: r.document_type, documentNumber: r.document_number, active: r.active })),
+      customers: (customersResult.data ?? []).map((r: any) => ({ id: r.id, name: r.name, documentType: r.document_type, documentNumber: r.document_number, email: r.email, phone: r.phone, active: r.active })),
       professionals: (professionalsResult.data ?? []).map((r: any) => ({
         id: r.id, name: r.name, active: r.active, activityIds: qualificationMap.get(r.id) ?? [],
         availabilityRules: (availabilityMap.get(r.id) ?? []).map((x: any) => ({ id: x.id, weekday: x.weekday, startTime: x.start_time, endTime: x.end_time, active: x.active })),
@@ -108,9 +109,11 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
   }
 
   async cancelAppointment(input: Parameters<SchedulingRepository["cancelAppointment"]>[0]): Promise<void> {
-    const { error } = await (this.supabase as any).from("appointments").update({ status: "CANCELLED", cancelled_at: new Date().toISOString(), cancellation_reason: input.reason })
-      .eq("id", input.appointmentId).eq("organization_id", input.organizationId).eq("status", "SCHEDULED");
-    if (error) throw error;
+    const { error } = await (this.supabase as any).rpc("cancel_scheduling_appointment", {
+      p_appointment_id: input.appointmentId,
+      p_reason: input.reason,
+    });
+    if (error) throw new Error(error.message);
   }
 
   async setActivityResourceRequirement(input: Parameters<SchedulingRepository["setActivityResourceRequirement"]>[0]): Promise<void> {
@@ -131,7 +134,10 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
     const { error } = await (this.supabase as any).rpc("set_schedule_rule_status", { p_schedule_rule_id: input.scheduleRuleId, p_status: input.status }); if (error) throw error;
   }
   async updateGenerationWindow(input: Parameters<SchedulingRepository["updateGenerationWindow"]>[0]): Promise<void> {
-    const { error } = await (this.supabase as any).from("organization_scheduling_settings").update({ generation_window_days: input.generationWindowDays }).eq("organization_id", input.organizationId); if (error) throw error;
+    const { error } = await (this.supabase as any).from("organization_scheduling_settings").update({
+      generation_window_days: input.generationWindowDays,
+      late_cancellation_window_minutes: input.cancellationWindowMinutes,
+    }).eq("organization_id", input.organizationId); if (error) throw error;
   }
   async refreshOrganizationWindow(organizationId: string): Promise<void> {
     const { error } = await (this.supabase as any).rpc("refresh_organization_scheduling_window", { p_organization_id: organizationId }); if (error) throw error;

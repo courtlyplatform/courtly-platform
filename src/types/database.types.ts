@@ -190,6 +190,7 @@ export type Database = {
       appointments: {
         Row: {
           activity_id: string
+          attendance_status: string
           cancellation_reason: string | null
           cancelled_at: string | null
           created_at: string
@@ -207,6 +208,7 @@ export type Database = {
         }
         Insert: {
           activity_id: string
+          attendance_status?: string
           cancellation_reason?: string | null
           cancelled_at?: string | null
           created_at?: string
@@ -224,6 +226,7 @@ export type Database = {
         }
         Update: {
           activity_id?: string
+          attendance_status?: string
           cancellation_reason?: string | null
           cancelled_at?: string | null
           created_at?: string
@@ -1667,6 +1670,10 @@ export type Database = {
         }
         Returns: string
       }
+      cancel_scheduling_appointment: {
+        Args: { p_appointment_id: string; p_reason?: string }
+        Returns: undefined
+      }
       create_organization_onboarding: {
         Args: {
           p_business_type: Database["public"]["Enums"]["organization_business_type"]
@@ -1794,8 +1801,21 @@ export type Database = {
         Returns: number
       }
       refresh_scheduling_window: { Args: never; Returns: number }
+      reschedule_scheduling_appointment: {
+        Args: {
+          p_appointment_id: string
+          p_ends_at: string
+          p_professional_id?: string
+          p_starts_at: string
+        }
+        Returns: undefined
+      }
       seed_default_expense_categories: {
         Args: { p_organization_id: string }
+        Returns: undefined
+      }
+      set_appointment_attendance_status: {
+        Args: { p_appointment_id: string; p_status: string }
         Returns: undefined
       }
       set_customer_active_status: {

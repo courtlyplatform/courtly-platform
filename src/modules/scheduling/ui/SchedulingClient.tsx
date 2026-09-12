@@ -31,7 +31,7 @@ import styles from "./scheduling.module.css";
 
 type ViewMode = "day" | "week" | "month";
 type Tab = "calendar" | "recurrences" | "resources" | "settings";
-type Modal = "appointment" | "recurrence" | "resource" | null;
+type Modal = "appointment" | "recurrence" | "resource" | "details" | null;
 
 type Feedback = { type: "success" | "error"; message: string } | null;
 
@@ -69,6 +69,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
   const [view, setView] = useState<ViewMode>("week");
   const [cursor, setCursor] = useState(() => startOfDay(new Date()));
   const [modal, setModal] = useState<Modal>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -100,6 +101,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
   const [resourceTypeForm, setResourceTypeForm] = useState("");
   const [now, setNow] = useState(() => new Date());
   const [windowDays, setWindowDays] = useState(String(initialData.settings.generationWindowDays));
+  const [cancellationHours, setCancellationHours] = useState(String(initialData.settings.cancellationWindowMinutes / 60));
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
@@ -280,6 +282,11 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
 
     const startsAt = localDateTimeToIso(appointmentForm.date, appointmentForm.startTime);
     const endsAt = localDateTimeToIso(appointmentForm.date, appointmentForm.endTime);
+
+    if (new Date(startsAt).getTime() <= Date.now()) {
+      setModalError(locale === "pt-BR" ? "Não é permitido criar compromissos no passado." : "Appointments cannot be created in the past.");
+      return;
+    }
 
     if (new Date(endsAt) <= new Date(startsAt)) {
       setModalError(t.feedback.invalidInterval);
@@ -490,6 +497,11 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
               locale={locale}
               t={t}
               now={now}
+              onOpenDetails={(appointment: Appointment) => {
+                setSelectedAppointment(appointment);
+                setModalError(null);
+                setModal("details");
+              }}
               onCancel={(appointmentId: string) =>
                 startTransition(async () => {
                   const result = await cancelAppointmentAction(appointmentId);
@@ -598,13 +610,23 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
               <span>{t.settings.days}</span>
             </div>
           </div>
+          <div className={styles.settingRow}>
+            <div>
+              <strong>{locale === "pt-BR" ? "Prazo para cancelamento" : "Cancellation deadline"}</strong>
+              <p>{locale === "pt-BR" ? "Quantidade mínima de horas antes do compromisso em que o cancelamento ainda é permitido." : "Minimum hours before an appointment during which cancellation is still allowed."}</p>
+            </div>
+            <div className={styles.numberField}>
+              <input type="number" min={0} max={168} step={0.5} value={cancellationHours} onChange={(event) => setCancellationHours(event.target.value)} />
+              <span>{locale === "pt-BR" ? "horas" : "hours"}</span>
+            </div>
+          </div>
           <button
             type="button"
             className={styles.primaryButton}
             disabled={isPending}
             onClick={() =>
               startTransition(async () => {
-                const result = await updateSchedulingSettingsAction({ generationWindowDays: Number(windowDays) });
+                const result = await updateSchedulingSettingsAction({ generationWindowDays: Number(windowDays), cancellationWindowMinutes: Math.round(Number(cancellationHours) * 60) });
                 setFeedback({
                   type: result.success ? "success" : "error",
                   message: result.success ? t.feedback.settingsUpdated : t.feedback.settingsFailed,
@@ -653,6 +675,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
               <Field label={t.fields.date}>
                 <input
                   type="date"
+                  min={todayIso()}
                   value={appointmentForm.date}
                   onChange={(event) => setAppointmentForm((current) => ({ ...current, date: event.target.value }))}
                 />
@@ -730,6 +753,29 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
             <ModalActions t={t} pending={isPending} onCancel={closeModal} submitLabel={t.actions.createAppointment} />
           </form>
         </Modal>
+      )}
+
+      {modal === "details" && selectedAppointment && (
+        <AppointmentDetailsModal
+          appointment={selectedAppointment}
+          data={initialData}
+          locale={locale}
+          t={t}
+          pending={isPending}
+          onClose={closeModal}
+          onCancel={(appointmentId: string) => startTransition(async () => {
+            const result = await cancelAppointmentAction(appointmentId);
+            if (result.success) {
+              setModal(null);
+              setFeedback({ type: "success", message: t.feedback.appointmentCancelled });
+              router.refresh();
+            } else {
+              setModalError(("error" in result ? result.error : "").toLowerCase().includes("deadline")
+                ? (locale === "pt-BR" ? "O prazo permitido para cancelamento já foi ultrapassado." : "The cancellation deadline has passed.")
+                : t.feedback.cancelFailed);
+            }
+          })}
+        />
       )}
 
       {modal === "recurrence" && (
@@ -916,7 +962,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
   );
 }
 
-function DayWeekCalendar({ days, appointments, data, locale, t, onCancel, now }: any) {
+function DayWeekCalendar({ days, appointments, data, locale, t, onCancel, onOpenDetails, now }: any) {
   const hours = Array.from({ length: 15 }, (_, index) => index + 7);
   const nowHour = now.getHours();
   const nowMinute = now.getMinutes();
@@ -949,7 +995,7 @@ function DayWeekCalendar({ days, appointments, data, locale, t, onCancel, now }:
                 </div>
               )}
               {cellAppointments.map((appointment: Appointment) => (
-                <AppointmentCard key={appointment.id} appointment={appointment} data={data} locale={locale} t={t} onCancel={onCancel} />
+                <AppointmentCard key={appointment.id} appointment={appointment} data={data} locale={locale} t={t} onCancel={onCancel} onOpenDetails={onOpenDetails} />
               ))}
             </div>
           );
@@ -989,7 +1035,7 @@ function MonthCalendar({ days, cursor, appointments, data, locale, t, onSelectDa
   );
 }
 
-function AppointmentCard({ appointment, data, locale, t, onCancel }: any) {
+function AppointmentCard({ appointment, data, locale, t, onCancel, onOpenDetails }: any) {
   const activity = data.activities.find((item: Activity) => item.id === appointment.activityId);
   const customer = data.customers.find((item: any) => item.id === appointment.customerId);
   const professional = data.professionals.find((item: any) => item.id === appointment.professionalId);
@@ -997,7 +1043,14 @@ function AppointmentCard({ appointment, data, locale, t, onCancel }: any) {
   const color = activity?.specialtyColor ?? "var(--courtly-green)";
 
   return (
-    <article className={styles.appointmentCard} style={{ borderLeftColor: color, background: `color-mix(in srgb, ${color} 9%, var(--surface))` }}>
+    <article
+      className={styles.appointmentCard}
+      style={{ borderLeftColor: color, background: `color-mix(in srgb, ${color} 9%, var(--surface))` }}
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpenDetails(appointment)}
+      onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onOpenDetails(appointment); }}
+    >
       <div className={styles.appointmentTime} style={{ color }}>{formatTime(appointment.startsAt, locale)}–{formatTime(appointment.endsAt, locale)}</div>
       <strong>{customer?.name ?? t.calendar.unknownCustomer}</strong>
       <span>{activity?.name ?? t.calendar.unknownService}</span>
@@ -1006,12 +1059,59 @@ function AppointmentCard({ appointment, data, locale, t, onCancel }: any) {
       {resources.length > 0 && <small>{resources.map((resource: any) => resource.name).join(", ")}</small>}
       <div className={styles.appointmentFooter}>
         <span className={styles.statusScheduled}>{t.status.scheduled}</span>
-        {new Date(appointment.startsAt) > new Date() && (
-          <button type="button" onClick={() => onCancel(appointment.id)}>{t.actions.cancelAppointment}</button>
-        )}
+<button type="button" onClick={(event) => { event.stopPropagation(); onOpenDetails(appointment); }}>{locale === "pt-BR" ? "Detalhes" : "Details"}</button>
       </div>
     </article>
   );
+}
+
+function AppointmentDetailsModal({ appointment, data, locale, t, pending, onClose, onCancel }: any) {
+  const activity = data.activities.find((item: Activity) => item.id === appointment.activityId);
+  const customer = data.customers.find((item: any) => item.id === appointment.customerId);
+  const professional = data.professionals.find((item: any) => item.id === appointment.professionalId);
+  const resources = data.resources.filter((item: any) => appointment.resourceIds.includes(item.id));
+  const cancellationDeadline = new Date(new Date(appointment.startsAt).getTime() - data.settings.cancellationWindowMinutes * 60_000);
+  const canCancel = appointment.status === "SCHEDULED" && Date.now() <= cancellationDeadline.getTime();
+  const pt = locale === "pt-BR";
+
+  return (
+    <Modal title={pt ? "Detalhes do compromisso" : "Appointment details"} subtitle={pt ? "Informações completas do agendamento selecionado." : "Complete information for the selected booking."} closeLabel={t.actions.close} onClose={onClose}>
+      <div className={styles.detailsGrid}>
+        <Detail label={pt ? "Cliente" : "Customer"} value={customer?.name ?? t.calendar.unknownCustomer} />
+        <Detail label={pt ? "Documento" : "Document"} value={[customer?.documentType, customer?.documentNumber].filter(Boolean).join(" · ") || "—"} />
+        <Detail label="E-mail" value={customer?.email ?? "—"} />
+        <Detail label={pt ? "Telefone" : "Phone"} value={customer?.phone ?? "—"} />
+        <Detail label={pt ? "Serviço / modalidade" : "Service"} value={activity?.name ?? t.calendar.unknownService} />
+        <Detail label={pt ? "Especialidade" : "Specialty"} value={activity?.specialtyName ?? "—"} />
+        <Detail label={pt ? "Data" : "Date"} value={new Intl.DateTimeFormat(locale, { dateStyle: "full" }).format(new Date(appointment.startsAt))} />
+        <Detail label={pt ? "Horário" : "Time"} value={`${formatTime(appointment.startsAt, locale)}–${formatTime(appointment.endsAt, locale)}`} />
+        <Detail label={pt ? "Profissional" : "Professional"} value={professional?.name ?? (pt ? "Não se aplica" : "Not applicable")} />
+        <Detail label={pt ? "Recursos" : "Resources"} value={resources.length ? resources.map((item: any) => item.name).join(", ") : (pt ? "Nenhum" : "None")} />
+        <Detail label={pt ? "Confirmação" : "Confirmation"} value={appointment.attendanceStatus === "CONFIRMED" ? (pt ? "Confirmado" : "Confirmed") : appointment.attendanceStatus === "CANCELLED" ? (pt ? "Cancelado" : "Cancelled") : (pt ? "Pendente" : "Pending")} />
+        <Detail label={pt ? "Origem" : "Source"} value={appointment.source} />
+      </div>
+      <div className={styles.detailsPolicy}>
+        {pt
+          ? `Cancelamento permitido até ${new Intl.DateTimeFormat(locale, { dateStyle: "short", hour: "2-digit", minute: "2-digit" }).format(cancellationDeadline)}.`
+          : `Cancellation allowed until ${new Intl.DateTimeFormat(locale, { dateStyle: "short", hour: "2-digit", minute: "2-digit" }).format(cancellationDeadline)}.`}
+      </div>
+      <div className={styles.modalActions}>
+        <button type="button" className={styles.secondaryButton} onClick={onClose}>{t.actions.close}</button>
+        {appointment.status === "SCHEDULED" && (
+          <Link className={styles.secondaryLinkButton} href={`/attendance/${appointment.id}/reschedule`}>{pt ? "Reagendar" : "Reschedule"}</Link>
+        )}
+        {appointment.status === "SCHEDULED" && (
+          <button type="button" className={styles.dangerButton} disabled={pending || !canCancel} onClick={() => onCancel(appointment.id)}>
+            {canCancel ? t.actions.cancelAppointment : (pt ? "Prazo de cancelamento encerrado" : "Cancellation deadline passed")}
+          </button>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return <div className={styles.detailItem}><span>{label}</span><strong>{value}</strong></div>;
 }
 
 function RecurrencesPanel({ data, t, pending, onNew, onStatus }: any) {
@@ -1514,6 +1614,7 @@ function humanizeServerError(error: string, t: any) {
   if (value.includes("professional is required")) return t.feedback.professionalRequired;
   if (value.includes("required resources")) return t.feedback.resourceRequired;
   if (value.includes("subscription")) return t.feedback.subscriptionInvalid;
+  if (value.includes("pastappointment") || value.includes("scheduled in the past")) return t.feedback.pastAppointment ?? "Appointments cannot be scheduled in the past.";
   return t.feedback.unavailable;
 }
 

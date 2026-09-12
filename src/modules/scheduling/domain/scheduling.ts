@@ -5,6 +5,7 @@ export type ScheduleRuleStatus = "ACTIVE" | "PAUSED" | "ENDED";
 export type SchedulingSettings = {
   schedulingEnabled: boolean;
   generationWindowDays: number;
+  cancellationWindowMinutes: number;
 };
 
 export type SchedulingCustomer = {
@@ -12,6 +13,8 @@ export type SchedulingCustomer = {
   name: string;
   documentType: string | null;
   documentNumber: string | null;
+  email: string | null;
+  phone: string | null;
   active: boolean;
 };
 
@@ -91,6 +94,7 @@ export type Appointment = {
   status: AppointmentStatus;
   source: AppointmentSource;
   cancellationReason: string | null;
+  attendanceStatus: "PENDING" | "CONFIRMED" | "CANCELLED";
   resourceIds: string[];
 };
 

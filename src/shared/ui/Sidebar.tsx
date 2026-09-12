@@ -168,6 +168,7 @@ export function Sidebar({
                 dictionary
                     .navigation
                     .attendance,
+            permission: "ATTENDANCE_VIEW",
         },
         {
             href: "/makeups",

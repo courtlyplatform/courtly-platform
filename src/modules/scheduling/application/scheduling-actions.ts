@@ -37,10 +37,18 @@ export async function createAppointmentAction(input: {
   resourceIds?: string[];
 }): Promise<SchedulingActionResult> {
   try {
+    if (new Date(input.startsAt).getTime() <= Date.now()) {
+      return { success: false, error: "pastAppointment" };
+    }
+    if (new Date(input.endsAt).getTime() <= new Date(input.startsAt).getTime()) {
+      return { success: false, error: "invalidInterval" };
+    }
+
     const { repository } = await getManagerContext();
     const id = await repository.createAppointment(input);
 
     revalidatePath("/scheduling");
+    revalidatePath("/attendance");
     return { success: true, id };
   } catch (error) {
     console.error("[SCHEDULING] Failed to create appointment", error);
@@ -90,10 +98,11 @@ export async function cancelAppointmentAction(
     });
 
     revalidatePath("/scheduling");
+    revalidatePath("/attendance");
     return { success: true };
   } catch (error) {
     console.error("[SCHEDULING] Failed to cancel appointment", error);
-    return { success: false, error: "cancelFailed" };
+    return { success: false, error: error instanceof Error ? error.message : "cancelFailed" };
   }
 }
 
@@ -161,6 +170,7 @@ export async function changeScheduleRuleStatusAction(
 
 export async function updateSchedulingSettingsAction(input: {
   generationWindowDays: number;
+  cancellationWindowMinutes: number;
 }): Promise<SchedulingActionResult> {
   try {
     const { repository, context } = await getManagerContext();
@@ -168,7 +178,10 @@ export async function updateSchedulingSettingsAction(input: {
     if (
       !Number.isInteger(input.generationWindowDays) ||
       input.generationWindowDays < 7 ||
-      input.generationWindowDays > 3650
+      input.generationWindowDays > 3650 ||
+      !Number.isInteger(input.cancellationWindowMinutes) ||
+      input.cancellationWindowMinutes < 0 ||
+      input.cancellationWindowMinutes > 10080
     ) {
       return { success: false, error: "invalidWindow" };
     }
@@ -176,11 +189,13 @@ export async function updateSchedulingSettingsAction(input: {
     await repository.updateGenerationWindow({
       organizationId: context.organizationId,
       generationWindowDays: input.generationWindowDays,
+      cancellationWindowMinutes: input.cancellationWindowMinutes,
     });
 
     await repository.refreshOrganizationWindow(context.organizationId);
 
     revalidatePath("/scheduling");
+    revalidatePath("/attendance");
     return { success: true };
   } catch (error) {
     console.error("[SCHEDULING] Failed to update settings", error);

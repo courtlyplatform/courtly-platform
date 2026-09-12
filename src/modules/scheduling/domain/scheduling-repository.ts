@@ -52,6 +52,7 @@ export interface SchedulingRepository {
   updateGenerationWindow(input: {
     organizationId: string;
     generationWindowDays: number;
+    cancellationWindowMinutes: number;
   }): Promise<void>;
 
   refreshOrganizationWindow(organizationId: string): Promise<void>;
