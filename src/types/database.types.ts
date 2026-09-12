@@ -1072,6 +1072,8 @@ export type Database = {
       professional_specialties: {
         Row: {
           active: boolean
+          area: Database["public"]["Enums"]["professional_specialty_area"]
+          color: string
           created_at: string
           id: string
           name: string
@@ -1080,6 +1082,8 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          area?: Database["public"]["Enums"]["professional_specialty_area"]
+          color?: string
           created_at?: string
           id?: string
           name: string
@@ -1088,6 +1092,8 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          area?: Database["public"]["Enums"]["professional_specialty_area"]
+          color?: string
           created_at?: string
           id?: string
           name?: string
@@ -1772,6 +1778,16 @@ export type Database = {
         | "INVITED"
         | "ACTIVE"
         | "SUSPENDED"
+      professional_specialty_area:
+        | "HEALTHCARE"
+        | "DENTISTRY"
+        | "FITNESS"
+        | "SPORTS"
+        | "THERAPY"
+        | "BEAUTY"
+        | "WELLNESS"
+        | "EDUCATION"
+        | "OTHER"
       schedule_generation_conflict_reason: "CAPACITY_CONFLICT"
       schedule_recurrence_type: "WEEKLY"
       schedule_rule_status: "ACTIVE" | "PAUSED" | "ENDED"
@@ -1944,6 +1960,17 @@ export const Constants = {
         "INVITED",
         "ACTIVE",
         "SUSPENDED",
+      ],
+      professional_specialty_area: [
+        "HEALTHCARE",
+        "DENTISTRY",
+        "FITNESS",
+        "SPORTS",
+        "THERAPY",
+        "BEAUTY",
+        "WELLNESS",
+        "EDUCATION",
+        "OTHER",
       ],
       schedule_generation_conflict_reason: ["CAPACITY_CONFLICT"],
       schedule_recurrence_type: ["WEEKLY"],
