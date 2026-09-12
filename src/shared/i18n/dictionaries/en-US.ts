@@ -611,6 +611,17 @@ export const enUS = {
                 "Enter a valid price.",
         },
 
+        scheduling: {
+            mode: "Scheduling",
+            modeHelp: "Defines whether this service uses scheduling.",
+            professional: "Professional",
+            resource: "Physical resource",
+            resourceHelp: "Configure the resource type in Scheduling > Resources.",
+            none: "Not required",
+            optional: "Optional",
+            required: "Required",
+        },
+
         feedback: {
             success: {
                 serviceCreated:
@@ -640,6 +651,30 @@ export const enUS = {
                     "We couldn't complete the operation.",
             },
         },
+    },
+
+    scheduling: {
+        eyebrow: "Operations",
+        title: "Scheduling",
+        description: "Manage appointments, recurring schedules, professionals, resources and organization availability.",
+        tabs: { label: "Scheduling sections", calendar: "Calendar", recurrences: "Recurrences", resources: "Resources", professionals: "Professionals", settings: "Settings" },
+        views: { day: "Day", week: "Week", month: "Month" },
+        actions: { newAppointment: "New appointment", newRecurrence: "New recurrence", createAppointment: "Create appointment", createRecurrence: "Create recurrence", cancelAppointment: "Cancel", save: "Save", saving: "Saving...", cancel: "Back", close: "Close" },
+        calendar: { previous: "Previous period", next: "Next period", today: "Today", appointmentCount: "{count} appointment(s)", free: "No appointments", unknownCustomer: "Customer", unknownService: "Service" },
+        capacity: { available: "Available", busy: "Busy", unavailable: "Unavailable", ready: "The selected professional and resources are free during this interval.", resources: "Resources", professionals: "Professionals" },
+        fields: { customer: "Customer", service: "Service", date: "Date", startTime: "Start", endTime: "End", professional: "Professional", resources: "Resources", subscription: "Plan / contracted service", weekday: "Weekday", effectiveFrom: "Effective from", effectiveUntil: "Effective until" },
+        placeholders: { selectCustomer: "Select customer", selectService: "Select service", noProfessional: "No professional", selectSubscription: "Select an active agreement" },
+        appointment: { title: "New appointment", description: "Create a one-time appointment while respecting operational availability.", subscriptionTitle: "Commercial link", withoutSubscription: "Without agreement", noSubscription: "This customer has no compatible active agreement. The appointment may be created without a commercial link when the operation allows it." },
+        recurrence: { title: "New recurrence", description: "Create a weekly rule linked to an active agreement.", windowTitle: "Rolling window", windowDescription: "The next {days} days are generated immediately and the daily process keeps this window continuously filled." },
+        recurrences: { eyebrow: "Recurrence", title: "Recurring rules", description: "Manage weekly schedules without rewriting already generated history.", pause: "Pause", resume: "Resume", end: "End", empty: "No recurring rules yet.", conflicts: "{count} occurrence(s) could not be generated because of capacity conflicts." },
+        ruleStatus: { active: "Active", paused: "Paused", ended: "Ended" },
+        resources: { eyebrow: "Capacity", title: "Resources", description: "Register courts, rooms, offices and other limited physical resources.", new: "New resource", newTitle: "Create resource", newDescription: "Create a physical resource that can be reserved by Scheduling.", type: "Resource type", typePlaceholder: "E.g. Tennis court", name: "Name", namePlaceholder: "E.g. Court 1", activate: "Activate", deactivate: "Deactivate", empty: "No resources registered.", requirementsTitle: "Service requirements", requirementsDescription: "Define the resource type and quantity required by each service.", selectType: "Select type", requiredHelp: "Select every required resource for this service.", optionalHelp: "You may assign resources to this appointment, but they are not mandatory." },
+        professionals: { eyebrow: "Team", title: "Qualified professionals", description: "Define which professionals can perform each service. Scheduling availability only considers qualified professionals.", active: "Active", inactive: "Inactive", new: "New professional", newTitle: "Create professional", newDescription: "Add an organization professional and then select the services they are qualified to perform.", name: "Name", email: "Email", phone: "Phone", create: "Create professional" },
+        settings: { eyebrow: "Policies", title: "Scheduling settings", description: "Organization-wide Scheduling parameters.", windowTitle: "Generation window", windowHelp: "Number of future days automatically maintained for recurring rules.", days: "days" },
+        status: { scheduled: "Scheduled" },
+        weekdays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+        weekdaysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        feedback: { invalidData: "Fill in the required fields.", invalidInterval: "The end time must be later than the start time.", unavailable: "There is no availability for this appointment in the selected interval.", professionalRequired: "This service requires a qualified professional.", resourceRequired: "This service requires the configured resources.", professionalUnavailable: "The selected professional is already booked during this interval.", resourceUnavailable: "One of the selected resources is already booked during this interval.", subscriptionInvalid: "The selected agreement is not active or compatible with the service.", appointmentCreated: "Appointment created successfully.", recurrenceCreated: "Recurrence created and future window generated successfully.", appointmentCancelled: "Appointment cancelled successfully.", cancelFailed: "We couldn't cancel the appointment.", resourceUpdated: "Resource updated successfully.", resourceFailed: "We couldn't save the resource.", requirementUpdated: "Service requirement updated successfully.", requirementFailed: "We couldn't update the service requirement.", qualificationUpdated: "Professional qualification updated successfully.", qualificationFailed: "We couldn't update the professional qualification.", settingsUpdated: "Settings updated and scheduling window synchronized.", settingsFailed: "We couldn't update the settings.", professionalCreated: "Professional created successfully.", professionalSaveFailed: "We couldn't create the professional.", ruleStatusUpdated: "Recurrence status updated successfully.", ruleStatusFailed: "We couldn't update the recurrence." },
     },
 
     customerSubscriptions: {

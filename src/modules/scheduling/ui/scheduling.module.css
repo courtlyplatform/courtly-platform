@@ -1,0 +1,796 @@
+.page {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--text);
+}
+
+.pageHeader,
+.sectionHeader,
+.calendarToolbar,
+.headerActions,
+.toolbarGroup,
+.modalHeader,
+.settingRow,
+.appointmentFooter {
+  display: flex;
+  align-items: center;
+}
+
+.pageHeader,
+.sectionHeader,
+.calendarToolbar,
+.settingRow,
+.modalHeader {
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.pageHeader {
+  align-items: flex-start;
+}
+
+.pageHeader h1,
+.sectionHeader h2,
+.settingsCard h2,
+.modalHeader h2,
+.subsection h3 {
+  margin: 0;
+  color: var(--text);
+}
+
+.pageHeader p,
+.sectionHeader p,
+.settingsCard p,
+.modalHeader p,
+.subsection p,
+.subscriptionBox p,
+.resourceSelector p,
+.infoBox p {
+  margin: 7px 0 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.eyebrow,
+.sectionEyebrow {
+  display: inline-block;
+  margin-bottom: 7px;
+  color: var(--courtly-green);
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.headerActions,
+.toolbarGroup {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.primaryButton,
+.secondaryButton,
+.iconButton,
+.tab,
+.tabActive,
+.segment,
+.segmentActive,
+.resourceCard button,
+.appointmentFooter button {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  transition: var(--transition-theme);
+}
+
+.primaryButton,
+.secondaryButton {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.primaryButton {
+  background: var(--courtly-green);
+  color: white;
+}
+
+.secondaryButton,
+.iconButton {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.iconButton {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 1.4rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.tab,
+.tabActive {
+  padding: 10px 14px;
+  border-radius: 10px;
+  white-space: nowrap;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.tabActive {
+  background: var(--surface-secondary);
+  color: var(--text);
+}
+
+.calendarCard,
+.panelCard,
+.settingsCard {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.calendarCard {
+  overflow: hidden;
+}
+
+.calendarToolbar {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.periodTitle {
+  text-transform: capitalize;
+}
+
+.segmented {
+  display: flex;
+  padding: 4px;
+  border-radius: 11px;
+  background: var(--surface-secondary);
+}
+
+.segment,
+.segmentActive {
+  padding: 8px 11px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.segmentActive {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.capacityLegend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: .84rem;
+}
+
+.capacityLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dotAvailable,
+.dotBusy,
+.dotUnavailable {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dotAvailable { background: var(--courtly-green); }
+.dotBusy { background: #d59b25; }
+.dotUnavailable { background: #d94a4a; }
+
+.dayWeekGrid {
+  display: grid;
+  overflow: auto;
+  max-height: 740px;
+}
+
+.cornerCell,
+.dayHeader,
+.timeCell,
+.slotCell {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.cornerCell,
+.dayHeader {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--surface);
+}
+
+.cornerCell {
+  left: 0;
+  z-index: 5;
+}
+
+.dayHeader {
+  min-height: 62px;
+  padding: 10px;
+  text-align: center;
+}
+
+.dayHeader span {
+  display: block;
+  color: var(--text-secondary);
+  font-size: .78rem;
+  text-transform: uppercase;
+}
+
+.dayHeader strong {
+  display: block;
+  margin-top: 4px;
+}
+
+.timeCell {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  min-height: 92px;
+  padding: 10px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: .8rem;
+  text-align: right;
+}
+
+.slotCell {
+  min-height: 92px;
+  padding: 7px;
+  background: linear-gradient(to bottom, transparent 49%, var(--border) 50%, transparent 51%);
+}
+
+.appointmentCard {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 6px;
+  padding: 9px;
+  border: 1px solid color-mix(in srgb, var(--courtly-green) 35%, var(--border));
+  border-left: 4px solid var(--courtly-green);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--courtly-green) 7%, var(--surface));
+  font-size: .78rem;
+}
+
+.appointmentCard strong {
+  color: var(--text);
+}
+
+.appointmentCard span,
+.appointmentCard small {
+  color: var(--text-secondary);
+}
+
+.appointmentTime {
+  font-weight: 800;
+  color: var(--courtly-green);
+}
+
+.appointmentFooter {
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.statusScheduled {
+  font-size: .68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.appointmentFooter button {
+  padding: 0;
+  background: transparent;
+  color: #c43f3f;
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(110px, 1fr));
+  overflow-x: auto;
+}
+
+.monthWeekday {
+  padding: 10px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: .76rem;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.monthDay {
+  min-height: 126px;
+  padding: 10px;
+  border: 0;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.monthDay > strong,
+.monthDay > span,
+.monthDay > i {
+  display: block;
+}
+
+.monthDay > span {
+  margin: 5px 0 8px;
+  color: var(--text-secondary);
+  font-size: .75rem;
+}
+
+.monthDay > i {
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--courtly-green);
+  font-size: .72rem;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.monthDayMuted {
+  opacity: .45;
+}
+
+.panelCard,
+.settingsCard {
+  padding: 22px;
+}
+
+.resourceGrid,
+.professionalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.resourceCard,
+.professionalCard {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-secondary);
+}
+
+.resourceCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.resourceCard span,
+.resourceCard strong {
+  display: block;
+}
+
+.resourceCard span {
+  color: var(--text-secondary);
+  font-size: .76rem;
+}
+
+.resourceCard button {
+  background: transparent;
+  color: var(--courtly-green);
+  font-weight: 700;
+}
+
+.professionalCard header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.professionalCard header span {
+  color: var(--text-secondary);
+  font-size: .78rem;
+}
+
+.checkList {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.checkList label,
+.resourceOptions label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+}
+
+.subsection {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.requirementRow {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(160px, 1fr) 90px auto;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.requirementRow select,
+.requirementRow input,
+.field input,
+.field select,
+.subscriptionBox select,
+.settingsCard input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  outline: none;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.settingsCard {
+  display: grid;
+  gap: 24px;
+}
+
+.settingRow {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-secondary);
+}
+
+.numberField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, .52);
+}
+
+.modal {
+  width: min(760px, 100%);
+  max-height: min(90vh, 900px);
+  overflow-y: auto;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.modalHeader {
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.modalClose {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-secondary);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.35rem;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field > span {
+  color: var(--text);
+  font-size: .84rem;
+  font-weight: 700;
+}
+
+.subscriptionBox,
+.resourceSelector,
+.infoBox,
+.availabilityOk,
+.availabilityBlocked {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface-secondary);
+}
+
+.subscriptionBox {
+  display: grid;
+  gap: 10px;
+}
+
+.resourceSelector {
+  display: grid;
+  gap: 12px;
+}
+
+.resourceOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+}
+
+.resourceOptions label {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.resourceOptions span,
+.resourceOptions small {
+  display: block;
+}
+
+.resourceOptions small {
+  color: var(--text-secondary);
+  font-size: .72rem;
+}
+
+.availabilityOk {
+  border-color: color-mix(in srgb, var(--courtly-green) 45%, var(--border));
+  background: color-mix(in srgb, var(--courtly-green) 8%, var(--surface));
+}
+
+.availabilityBlocked {
+  border-color: rgba(217, 74, 74, .45);
+  background: rgba(217, 74, 74, .07);
+}
+
+.availabilityOk p,
+.availabilityBlocked p {
+  margin: 5px 0 0;
+  color: var(--text-secondary);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.emptyText {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 920px) {
+  .pageHeader,
+  .calendarToolbar,
+  .sectionHeader,
+  .settingRow {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .headerActions {
+    width: 100%;
+  }
+
+  .headerActions button {
+    flex: 1;
+  }
+
+  .periodTitle {
+    order: -1;
+  }
+
+  .requirementRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    gap: 16px;
+  }
+
+  .formGrid,
+  .requirementRow {
+    grid-template-columns: 1fr;
+  }
+
+  .panelCard,
+  .settingsCard,
+  .modal {
+    padding: 16px;
+  }
+
+  .calendarToolbar {
+    padding: 14px;
+  }
+
+  .segmented {
+    width: 100%;
+  }
+
+  .segment,
+  .segmentActive {
+    flex: 1;
+  }
+
+  .modalActions {
+    flex-direction: column-reverse;
+  }
+
+  .modalActions button {
+    width: 100%;
+  }
+}
+
+.rulesList {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.ruleCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-secondary);
+}
+
+.ruleCard strong,
+.ruleCard p,
+.ruleCard small,
+.ruleStatus {
+  display: block;
+}
+
+.ruleCard p {
+  margin: 5px 0 3px;
+  color: var(--text-secondary);
+}
+
+.ruleCard small {
+  color: var(--text-secondary);
+}
+
+.ruleStatus {
+  margin-bottom: 5px;
+  color: var(--courtly-green);
+  font-size: .7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ruleActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ruleActions button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.ruleActions button:last-child {
+  color: #c43f3f;
+}
+
+@media (max-width: 640px) {
+  .ruleCard {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ruleActions button {
+    flex: 1;
+  }
+}
+
+.slotFull {
+  background-color: rgba(217, 74, 74, .055);
+}
+
+.slotOccupancy {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-bottom: 5px;
+  color: var(--text-secondary);
+  font-size: .66rem;
+  font-weight: 700;
+}
+
+.slotFull .slotOccupancy {
+  color: #c43f3f;
+}
+
+.ruleConflict {
+  display: inline-flex;
+  margin-top: 9px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: rgba(217, 74, 74, .09);
+  color: #c43f3f;
+  font-size: .72rem;
+  font-weight: 800;
+}

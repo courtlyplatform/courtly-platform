@@ -55,6 +55,12 @@ type ActivityFormState = {
   defaultDurationMinutes: string;
 
   defaultPrice: string;
+
+  schedulingMode: Activity["schedulingMode"];
+
+  professionalRequirement: Activity["professionalRequirement"];
+
+  resourceRequirement: Activity["resourceRequirement"];
 };
 
 
@@ -84,6 +90,12 @@ const EMPTY_FORM:
     "60",
 
   defaultPrice: "",
+
+  schedulingMode: "NONE",
+
+  professionalRequirement: "NONE",
+
+  resourceRequirement: "NONE",
 };
 
 
@@ -597,6 +609,15 @@ export function ServicesClient({
             activity
               .defaultPrice
           ),
+
+      schedulingMode:
+        activity.schedulingMode,
+
+      professionalRequirement:
+        activity.professionalRequirement,
+
+      resourceRequirement:
+        activity.resourceRequirement,
     });
 
     setModalOpen(
@@ -720,6 +741,19 @@ export function ServicesClient({
 
             defaultPrice:
               price,
+
+            schedulingMode:
+              form.schedulingMode,
+
+            professionalRequirement:
+              form.schedulingMode === "NONE"
+                ? "NONE"
+                : form.professionalRequirement,
+
+            resourceRequirement:
+              form.schedulingMode === "NONE"
+                ? "NONE"
+                : form.resourceRequirement,
           });
 
 
@@ -1936,6 +1970,79 @@ export function ServicesClient({
                 </div>
               </div>
 
+
+              <div className="service-form-row">
+                <div className="form-group">
+                  <label htmlFor="service-scheduling-mode">
+                    {t.scheduling.mode}
+                  </label>
+                  <select
+                    id="service-scheduling-mode"
+                    value={form.schedulingMode}
+                    onChange={(event) => {
+                      const schedulingMode = event.target.value as Activity["schedulingMode"];
+                      setForm((current) => ({
+                        ...current,
+                        schedulingMode,
+                        professionalRequirement:
+                          schedulingMode === "NONE" ? "NONE" : current.professionalRequirement,
+                        resourceRequirement:
+                          schedulingMode === "NONE" ? "NONE" : current.resourceRequirement,
+                      }));
+                    }}
+                  >
+                    <option value="NONE">{t.scheduling.none}</option>
+                    <option value="OPTIONAL">{t.scheduling.optional}</option>
+                    <option value="REQUIRED">{t.scheduling.required}</option>
+                  </select>
+                  <small>{t.scheduling.modeHelp}</small>
+                </div>
+
+                {form.schedulingMode !== "NONE" && (
+                  <div className="form-group">
+                    <label htmlFor="service-professional-requirement">
+                      {t.scheduling.professional}
+                    </label>
+                    <select
+                      id="service-professional-requirement"
+                      value={form.professionalRequirement}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          professionalRequirement: event.target.value as Activity["professionalRequirement"],
+                        }))
+                      }
+                    >
+                      <option value="NONE">{t.scheduling.none}</option>
+                      <option value="OPTIONAL">{t.scheduling.optional}</option>
+                      <option value="REQUIRED">{t.scheduling.required}</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {form.schedulingMode !== "NONE" && (
+                <div className="form-group">
+                  <label htmlFor="service-resource-requirement">
+                    {t.scheduling.resource}
+                  </label>
+                  <select
+                    id="service-resource-requirement"
+                    value={form.resourceRequirement}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        resourceRequirement: event.target.value as Activity["resourceRequirement"],
+                      }))
+                    }
+                  >
+                    <option value="NONE">{t.scheduling.none}</option>
+                    <option value="OPTIONAL">{t.scheduling.optional}</option>
+                    <option value="REQUIRED">{t.scheduling.required}</option>
+                  </select>
+                  <small>{t.scheduling.resourceHelp}</small>
+                </div>
+              )}
 
               {modalError && (
                 <CourtlyAlert

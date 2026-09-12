@@ -1,3 +1,13 @@
+export type ActivitySchedulingMode =
+  | "NONE"
+  | "OPTIONAL"
+  | "REQUIRED";
+
+export type SchedulingRequirement =
+  | "NONE"
+  | "OPTIONAL"
+  | "REQUIRED";
+
 export type Activity = {
   id: string;
   organizationId: string;
@@ -5,6 +15,9 @@ export type Activity = {
   description: string | null;
   defaultDurationMinutes: number;
   defaultPrice: number | null;
+  schedulingMode: ActivitySchedulingMode;
+  professionalRequirement: SchedulingRequirement;
+  resourceRequirement: SchedulingRequirement;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -16,6 +29,9 @@ export type CreateActivityInput = {
   description?: string | null;
   defaultDurationMinutes: number;
   defaultPrice?: number | null;
+  schedulingMode: ActivitySchedulingMode;
+  professionalRequirement: SchedulingRequirement;
+  resourceRequirement: SchedulingRequirement;
 };
 
 export type UpdateActivityInput = {
@@ -25,6 +41,9 @@ export type UpdateActivityInput = {
   description?: string | null;
   defaultDurationMinutes: number;
   defaultPrice?: number | null;
+  schedulingMode: ActivitySchedulingMode;
+  professionalRequirement: SchedulingRequirement;
+  resourceRequirement: SchedulingRequirement;
 };
 
 export type SetActivityStatusInput = {

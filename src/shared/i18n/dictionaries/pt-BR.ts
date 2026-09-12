@@ -591,6 +591,17 @@ export const ptBR = {
                 "Informe um preço válido.",
         },
 
+        scheduling: {
+            mode: "Uso da agenda",
+            modeHelp: "Define se este serviço utiliza agendamento.",
+            professional: "Profissional",
+            resource: "Recurso físico",
+            resourceHelp: "A configuração do tipo de recurso é feita na Agenda > Recursos.",
+            none: "Não necessário",
+            optional: "Opcional",
+            required: "Obrigatório",
+        },
+
         feedback: {
             success: {
                 serviceCreated:
@@ -619,6 +630,36 @@ export const ptBR = {
                 unexpected:
                     "Não foi possível concluir a operação.",
             },
+        },
+    },
+
+    scheduling: {
+        eyebrow: "Operação",
+        title: "Agenda",
+        description: "Gerencie compromissos, recorrências, profissionais, recursos e disponibilidade da organização.",
+        tabs: { label: "Seções da agenda", calendar: "Calendário", recurrences: "Recorrências", resources: "Recursos", professionals: "Profissionais", settings: "Configurações" },
+        views: { day: "Dia", week: "Semana", month: "Mês" },
+        actions: {
+            newAppointment: "Novo compromisso", newRecurrence: "Nova recorrência",
+            createAppointment: "Criar compromisso", createRecurrence: "Criar recorrência",
+            cancelAppointment: "Cancelar", save: "Salvar", saving: "Salvando...", cancel: "Voltar", close: "Fechar"
+        },
+        calendar: { previous: "Período anterior", next: "Próximo período", today: "Hoje", appointmentCount: "{count} compromisso(s)", free: "Sem compromissos", unknownCustomer: "Aluno", unknownService: "Serviço" },
+        capacity: { available: "Disponível", busy: "Ocupado", unavailable: "Indisponível", ready: "Profissional e recursos selecionados estão livres neste horário.", resources: "Recursos", professionals: "Profissionais" },
+        fields: { customer: "Aluno", service: "Serviço", date: "Data", startTime: "Início", endTime: "Fim", professional: "Profissional", resources: "Recursos", subscription: "Plano / serviço contratado", weekday: "Dia da semana", effectiveFrom: "Válido a partir de", effectiveUntil: "Válido até" },
+        placeholders: { selectCustomer: "Selecione o aluno", selectService: "Selecione o serviço", noProfessional: "Sem profissional", selectSubscription: "Selecione um contrato ativo" },
+        appointment: { title: "Novo compromisso", description: "Crie um atendimento avulso respeitando a disponibilidade operacional.", subscriptionTitle: "Vínculo comercial", withoutSubscription: "Sem vínculo com contrato", noSubscription: "Este aluno não possui um contrato ativo compatível. O compromisso pode ser criado sem vínculo comercial quando a operação permitir." },
+        recurrence: { title: "Nova recorrência", description: "Crie uma regra semanal vinculada a um contrato ativo.", windowTitle: "Janela móvel", windowDescription: "Os próximos {days} dias são gerados imediatamente e o processo diário mantém essa janela sempre abastecida." },
+        recurrences: { eyebrow: "Recorrência", title: "Regras recorrentes", description: "Gerencie horários semanais sem reescrever o histórico já gerado.", pause: "Pausar", resume: "Retomar", end: "Encerrar", empty: "Nenhuma recorrência cadastrada.", conflicts: "{count} ocorrência(s) não puderam ser geradas por conflito de capacidade." },
+        ruleStatus: { active: "Ativa", paused: "Pausada", ended: "Encerrada" },
+        resources: { eyebrow: "Capacidade", title: "Recursos", description: "Cadastre quadras, salas, consultórios e outros recursos físicos limitados.", new: "Novo recurso", newTitle: "Cadastrar recurso", newDescription: "Crie um recurso físico que poderá ser reservado pela Agenda.", type: "Tipo de recurso", typePlaceholder: "Ex.: Quadra de tênis", name: "Nome", namePlaceholder: "Ex.: Quadra 1", activate: "Ativar", deactivate: "Desativar", empty: "Nenhum recurso cadastrado.", requirementsTitle: "Requisitos por serviço", requirementsDescription: "Defina qual tipo e quantidade de recurso cada serviço exige.", selectType: "Selecione o tipo", requiredHelp: "Selecione todos os recursos obrigatórios para este serviço.", optionalHelp: "Você pode vincular recursos a este compromisso, mas eles não são obrigatórios." },
+        professionals: { eyebrow: "Equipe", title: "Profissionais habilitados", description: "Defina quais profissionais podem executar cada serviço. A disponibilidade da agenda considera somente profissionais habilitados.", active: "Ativo", inactive: "Inativo", new: "Novo profissional", newTitle: "Cadastrar profissional", newDescription: "Cadastre um profissional da organização e depois habilite os serviços que ele pode executar.", name: "Nome", email: "E-mail", phone: "Telefone", create: "Cadastrar profissional" },
+        settings: { eyebrow: "Políticas", title: "Configurações da agenda", description: "Parâmetros gerais da Agenda da organização.", windowTitle: "Janela de geração", windowHelp: "Quantidade de dias futuros mantidos automaticamente para regras recorrentes.", days: "dias" },
+        status: { scheduled: "Agendado" },
+        weekdays: ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"],
+        weekdaysShort: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+        feedback: {
+            invalidData: "Preencha os campos obrigatórios.", invalidInterval: "O horário final deve ser posterior ao horário inicial.", unavailable: "Não existe disponibilidade para esse atendimento no período selecionado.", professionalRequired: "Este serviço exige um profissional habilitado.", resourceRequired: "Este serviço exige os recursos configurados.", professionalUnavailable: "O profissional selecionado já está ocupado nesse horário.", resourceUnavailable: "Um dos recursos selecionados já está reservado nesse horário.", subscriptionInvalid: "O contrato selecionado não está ativo ou não é compatível com o serviço.", appointmentCreated: "Compromisso criado com sucesso.", recurrenceCreated: "Recorrência criada e janela futura gerada com sucesso.", appointmentCancelled: "Compromisso cancelado com sucesso.", cancelFailed: "Não foi possível cancelar o compromisso.", resourceUpdated: "Recurso atualizado com sucesso.", resourceFailed: "Não foi possível salvar o recurso.", requirementUpdated: "Requisito do serviço atualizado com sucesso.", requirementFailed: "Não foi possível atualizar o requisito do serviço.", qualificationUpdated: "Habilitação profissional atualizada com sucesso.", qualificationFailed: "Não foi possível atualizar a habilitação profissional.", settingsUpdated: "Configurações atualizadas e janela da agenda sincronizada.", settingsFailed: "Não foi possível atualizar as configurações.", professionalCreated: "Profissional cadastrado com sucesso.", professionalSaveFailed: "Não foi possível cadastrar o profissional.", ruleStatusUpdated: "Status da recorrência atualizado com sucesso.", ruleStatusFailed: "Não foi possível atualizar a recorrência."
         },
     },
 

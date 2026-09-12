@@ -44,6 +44,9 @@ export type Database = {
           id: string
           name: string
           organization_id: string
+          professional_requirement: Database["public"]["Enums"]["scheduling_requirement"]
+          resource_requirement: Database["public"]["Enums"]["scheduling_requirement"]
+          scheduling_mode: Database["public"]["Enums"]["activity_scheduling_mode"]
           updated_at: string
         }
         Insert: {
@@ -55,6 +58,9 @@ export type Database = {
           id?: string
           name: string
           organization_id: string
+          professional_requirement?: Database["public"]["Enums"]["scheduling_requirement"]
+          resource_requirement?: Database["public"]["Enums"]["scheduling_requirement"]
+          scheduling_mode?: Database["public"]["Enums"]["activity_scheduling_mode"]
           updated_at?: string
         }
         Update: {
@@ -66,6 +72,9 @@ export type Database = {
           id?: string
           name?: string
           organization_id?: string
+          professional_requirement?: Database["public"]["Enums"]["scheduling_requirement"]
+          resource_requirement?: Database["public"]["Enums"]["scheduling_requirement"]
+          scheduling_mode?: Database["public"]["Enums"]["activity_scheduling_mode"]
           updated_at?: string
         }
         Relationships: [
@@ -75,6 +84,196 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_resource_requirements: {
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          organization_id: string
+          quantity: number
+          resource_type_id: string
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          organization_id: string
+          quantity?: number
+          resource_type_id: string
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          quantity?: number
+          resource_type_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_activity_resource_activity"
+            columns: ["activity_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_activity_resource_type"
+            columns: ["resource_type_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "resource_types"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      appointment_resources: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          ends_at: string
+          organization_id: string
+          resource_id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          ends_at: string
+          organization_id: string
+          resource_id: string
+          starts_at: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          ends_at?: string
+          organization_id?: string
+          resource_id?: string
+          starts_at?: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_appointment_resources_appointment"
+            columns: ["appointment_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_appointment_resources_resource"
+            columns: ["resource_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      appointments: {
+        Row: {
+          activity_id: string
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          created_at: string
+          customer_id: string
+          customer_subscription_id: string | null
+          ends_at: string
+          id: string
+          organization_id: string
+          professional_id: string | null
+          schedule_rule_id: string | null
+          source: Database["public"]["Enums"]["appointment_source"]
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          customer_id: string
+          customer_subscription_id?: string | null
+          ends_at: string
+          id?: string
+          organization_id: string
+          professional_id?: string | null
+          schedule_rule_id?: string | null
+          source?: Database["public"]["Enums"]["appointment_source"]
+          starts_at: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          customer_id?: string
+          customer_subscription_id?: string | null
+          ends_at?: string
+          id?: string
+          organization_id?: string
+          professional_id?: string | null
+          schedule_rule_id?: string | null
+          source?: Database["public"]["Enums"]["appointment_source"]
+          starts_at?: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_appointments_activity"
+            columns: ["activity_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_appointments_customer"
+            columns: ["customer_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_appointments_professional"
+            columns: ["professional_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_appointments_rule"
+            columns: ["schedule_rule_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_rules"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_appointments_subscription"
+            columns: [
+              "customer_subscription_id",
+              "organization_id",
+              "customer_id",
+              "activity_id",
+            ]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: [
+              "id",
+              "organization_id",
+              "customer_id",
+              "activity_id",
+            ]
           },
         ]
       }
@@ -539,6 +738,59 @@ export type Database = {
           },
         ]
       }
+      organization_scheduling_settings: {
+        Row: {
+          allow_makeup_for_early_cancellation: boolean
+          allow_makeup_for_professional_absence: boolean
+          allow_makeup_for_weather: boolean
+          allow_manual_makeup_override: boolean
+          check_in_enabled: boolean
+          check_in_window_minutes: number
+          created_at: string
+          generation_window_days: number
+          late_cancellation_window_minutes: number
+          organization_id: string
+          scheduling_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          allow_makeup_for_early_cancellation?: boolean
+          allow_makeup_for_professional_absence?: boolean
+          allow_makeup_for_weather?: boolean
+          allow_manual_makeup_override?: boolean
+          check_in_enabled?: boolean
+          check_in_window_minutes?: number
+          created_at?: string
+          generation_window_days?: number
+          late_cancellation_window_minutes?: number
+          organization_id: string
+          scheduling_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          allow_makeup_for_early_cancellation?: boolean
+          allow_makeup_for_professional_absence?: boolean
+          allow_makeup_for_weather?: boolean
+          allow_manual_makeup_override?: boolean
+          check_in_enabled?: boolean
+          check_in_window_minutes?: number
+          created_at?: string
+          generation_window_days?: number
+          late_cancellation_window_minutes?: number
+          organization_id?: string
+          scheduling_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_scheduling_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           business_type:
@@ -586,6 +838,42 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      professional_activities: {
+        Row: {
+          activity_id: string
+          created_at: string
+          organization_id: string
+          professional_id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          organization_id: string
+          professional_id: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          organization_id?: string
+          professional_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_professional_activities_activity"
+            columns: ["activity_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_professional_activities_professional"
+            columns: ["professional_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
       }
       professionals: {
         Row: {
@@ -658,6 +946,259 @@ export type Database = {
         }
         Relationships: []
       }
+      resource_types: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_types_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resources: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+          resource_type_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+          resource_type_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          resource_type_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_resources_organization"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_resources_type"
+            columns: ["resource_type_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "resource_types"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      schedule_generation_conflicts: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          organization_id: string
+          reason: Database["public"]["Enums"]["schedule_generation_conflict_reason"]
+          resolved_at: string | null
+          schedule_rule_id: string
+          starts_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          organization_id: string
+          reason?: Database["public"]["Enums"]["schedule_generation_conflict_reason"]
+          resolved_at?: string | null
+          schedule_rule_id: string
+          starts_at: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          organization_id?: string
+          reason?: Database["public"]["Enums"]["schedule_generation_conflict_reason"]
+          resolved_at?: string | null
+          schedule_rule_id?: string
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_schedule_generation_conflicts_rule"
+            columns: ["schedule_rule_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_rules"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      schedule_rule_resources: {
+        Row: {
+          created_at: string
+          organization_id: string
+          resource_id: string
+          schedule_rule_id: string
+        }
+        Insert: {
+          created_at?: string
+          organization_id: string
+          resource_id: string
+          schedule_rule_id: string
+        }
+        Update: {
+          created_at?: string
+          organization_id?: string
+          resource_id?: string
+          schedule_rule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_schedule_rule_resources_resource"
+            columns: ["resource_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_schedule_rule_resources_rule"
+            columns: ["schedule_rule_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_rules"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      schedule_rules: {
+        Row: {
+          activity_id: string
+          created_at: string
+          customer_id: string
+          customer_subscription_id: string
+          effective_from: string
+          effective_until: string | null
+          end_time: string
+          id: string
+          organization_id: string
+          professional_id: string | null
+          recurrence_type: Database["public"]["Enums"]["schedule_recurrence_type"]
+          start_time: string
+          status: Database["public"]["Enums"]["schedule_rule_status"]
+          timezone: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          customer_id: string
+          customer_subscription_id: string
+          effective_from: string
+          effective_until?: string | null
+          end_time: string
+          id?: string
+          organization_id: string
+          professional_id?: string | null
+          recurrence_type?: Database["public"]["Enums"]["schedule_recurrence_type"]
+          start_time: string
+          status?: Database["public"]["Enums"]["schedule_rule_status"]
+          timezone?: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          customer_id?: string
+          customer_subscription_id?: string
+          effective_from?: string
+          effective_until?: string | null
+          end_time?: string
+          id?: string
+          organization_id?: string
+          professional_id?: string | null
+          recurrence_type?: Database["public"]["Enums"]["schedule_recurrence_type"]
+          start_time?: string
+          status?: Database["public"]["Enums"]["schedule_rule_status"]
+          timezone?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_schedule_rules_activity"
+            columns: ["activity_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_schedule_rules_customer"
+            columns: ["customer_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_schedule_rules_professional"
+            columns: ["professional_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_schedule_rules_subscription"
+            columns: [
+              "customer_subscription_id",
+              "organization_id",
+              "customer_id",
+              "activity_id",
+            ]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: [
+              "id",
+              "organization_id",
+              "customer_id",
+              "activity_id",
+            ]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -689,12 +1230,42 @@ export type Database = {
         }
         Returns: string
       }
+      create_scheduling_appointment: {
+        Args: {
+          p_activity_id: string
+          p_customer_id: string
+          p_customer_subscription_id: string
+          p_ends_at: string
+          p_professional_id?: string
+          p_resource_ids?: string[]
+          p_source?: Database["public"]["Enums"]["appointment_source"]
+          p_starts_at: string
+        }
+        Returns: string
+      }
+      create_scheduling_rule: {
+        Args: {
+          p_customer_subscription_id: string
+          p_effective_from: string
+          p_effective_until?: string
+          p_end_time: string
+          p_professional_id?: string
+          p_resource_ids?: string[]
+          p_start_time: string
+          p_weekday: number
+        }
+        Returns: string
+      }
       generate_recurring_expenses_for_period: {
         Args: {
           p_organization_id: string
           p_period_end: string
           p_period_start: string
         }
+        Returns: number
+      }
+      generate_schedule_rule_appointments: {
+        Args: { p_schedule_rule_id: string; p_window_end?: string }
         Returns: number
       }
       generate_subscription_revenues_for_period: {
@@ -704,6 +1275,15 @@ export type Database = {
           p_period_start: string
         }
         Returns: number
+      }
+      get_scheduling_availability: {
+        Args: {
+          p_activity_id: string
+          p_ends_at: string
+          p_professional_id?: string
+          p_starts_at: string
+        }
+        Returns: Json
       }
       is_organization_manager: {
         Args: { target_organization_id: string }
@@ -717,10 +1297,23 @@ export type Database = {
         Args: { target_organization_id: string }
         Returns: boolean
       }
+      reactivate_rule_pause_appointments: {
+        Args: { p_schedule_rule_id: string }
+        Returns: number
+      }
+      reactivate_subscription_pause_appointments: {
+        Args: { p_subscription_id: string }
+        Returns: number
+      }
       refresh_financial_overdue_statuses: {
         Args: { p_organization_id: string }
         Returns: undefined
       }
+      refresh_organization_scheduling_window: {
+        Args: { p_organization_id: string }
+        Returns: number
+      }
+      refresh_scheduling_window: { Args: never; Returns: number }
       seed_default_expense_categories: {
         Args: { p_organization_id: string }
         Returns: undefined
@@ -731,6 +1324,13 @@ export type Database = {
           active: boolean
           ended_subscriptions: number
         }[]
+      }
+      set_schedule_rule_status: {
+        Args: {
+          p_schedule_rule_id: string
+          p_status: Database["public"]["Enums"]["schedule_rule_status"]
+        }
+        Returns: undefined
       }
       sync_financial_period: {
         Args: { p_reference_date: string }
@@ -744,6 +1344,9 @@ export type Database = {
       }
     }
     Enums: {
+      activity_scheduling_mode: "NONE" | "OPTIONAL" | "REQUIRED"
+      appointment_source: "RECURRENCE" | "MANUAL" | "MAKEUP" | "RESCHEDULE"
+      appointment_status: "SCHEDULED" | "CANCELLED" | "COMPLETED"
       expense_recurrence_cycle:
         | "WEEKLY"
         | "MONTHLY"
@@ -764,6 +1367,10 @@ export type Database = {
       organization_currency: "BRL" | "USD" | "EUR" | "CAD"
       organization_role: "OWNER" | "ADMIN" | "PROFESSIONAL" | "CUSTOMER"
       organization_status: "ACTIVE" | "INACTIVE"
+      schedule_generation_conflict_reason: "CAPACITY_CONFLICT"
+      schedule_recurrence_type: "WEEKLY"
+      schedule_rule_status: "ACTIVE" | "PAUSED" | "ENDED"
+      scheduling_requirement: "NONE" | "OPTIONAL" | "REQUIRED"
       subscription_billing_cycle:
         | "WEEKLY"
         | "MONTHLY"
@@ -902,6 +1509,9 @@ export const Constants = {
   },
   public: {
     Enums: {
+      activity_scheduling_mode: ["NONE", "OPTIONAL", "REQUIRED"],
+      appointment_source: ["RECURRENCE", "MANUAL", "MAKEUP", "RESCHEDULE"],
+      appointment_status: ["SCHEDULED", "CANCELLED", "COMPLETED"],
       expense_recurrence_cycle: [
         "WEEKLY",
         "MONTHLY",
@@ -924,6 +1534,10 @@ export const Constants = {
       organization_currency: ["BRL", "USD", "EUR", "CAD"],
       organization_role: ["OWNER", "ADMIN", "PROFESSIONAL", "CUSTOMER"],
       organization_status: ["ACTIVE", "INACTIVE"],
+      schedule_generation_conflict_reason: ["CAPACITY_CONFLICT"],
+      schedule_recurrence_type: ["WEEKLY"],
+      schedule_rule_status: ["ACTIVE", "PAUSED", "ENDED"],
+      scheduling_requirement: ["NONE", "OPTIONAL", "REQUIRED"],
       subscription_billing_cycle: [
         "WEEKLY",
         "MONTHLY",

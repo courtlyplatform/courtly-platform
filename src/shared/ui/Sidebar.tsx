@@ -27,6 +27,14 @@ import type {
     OrganizationRole,
 } from "@/shared/auth/get-current-organization-commercial-context";
 
+type NavigationItem = {
+    href: string;
+    icon: string;
+    label: string;
+    ownerOnly?: boolean;
+    managerOnly?: boolean;
+};
+
 type SidebarProps = {
     collapsed: boolean;
     onToggle: () => void;
@@ -105,7 +113,7 @@ export function Sidebar({
         []
     );
 
-    const navigation = [
+    const navigation: NavigationItem[] = [
         {
             href: "/dashboard",
             icon: "⌂",
@@ -137,6 +145,7 @@ export function Sidebar({
                 dictionary
                     .navigation
                     .scheduling,
+            managerOnly: true,
         },
         {
             href: "/attendance",
@@ -167,9 +176,21 @@ export function Sidebar({
 
     const visibleNavigation =
         navigation.filter(
-            (item) =>
-                !item.ownerOnly ||
-                role === "OWNER"
+            (item) => {
+                const ownerAllowed =
+                    !item.ownerOnly ||
+                    role === "OWNER";
+
+                const managerAllowed =
+                    !item.managerOnly ||
+                    role === "OWNER" ||
+                    role === "ADMIN";
+
+                return (
+                    ownerAllowed &&
+                    managerAllowed
+                );
+            }
         );
 
     const sidebarClassName = [

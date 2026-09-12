@@ -45,6 +45,9 @@ type SaveActivityRequest = {
   description?: string | null;
   defaultDurationMinutes: number;
   defaultPrice?: number | null;
+  schedulingMode: "NONE" | "OPTIONAL" | "REQUIRED";
+  professionalRequirement: "NONE" | "OPTIONAL" | "REQUIRED";
+  resourceRequirement: "NONE" | "OPTIONAL" | "REQUIRED";
 };
 
 export async function saveActivityAction(
@@ -84,6 +87,15 @@ export async function saveActivityAction(
 
           defaultPrice:
             request.defaultPrice,
+
+          schedulingMode:
+            request.schedulingMode,
+
+          professionalRequirement:
+            request.professionalRequirement,
+
+          resourceRequirement:
+            request.resourceRequirement,
         }
       );
     } else {
@@ -103,6 +115,15 @@ export async function saveActivityAction(
 
           defaultPrice:
             request.defaultPrice,
+
+          schedulingMode:
+            request.schedulingMode,
+
+          professionalRequirement:
+            request.professionalRequirement,
+
+          resourceRequirement:
+            request.resourceRequirement,
         }
       );
     }
