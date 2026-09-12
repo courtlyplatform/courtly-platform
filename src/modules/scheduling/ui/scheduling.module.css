@@ -819,3 +819,10 @@
 .inlineTypeCreator input { flex:1; min-height:42px; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); padding:0 10px; }
 .resourceOptionBusy { opacity:.55; }
 .resourceOptionBusy input { cursor:not-allowed; }
+
+/* ===== Recurrence contract lookup / availability ===== */
+.subscriptionLookup { display:grid; gap:8px; }
+.subscriptionLookup input[type="search"] { width:100%; min-height:42px; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); padding:0 12px; }
+.subscriptionLookup select { min-height:86px; }
+.lookupHelp { display:block; margin-top:5px; color:var(--text-secondary); font-size:.76rem; line-height:1.35; font-weight:500; }
+.field input[readonly] { background:var(--surface-secondary); color:var(--text-secondary); cursor:not-allowed; }

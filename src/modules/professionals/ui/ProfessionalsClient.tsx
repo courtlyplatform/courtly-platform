@@ -170,6 +170,8 @@ export function ProfessionalsClient({
   const [specialtyForm, setSpecialtyForm] =
     useState<SpecialtyDraft>(emptySpecialty());
 
+  const [availabilityCopyTargets, setAvailabilityCopyTargets] = useState<Record<string, number[]>>({});
+
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error';
     message: string;
@@ -364,12 +366,14 @@ export function ProfessionalsClient({
 
   const openNew = () => {
     setSelected(null);
+    setAvailabilityCopyTargets({});
     setForm(emptyForm());
     setModal('form');
   };
 
   const openEdit = (professional: Professional) => {
     setSelected(professional);
+    setAvailabilityCopyTargets({});
 
     const rules: AvailabilityDraft[] = [];
 
@@ -653,6 +657,92 @@ export function ProfessionalsClient({
               ),
       };
     });
+  };
+
+  const toggleAvailabilityCopyTarget = (
+    sourceKey: string,
+    targetWeekday: number,
+    checked: boolean,
+  ) => {
+    setAvailabilityCopyTargets((current) => {
+      const selectedDays = current[sourceKey] ?? [];
+      const nextDays = checked
+        ? Array.from(new Set([...selectedDays, targetWeekday])).sort((a, b) => a - b)
+        : selectedDays.filter((weekday) => weekday !== targetWeekday);
+
+      return {
+        ...current,
+        [sourceKey]: nextDays,
+      };
+    });
+  };
+
+  const applyAvailabilityToSelectedDays = (sourceKey: string) => {
+    const targetWeekdays = availabilityCopyTargets[sourceKey] ?? [];
+    if (!targetWeekdays.length) {
+      return;
+    }
+
+    setForm((current) => {
+      const source = current.availabilityRules.find((rule) => rule.key === sourceKey);
+      if (!source || !source.enabled) {
+        return current;
+      }
+
+      let nextRules = [...current.availabilityRules];
+
+      for (const targetWeekday of targetWeekdays) {
+        if (targetWeekday === source.weekday) {
+          continue;
+        }
+
+        const targetRules = nextRules.filter((rule) => rule.weekday === targetWeekday);
+        const hasExactInterval = targetRules.some(
+          (rule) =>
+            rule.enabled &&
+            rule.startTime === source.startTime &&
+            rule.endTime === source.endTime,
+        );
+
+        if (hasExactInterval) {
+          continue;
+        }
+
+        const onlyPlaceholder =
+          targetRules.length === 1 &&
+          targetRules[0] &&
+          !targetRules[0].enabled;
+
+        if (onlyPlaceholder) {
+          nextRules = nextRules.filter((rule) => rule.key !== targetRules[0].key);
+        }
+
+        nextRules.push(
+          makeAvailability(
+            targetWeekday,
+            source.startTime,
+            source.endTime,
+            true,
+          ),
+        );
+      }
+
+      nextRules.sort(
+        (a, b) =>
+          a.weekday - b.weekday ||
+          a.startTime.localeCompare(b.startTime),
+      );
+
+      return {
+        ...current,
+        availabilityRules: nextRules,
+      };
+    });
+
+    setAvailabilityCopyTargets((current) => ({
+      ...current,
+      [sourceKey]: [],
+    }));
   };
 
   return (
@@ -1988,25 +2078,60 @@ export function ProfessionalsClient({
                         .map(
                           (rule) => (
                             <div
-                              className={
-                                styles.availabilityRow
-                              }
-                              key={
-                                rule.key
-                              }
+                              className={styles.availabilityRuleBlock}
+                              key={rule.key}
                             >
-                              <label
+                              <div
                                 className={
-                                  styles.enabledToggle
+                                  styles.availabilityRow
                                 }
                               >
-                                <input
+                                <label
                                   className={
-                                    styles.cleanCheckbox
+                                    styles.enabledToggle
                                   }
-                                  type="checkbox"
-                                  checked={
-                                    rule.enabled
+                                >
+                                  <input
+                                    className={
+                                      styles.cleanCheckbox
+                                    }
+                                    type="checkbox"
+                                    checked={
+                                      rule.enabled
+                                    }
+                                    onChange={(
+                                      event,
+                                    ) =>
+                                      updateInterval(
+                                        rule.key,
+                                        {
+                                          enabled:
+                                            event
+                                              .target
+                                              .checked,
+                                        },
+                                      )
+                                    }
+                                  />
+
+                                  <span>
+                                    {rule.enabled
+                                      ? t
+                                          .availability
+                                          .available
+                                      : t
+                                          .availability
+                                          .unavailable}
+                                  </span>
+                                </label>
+
+                                <input
+                                  type="time"
+                                  disabled={
+                                    !rule.enabled
+                                  }
+                                  value={
+                                    rule.startTime
                                   }
                                   onChange={(
                                     event,
@@ -2014,99 +2139,113 @@ export function ProfessionalsClient({
                                     updateInterval(
                                       rule.key,
                                       {
-                                        enabled:
+                                        startTime:
                                           event
                                             .target
-                                            .checked,
+                                            .value,
                                       },
                                     )
                                   }
                                 />
 
-                                <span>
-                                  {rule.enabled
-                                    ? t
-                                        .availability
-                                        .available
-                                    : t
-                                        .availability
-                                        .unavailable}
+                                <span
+                                  className={
+                                    styles.timeSeparator
+                                  }
+                                >
+                                  –
                                 </span>
-                              </label>
 
-                              <input
-                                type="time"
-                                disabled={
-                                  !rule.enabled
-                                }
-                                value={
-                                  rule.startTime
-                                }
-                                onChange={(
-                                  event,
-                                ) =>
-                                  updateInterval(
-                                    rule.key,
-                                    {
-                                      startTime:
-                                        event
-                                          .target
-                                          .value,
-                                    },
-                                  )
-                                }
-                              />
+                                <input
+                                  type="time"
+                                  disabled={
+                                    !rule.enabled
+                                  }
+                                  value={
+                                    rule.endTime
+                                  }
+                                  onChange={(
+                                    event,
+                                  ) =>
+                                    updateInterval(
+                                      rule.key,
+                                      {
+                                        endTime:
+                                          event
+                                            .target
+                                            .value,
+                                      },
+                                    )
+                                  }
+                                />
 
-                              <span
-                                className={
-                                  styles.timeSeparator
-                                }
-                              >
-                                –
-                              </span>
+                                <button
+                                  type="button"
+                                  className={
+                                    styles.iconButton
+                                  }
+                                  onClick={() =>
+                                    removeInterval(
+                                      rule.key,
+                                      weekday,
+                                    )
+                                  }
+                                  aria-label={
+                                    t
+                                      .availability
+                                      .removeInterval
+                                  }
+                                >
+                                  ×
+                                </button>
+                              </div>
 
-                              <input
-                                type="time"
-                                disabled={
-                                  !rule.enabled
-                                }
-                                value={
-                                  rule.endTime
-                                }
-                                onChange={(
-                                  event,
-                                ) =>
-                                  updateInterval(
-                                    rule.key,
-                                    {
-                                      endTime:
-                                        event
-                                          .target
-                                          .value,
-                                    },
-                                  )
-                                }
-                              />
+                              {rule.enabled && (
+                                <div className={styles.copyAvailability}>
+                                  <div className={styles.copyAvailabilityHeader}>
+                                    <span>
+                                      {locale === 'pt-BR'
+                                        ? 'Aplicar este horário também em:'
+                                        : 'Apply this time range also to:'}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      className={styles.smallButton}
+                                      disabled={(availabilityCopyTargets[rule.key] ?? []).length === 0}
+                                      onClick={() => applyAvailabilityToSelectedDays(rule.key)}
+                                    >
+                                      {locale === 'pt-BR' ? 'Aplicar' : 'Apply'}
+                                    </button>
+                                  </div>
 
-                              <button
-                                type="button"
-                                className={
-                                  styles.iconButton
-                                }
-                                onClick={() =>
-                                  removeInterval(
-                                    rule.key,
-                                    weekday,
-                                  )
-                                }
-                                aria-label={
-                                  t
-                                    .availability
-                                    .removeInterval
-                                }
-                              >
-                                ×
-                              </button>
+                                  <div className={styles.copyDayOptions}>
+                                    {Array.from({ length: 7 }, (_, targetWeekday) => {
+                                      if (targetWeekday === weekday) {
+                                        return null;
+                                      }
+
+                                      const checked = (availabilityCopyTargets[rule.key] ?? []).includes(targetWeekday);
+
+                                      return (
+                                        <label key={targetWeekday}>
+                                          <input
+                                            type="checkbox"
+                                            checked={checked}
+                                            onChange={(event) =>
+                                              toggleAvailabilityCopyTarget(
+                                                rule.key,
+                                                targetWeekday,
+                                                event.target.checked,
+                                              )
+                                            }
+                                          />
+                                          <span>{t.weekdays[targetWeekday]}</span>
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ),
                         )}

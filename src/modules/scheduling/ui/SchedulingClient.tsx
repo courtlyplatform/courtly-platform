@@ -94,6 +94,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
     professionalId: "",
     resourceIds: [],
   }));
+  const [recurrenceSubscriptionSearch, setRecurrenceSubscriptionSearch] = useState("");
 
   const [resourceForm, setResourceForm] = useState({ id: "", name: "", resourceTypeId: "" });
   const [resourceTypeForm, setResourceTypeForm] = useState("");
@@ -127,6 +128,53 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
     ? activeActivities.find((activity) => activity.id === recurrenceSubscription.activityId) ?? null
     : null;
 
+  const filteredRecurrenceSubscriptions = useMemo(() => {
+    const query = normalizeLookup(recurrenceSubscriptionSearch);
+    const queryDigits = digitsOnly(recurrenceSubscriptionSearch);
+
+    return initialData.subscriptions
+      .filter((subscription) => subscription.status === "ACTIVE")
+      .filter((subscription) => {
+        const activity = initialData.activities.find((item) => item.id === subscription.activityId);
+        if (!activity || activity.schedulingMode === "NONE") return false;
+        if (!query && !queryDigits) return true;
+
+        const customer = initialData.customers.find((item) => item.id === subscription.customerId);
+        const haystack = normalizeLookup(`${customer?.name ?? ""} ${activity.name}`);
+        const document = digitsOnly(customer?.documentNumber ?? "");
+
+        return haystack.includes(query) || (!!queryDigits && document.includes(queryDigits));
+      });
+  }, [initialData.activities, initialData.customers, initialData.subscriptions, recurrenceSubscriptionSearch]);
+
+  const recurrenceProfessionals = useMemo(
+    () =>
+      getAvailableProfessionalsForRecurrence(
+        recurrenceActivity,
+        recurrenceForm.weekday,
+        recurrenceForm.startTime,
+        recurrenceForm.endTime,
+        recurrenceForm.effectiveFrom,
+        recurrenceForm.effectiveUntil,
+        initialData,
+      ),
+    [
+      recurrenceActivity,
+      recurrenceForm.weekday,
+      recurrenceForm.startTime,
+      recurrenceForm.endTime,
+      recurrenceForm.effectiveFrom,
+      recurrenceForm.effectiveUntil,
+      initialData,
+    ],
+  );
+
+  useEffect(() => {
+    if (!recurrenceForm.professionalId) return;
+    if (recurrenceProfessionals.some((professional) => professional.id === recurrenceForm.professionalId)) return;
+    setRecurrenceForm((current) => ({ ...current, professionalId: "" }));
+  }, [recurrenceForm.professionalId, recurrenceProfessionals]);
+
   const visibleAppointments = useMemo(
     () => initialData.appointments.filter((appointment) => appointment.status !== "CANCELLED"),
     [initialData.appointments]
@@ -153,6 +201,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
   const openRecurrence = () => {
     setFeedback(null);
     setModalError(null);
+    setRecurrenceSubscriptionSearch("");
     setRecurrenceForm({
       subscriptionId: "",
       weekday: String(cursor.getDay()),
@@ -193,6 +242,31 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
       resourceIds: [],
       endTime,
     }));
+  };
+
+  const handleRecurrenceSubscriptionChange = (subscriptionId: string) => {
+    const subscription = initialData.subscriptions.find((item) => item.id === subscriptionId) ?? null;
+    const customer = subscription
+      ? initialData.customers.find((item) => item.id === subscription.customerId) ?? null
+      : null;
+    const activity = subscription
+      ? initialData.activities.find((item) => item.id === subscription.activityId) ?? null
+      : null;
+
+    setRecurrenceForm((current) => ({
+      ...current,
+      subscriptionId,
+      effectiveFrom: subscription?.startsAt ?? todayIso(),
+      effectiveUntil: subscription ? getSubscriptionRecurrenceEnd(subscription) : "",
+      professionalId: "",
+      resourceIds: [],
+    }));
+
+    if (subscription) {
+      setRecurrenceSubscriptionSearch(
+        `${customer?.name ?? ""}${customer?.documentNumber ? ` — ${customer.documentNumber}` : ""}${activity ? ` — ${activity.name}` : ""}`,
+      );
+    }
   };
 
   const handleAppointmentSubmit = (event: FormEvent) => {
@@ -267,6 +341,18 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
       !recurrenceForm.professionalId
     ) {
       setModalError(t.feedback.professionalRequired);
+      return;
+    }
+
+    if (
+      recurrenceForm.professionalId &&
+      !recurrenceProfessionals.some((professional) => professional.id === recurrenceForm.professionalId)
+    ) {
+      setModalError(
+        locale === "pt-BR"
+          ? "O profissional selecionado não está disponível para o primeiro horário desta recorrência."
+          : "The selected professional is not available for the first slot of this recurrence.",
+      );
       return;
     }
 
@@ -650,29 +736,37 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
         <Modal title={t.recurrence.title} subtitle={t.recurrence.description} closeLabel={t.actions.close} onClose={closeModal}>
           <form className={styles.form} onSubmit={handleRecurrenceSubmit}>
             <Field label={t.fields.subscription}>
-              <select
-                value={recurrenceForm.subscriptionId}
-                onChange={(event) =>
-                  setRecurrenceForm((current) => ({
-                    ...current,
-                    subscriptionId: event.target.value,
-                    professionalId: "",
-                    resourceIds: [],
-                  }))
-                }
-              >
-                <option value="">{t.placeholders.selectSubscription}</option>
-                {initialData.subscriptions.filter((subscription) => subscription.status === "ACTIVE").map((subscription) => {
-                  const customer = initialData.customers.find((item) => item.id === subscription.customerId);
-                  const activity = initialData.activities.find((item) => item.id === subscription.activityId);
-                  if (!activity || activity.schedulingMode === "NONE") return null;
-                  return (
-                    <option key={subscription.id} value={subscription.id}>
-                      {customer?.name ?? "Customer"} — {activity.name}
-                    </option>
-                  );
-                })}
-              </select>
+              <div className={styles.subscriptionLookup}>
+                <input
+                  type="search"
+                  value={recurrenceSubscriptionSearch}
+                  placeholder={locale === "pt-BR" ? "Buscar por nome ou documento do cliente" : "Search by customer name or document"}
+                  onChange={(event) => setRecurrenceSubscriptionSearch(event.target.value)}
+                />
+                <select
+                  value={recurrenceForm.subscriptionId}
+                  size={Math.min(Math.max(filteredRecurrenceSubscriptions.length + 1, 2), 6)}
+                  onChange={(event) => handleRecurrenceSubscriptionChange(event.target.value)}
+                >
+                  <option value="">{t.placeholders.selectSubscription}</option>
+                  {filteredRecurrenceSubscriptions.map((subscription) => {
+                    const customer = initialData.customers.find((item) => item.id === subscription.customerId);
+                    const activity = initialData.activities.find((item) => item.id === subscription.activityId);
+                    if (!activity) return null;
+                    const documentLabel = customer?.documentNumber ? ` • ${customer.documentNumber}` : "";
+                    return (
+                      <option key={subscription.id} value={subscription.id}>
+                        {customer?.name ?? "Customer"}{documentLabel} — {activity.name}
+                      </option>
+                    );
+                  })}
+                </select>
+                {filteredRecurrenceSubscriptions.length === 0 && recurrenceSubscriptionSearch.trim() && (
+                  <small className={styles.lookupHelp}>
+                    {locale === "pt-BR" ? "Nenhum plano ativo encontrado para essa busca." : "No active plan found for this search."}
+                  </small>
+                )}
+              </div>
             </Field>
 
             <div className={styles.formGrid}>
@@ -691,18 +785,42 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
                 <input type="time" value={recurrenceForm.endTime} onChange={(event) => setRecurrenceForm((current) => ({ ...current, endTime: event.target.value }))} />
               </Field>
               <Field label={t.fields.effectiveFrom}>
-                <input type="date" value={recurrenceForm.effectiveFrom} onChange={(event) => setRecurrenceForm((current) => ({ ...current, effectiveFrom: event.target.value }))} />
+                <input
+                  type="date"
+                  value={recurrenceForm.effectiveFrom}
+                  readOnly={Boolean(recurrenceSubscription)}
+                  onChange={(event) => setRecurrenceForm((current) => ({ ...current, effectiveFrom: event.target.value }))}
+                />
               </Field>
               <Field label={t.fields.effectiveUntil}>
-                <input type="date" value={recurrenceForm.effectiveUntil} onChange={(event) => setRecurrenceForm((current) => ({ ...current, effectiveUntil: event.target.value }))} />
+                <input
+                  type="date"
+                  value={recurrenceForm.effectiveUntil}
+                  readOnly={Boolean(recurrenceSubscription)}
+                  onChange={(event) => setRecurrenceForm((current) => ({ ...current, effectiveUntil: event.target.value }))}
+                />
+                {recurrenceSubscription && (
+                  <small className={styles.lookupHelp}>
+                    {locale === "pt-BR"
+                      ? `Período calculado pelo plano (${billingCycleLabel(recurrenceSubscription.billingCycle, locale)}).`
+                      : `Period calculated from the plan (${billingCycleLabel(recurrenceSubscription.billingCycle, locale)}).`}
+                  </small>
+                )}
               </Field>
               <Field label={t.fields.professional}>
                 <select value={recurrenceForm.professionalId} onChange={(event) => setRecurrenceForm((current) => ({ ...current, professionalId: event.target.value }))}>
                   <option value="">{t.placeholders.noProfessional}</option>
-                  {getCompatibleProfessionals(recurrenceActivity, initialData).map((professional) => (
+                  {recurrenceProfessionals.map((professional) => (
                     <option key={professional.id} value={professional.id}>{professional.name}</option>
                   ))}
                 </select>
+                {recurrenceActivity && recurrenceProfessionals.length === 0 && (
+                  <small className={styles.lookupHelp}>
+                    {locale === "pt-BR"
+                      ? "Nenhum profissional habilitado está disponível nesse dia e horário. Exceções do primeiro atendimento também são consideradas."
+                      : "No qualified professional is available for this weekday and time. Exceptions on the first occurrence are also considered."}
+                  </small>
+                )}
               </Field>
             </div>
 
@@ -1192,6 +1310,110 @@ function ModalActions({ t, pending, onCancel, submitLabel }: any) {
       <button type="button" className={styles.secondaryButton} disabled={pending} onClick={onCancel}>{t.actions.cancel}</button>
       <button type="submit" className={styles.primaryButton} disabled={pending}>{pending ? t.actions.saving : submitLabel}</button>
     </div>
+  );
+}
+
+function normalizeLookup(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function digitsOnly(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+function getSubscriptionRecurrenceEnd(subscription: SchedulingPageData["subscriptions"][number]) {
+  if (subscription.endsAt) return subscription.endsAt;
+
+  const [year, month, day] = subscription.startsAt.split("-").map(Number);
+  if (!year || !month || !day) return "";
+
+  if (subscription.billingCycle === "ONE_TIME") return subscription.startsAt;
+
+  const monthsToAdd =
+    subscription.billingCycle === "MONTHLY" ? 1 :
+    subscription.billingCycle === "QUARTERLY" ? 3 :
+    subscription.billingCycle === "SEMIANNUAL" ? 6 :
+    subscription.billingCycle === "ANNUAL" ? 12 : 0;
+
+  if (subscription.billingCycle === "WEEKLY") {
+    const date = new Date(Date.UTC(year, month - 1, day));
+    date.setUTCDate(date.getUTCDate() + 7);
+    return formatUtcDate(date);
+  }
+
+  const totalMonths = year * 12 + (month - 1) + monthsToAdd;
+  const targetYear = Math.floor(totalMonths / 12);
+  const targetMonthIndex = totalMonths % 12;
+  const lastDay = new Date(Date.UTC(targetYear, targetMonthIndex + 1, 0)).getUTCDate();
+  const target = new Date(Date.UTC(targetYear, targetMonthIndex, Math.min(day, lastDay)));
+  return formatUtcDate(target);
+}
+
+function formatUtcDate(date: Date) {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
+}
+
+function billingCycleLabel(cycle: string, locale: string) {
+  const pt: Record<string, string> = {
+    WEEKLY: "semanal",
+    MONTHLY: "mensal",
+    QUARTERLY: "trimestral",
+    SEMIANNUAL: "semestral",
+    ANNUAL: "anual",
+    ONE_TIME: "pagamento único",
+  };
+  const en: Record<string, string> = {
+    WEEKLY: "weekly",
+    MONTHLY: "monthly",
+    QUARTERLY: "quarterly",
+    SEMIANNUAL: "semiannual",
+    ANNUAL: "annual",
+    ONE_TIME: "one-time",
+  };
+  return (locale === "pt-BR" ? pt : en)[cycle] ?? cycle;
+}
+
+function getFirstRecurrenceDate(effectiveFrom: string, weekday: number, effectiveUntil?: string) {
+  if (!effectiveFrom || weekday < 0 || weekday > 6) return null;
+  const searchFrom = effectiveFrom < todayIso() ? todayIso() : effectiveFrom;
+  const [year, month, day] = searchFrom.split("-").map(Number);
+  if (!year || !month || !day) return null;
+
+  const date = new Date(year, month - 1, day, 12, 0, 0, 0);
+  for (let offset = 0; offset < 7; offset += 1) {
+    const candidate = new Date(date);
+    candidate.setDate(date.getDate() + offset);
+    if (candidate.getDay() !== weekday) continue;
+    const isoDate = formatLocalDate(candidate);
+    if (effectiveUntil && isoDate > effectiveUntil) return null;
+    return isoDate;
+  }
+  return null;
+}
+
+function getAvailableProfessionalsForRecurrence(
+  activity: Activity | null,
+  weekdayValue: string,
+  startTime: string,
+  endTime: string,
+  effectiveFrom: string,
+  effectiveUntil: string,
+  data: SchedulingPageData,
+) {
+  if (!activity || !startTime || !endTime || endTime <= startTime) return [];
+  const weekday = Number(weekdayValue);
+  const firstDate = getFirstRecurrenceDate(effectiveFrom, weekday, effectiveUntil);
+  if (!firstDate) return [];
+
+  const startsAt = localDateTimeToIso(firstDate, startTime);
+  const endsAt = localDateTimeToIso(firstDate, endTime);
+
+  return getCompatibleProfessionals(activity, data).filter((professional) =>
+    isProfessionalAvailable(professional, activity.id, startsAt, endsAt, data),
   );
 }
 
