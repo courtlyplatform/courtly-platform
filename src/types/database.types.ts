@@ -104,7 +104,8 @@ export type Database = {
           id: string
           organization_id: string
           quantity: number
-          resource_type_id: string
+          resource_pool_id: string | null
+          resource_type_id: string | null
           updated_at: string
         }
         Insert: {
@@ -113,7 +114,8 @@ export type Database = {
           id?: string
           organization_id: string
           quantity?: number
-          resource_type_id: string
+          resource_pool_id?: string | null
+          resource_type_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -122,7 +124,8 @@ export type Database = {
           id?: string
           organization_id?: string
           quantity?: number
-          resource_type_id?: string
+          resource_pool_id?: string | null
+          resource_type_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -131,6 +134,13 @@ export type Database = {
             columns: ["activity_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "activities"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_activity_resource_pool"
+            columns: ["resource_pool_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "resource_pools"
             referencedColumns: ["id", "organization_id"]
           },
           {
@@ -1372,6 +1382,77 @@ export type Database = {
         }
         Relationships: []
       }
+      resource_pool_members: {
+        Row: {
+          created_at: string
+          organization_id: string
+          resource_id: string
+          resource_pool_id: string
+        }
+        Insert: {
+          created_at?: string
+          organization_id: string
+          resource_id: string
+          resource_pool_id: string
+        }
+        Update: {
+          created_at?: string
+          organization_id?: string
+          resource_id?: string
+          resource_pool_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_resource_pool_members_pool"
+            columns: ["resource_pool_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "resource_pools"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_resource_pool_members_resource"
+            columns: ["resource_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      resource_pools: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_pools_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resource_types: {
         Row: {
           active: boolean
@@ -1670,6 +1751,16 @@ export type Database = {
         }
         Returns: string
       }
+      allocate_activity_resources: {
+        Args: {
+          p_activity_id: string
+          p_ends_at: string
+          p_ignore_appointment_id?: string
+          p_organization_id: string
+          p_starts_at: string
+        }
+        Returns: string[]
+      }
       cancel_scheduling_appointment: {
         Args: { p_appointment_id: string; p_reason?: string }
         Returns: undefined
@@ -1801,6 +1892,10 @@ export type Database = {
         Returns: number
       }
       refresh_scheduling_window: { Args: never; Returns: number }
+      replace_activity_resource_requirements: {
+        Args: { p_activity_id: string; p_requirements: Json }
+        Returns: undefined
+      }
       reschedule_scheduling_appointment: {
         Args: {
           p_appointment_id: string
@@ -1809,6 +1904,15 @@ export type Database = {
           p_starts_at: string
         }
         Returns: undefined
+      }
+      save_resource_pool: {
+        Args: {
+          p_name: string
+          p_organization_id: string
+          p_pool_id: string
+          p_resource_ids?: string[]
+        }
+        Returns: string
       }
       seed_default_expense_categories: {
         Args: { p_organization_id: string }

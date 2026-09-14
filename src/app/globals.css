@@ -7257,3 +7257,175 @@ CUSTOMER PLANS SUMMARY — DESKTOP
     color:
         #e8cc78;
 }
+/* =========================================================
+   SERVICES — RESOURCE REQUIREMENTS / RESOURCE POOLS
+   ========================================================= */
+.service-form .form-group select {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--input-background);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease,
+        background-color 0.2s ease, color 0.2s ease;
+}
+
+.service-form .form-group select:hover {
+    border-color: var(--text-secondary);
+}
+
+.service-form .form-group select:focus {
+    border-color: var(--courtly-green);
+    box-shadow: 0 0 0 3px var(--courtly-green-soft);
+}
+
+.service-config-section {
+    display: grid;
+    gap: 16px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface-secondary);
+}
+
+.service-config-section__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.service-config-section__header h3 {
+    margin: 3px 0 4px;
+    color: var(--text);
+    font-size: 15px;
+}
+
+.service-config-section__header p {
+    max-width: 560px;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.service-config-eyebrow {
+    color: var(--courtly-green);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.service-add-requirement {
+    flex-shrink: 0;
+    min-height: 38px;
+}
+
+.service-resource-requirements {
+    display: grid;
+    gap: 10px;
+}
+
+.service-resource-requirement {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(130px, 0.55fr) minmax(150px, 0.65fr) 38px;
+    gap: 10px;
+    align-items: end;
+    padding: 13px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+}
+
+.service-resource-pool {
+    display: grid;
+    gap: 3px;
+    min-height: 44px;
+    align-content: center;
+}
+
+.service-resource-pool > span {
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.service-resource-pool > strong {
+    color: var(--text);
+    font-size: 12px;
+}
+
+.service-resource-warning {
+    color: #d9825b;
+    font-size: 10px;
+    line-height: 1.35;
+}
+
+.service-resource-remove {
+    width: 38px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.service-resource-remove:hover {
+    border-color: #d96b6b;
+    color: #d96b6b;
+}
+
+.service-resource-empty,
+.service-resource-example {
+    padding: 12px 14px;
+    border: 1px dashed var(--border);
+    border-radius: 9px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.service-resource-example {
+    border-style: solid;
+    background: var(--surface);
+}
+
+.service-resource-example strong {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--text);
+    font-size: 11px;
+}
+
+.service-resource-example p {
+    margin: 0;
+}
+
+@media (max-width: 767px) {
+    .service-config-section__header {
+        flex-direction: column;
+    }
+
+    .service-add-requirement {
+        width: 100%;
+    }
+
+    .service-resource-requirement {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+
+    .service-resource-remove {
+        width: 100%;
+    }
+}

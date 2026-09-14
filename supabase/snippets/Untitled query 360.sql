@@ -1,6 +1,8 @@
 select
-    enumlabel
-from pg_enum
-where enumtypid =
-    'public.subscription_status'::regtype
-order by enumsortorder;
+    id,
+    organization_id,
+    name,
+    resource_type_id,
+    active
+from public.resources
+order by name;

@@ -4,6 +4,7 @@ import {
   type FormEvent,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -11,14 +12,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { CourtlyAlert } from "@/shared/ui/CourtlyAlert";
-import { saveResourceAction, saveResourceTypeAction, toggleResourceAction } from "@/modules/resources/application/resource-actions";
+import { saveResourceAction, saveResourcePoolAction, saveResourceTypeAction, toggleResourceAction } from "@/modules/resources/application/resource-actions";
 import {
   cancelAppointmentAction,
   changeScheduleRuleStatusAction,
   createAppointmentAction,
   createScheduleRuleAction,
-  setActivityResourceRequirementAction,
-  setActivitySpecialtyAction,
   setProfessionalQualificationAction,
   updateSchedulingSettingsAction,
 } from "../application/scheduling-actions";
@@ -31,7 +30,7 @@ import styles from "./scheduling.module.css";
 
 type ViewMode = "day" | "week" | "month";
 type Tab = "calendar" | "recurrences" | "resources" | "settings";
-type Modal = "appointment" | "recurrence" | "resource" | "details" | null;
+type Modal = "appointment" | "recurrence" | "resource" | "pool" | "details" | null;
 
 type Feedback = { type: "success" | "error"; message: string } | null;
 
@@ -99,6 +98,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
 
   const [resourceForm, setResourceForm] = useState({ id: "", name: "", resourceTypeId: "" });
   const [resourceTypeForm, setResourceTypeForm] = useState("");
+  const [poolForm, setPoolForm] = useState({ id: "", name: "", resourceIds: [] as string[] });
   const [now, setNow] = useState(() => new Date());
   const [windowDays, setWindowDays] = useState(String(initialData.settings.generationWindowDays));
   const [cancellationHours, setCancellationHours] = useState(String(initialData.settings.cancellationWindowMinutes / 60));
@@ -366,8 +366,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
     const requiredResources = getRequiredResources(recurrenceActivity, initialData);
     if (
       recurrenceActivity.resourceRequirement === "REQUIRED" &&
-      requiredResources.length > 0 &&
-      !hasRequiredResourcesSelected(requiredResources, recurrenceForm.resourceIds, initialData)
+      requiredResources.length === 0
     ) {
       setModalError(t.feedback.resourceRequired);
       return;
@@ -564,26 +563,16 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
               if (result.success) router.refresh();
             })
           }
-          onRequirement={(activityId: string, resourceTypeId: string, quantity: number) =>
-            startTransition(async () => {
-              const result = await setActivityResourceRequirementAction({ activityId, resourceTypeId, quantity });
-              setFeedback({
-                type: result.success ? "success" : "error",
-                message: result.success ? t.feedback.requirementUpdated : t.feedback.requirementFailed,
-              });
-              if (result.success) router.refresh();
-            })
-          }
-          onSpecialty={(activityId: string, specialtyId: string | null) =>
-            startTransition(async () => {
-              const result = await setActivitySpecialtyAction({ activityId, specialtyId });
-              setFeedback({
-                type: result.success ? "success" : "error",
-                message: result.success ? (locale === "pt-BR" ? "Especialidade do serviço atualizada." : "Service specialty updated.") : t.feedback.requirementFailed,
-              });
-              if (result.success) router.refresh();
-            })
-          }
+          onNewPool={() => {
+            setPoolForm({ id: "", name: "", resourceIds: [] });
+            setModalError(null);
+            setModal("pool");
+          }}
+          onEditPool={(pool: any) => {
+            setPoolForm({ id: pool.id, name: pool.name, resourceIds: pool.resourceIds });
+            setModalError(null);
+            setModal("pool");
+          }}
         />
       )}
 
@@ -728,13 +717,11 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
               onChange={(subscriptionId: string) => setAppointmentForm((current) => ({ ...current, subscriptionId }))}
             />
 
-            <ResourceSelector
+            <ResourcePoolPreview
               activity={appointmentActivity}
-              selected={appointmentForm.resourceIds}
               data={initialData}
               t={t}
               locale={locale}
-              onChange={(resourceIds: string[]) => setAppointmentForm((current) => ({ ...current, resourceIds }))}
               date={appointmentForm.date}
               startTime={appointmentForm.startTime}
               endTime={appointmentForm.endTime}
@@ -751,6 +738,76 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
 
             {modalError && <CourtlyAlert type="error" message={modalError} />}
             <ModalActions t={t} pending={isPending} onCancel={closeModal} submitLabel={t.actions.createAppointment} />
+          </form>
+        </Modal>
+      )}
+
+      {modal === "pool" && (
+        <Modal
+          title={poolForm.id ? (locale === "pt-BR" ? "Editar pool de recursos" : "Edit resource pool") : (locale === "pt-BR" ? "Novo pool de recursos" : "New resource pool")}
+          subtitle={locale === "pt-BR" ? "Agrupe recursos físicos intercambiáveis para o motor de disponibilidade." : "Group interchangeable physical resources for the availability engine."}
+          closeLabel={t.actions.close}
+          onClose={closeModal}
+        >
+          <form
+            className={styles.modalForm}
+            onSubmit={(event) => {
+              event.preventDefault();
+              setModalError(null);
+              if (!poolForm.name.trim() || poolForm.resourceIds.length === 0) {
+                setModalError(locale === "pt-BR" ? "Informe o nome e selecione ao menos um recurso." : "Enter a name and select at least one resource.");
+                return;
+              }
+              startTransition(async () => {
+                const result = await saveResourcePoolAction({
+                  id: poolForm.id || undefined,
+                  name: poolForm.name,
+                  resourceIds: poolForm.resourceIds,
+                });
+                if (!result.success) {
+                  setModalError(t.feedback.resourceFailed);
+                  return;
+                }
+                setModal(null);
+                setFeedback({ type: "success", message: locale === "pt-BR" ? "Pool de recursos salvo." : "Resource pool saved." });
+                router.refresh();
+              });
+            }}
+          >
+            <Field label={locale === "pt-BR" ? "Nome do pool" : "Pool name"}>
+              <input
+                value={poolForm.name}
+                onChange={(event) => setPoolForm((current) => ({ ...current, name: event.target.value }))}
+                placeholder={locale === "pt-BR" ? "Ex.: Quadras de Tennis" : "E.g. Tennis courts"}
+              />
+            </Field>
+
+            <div className={styles.resourceSelector}>
+              <div>
+                <strong>{locale === "pt-BR" ? "Recursos do pool" : "Pool resources"}</strong>
+                <p>{locale === "pt-BR" ? "Selecione os recursos que podem substituir uns aos outros para os serviços vinculados a este pool." : "Select resources that can substitute one another for services linked to this pool."}</p>
+              </div>
+              <div className={styles.resourceOptions}>
+                {initialData.resources.filter((resource) => resource.active).map((resource) => (
+                  <label key={resource.id}>
+                    <input
+                      type="checkbox"
+                      checked={poolForm.resourceIds.includes(resource.id)}
+                      onChange={(event) => setPoolForm((current) => ({
+                        ...current,
+                        resourceIds: event.target.checked
+                          ? [...current.resourceIds, resource.id]
+                          : current.resourceIds.filter((id) => id !== resource.id),
+                      }))}
+                    />
+                    <span>{resource.name}<small>{resource.resourceTypeName ?? (locale === "pt-BR" ? "Sem tipo" : "No type")}</small></span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {modalError && <CourtlyAlert type="error" message={modalError} />}
+            <ModalActions t={t} pending={isPending} onCancel={closeModal} submitLabel={t.actions.save} />
           </form>
         </Modal>
       )}
@@ -869,14 +926,14 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
                 )}
               </Field>
             </div>
-
-            <ResourceSelector
+            <ResourcePoolPreview
               activity={recurrenceActivity}
-              selected={recurrenceForm.resourceIds}
               data={initialData}
               t={t}
               locale={locale}
-              onChange={(resourceIds: string[]) => setRecurrenceForm((current) => ({ ...current, resourceIds }))}
+              date={recurrenceForm.effectiveFrom}
+              startTime={recurrenceForm.startTime}
+              endTime={recurrenceForm.endTime}
             />
 
             <div className={styles.infoBox}>
@@ -904,7 +961,13 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
                   resourceTypeId: resourceForm.resourceTypeId || null,
                 });
                 if (!result.success) {
-                  setModalError(t.feedback.resourceFailed);
+                  if (result.error === "resourceNameAlreadyExists") {
+                    setModalError(locale === "pt-BR"
+                      ? `Já existe um recurso chamado "${resourceForm.name.trim()}". Edite o recurso existente ou escolha outro nome.`
+                      : `A resource named "${resourceForm.name.trim()}" already exists. Edit the existing resource or choose another name.`);
+                  } else {
+                    setModalError(t.feedback.resourceFailed);
+                  }
                   return;
                 }
                 setModal(null);
@@ -963,19 +1026,47 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
 }
 
 function DayWeekCalendar({ days, appointments, data, locale, t, onCancel, onOpenDetails, now }: any) {
-  const hours = Array.from({ length: 15 }, (_, index) => index + 7);
+  // Keep the whole day available in the grid. The old 07:00–21:00 window made
+  // the real-time marker disappear after 21:59 (for example at 23:53).
+  const hours = Array.from({ length: 24 }, (_, index) => index);
   const nowHour = now.getHours();
   const nowMinute = now.getMinutes();
+  const gridRef = useRef<HTMLDivElement>(null);
+  const containsToday = days.some((day: Date) => isSameDate(day, now));
+
+  useEffect(() => {
+    if (!containsToday || !gridRef.current) return;
+
+    // One hour row is at least 92px high. Position the current hour close to the
+    // middle of the viewport while still allowing 00:00 to remain at the top.
+    const rowHeight = 92;
+    const headerHeight = 62;
+    const viewportHeight = gridRef.current.clientHeight;
+    const target = headerHeight + nowHour * rowHeight + (nowMinute / 60) * rowHeight;
+    gridRef.current.scrollTop = Math.max(0, target - viewportHeight * 0.45);
+  }, [containsToday, nowHour]);
+
+  const todayStart = startOfDay(now).getTime();
 
   return (
-    <div className={styles.dayWeekGrid} style={{ gridTemplateColumns: `84px repeat(${days.length}, minmax(170px, 1fr))` }}>
+    <div ref={gridRef} className={styles.dayWeekGrid} style={{ gridTemplateColumns: `84px repeat(${days.length}, minmax(170px, 1fr))` }}>
       <div className={styles.cornerCell} />
-      {days.map((day: Date) => (
-        <div key={day.toISOString()} className={`${styles.dayHeader} ${isSameDate(day, now) ? styles.dayHeaderToday : ""}`}>
-          <span>{new Intl.DateTimeFormat(locale, { weekday: "short" }).format(day)}</span>
-          <strong>{new Intl.DateTimeFormat(locale, { day: "2-digit", month: "2-digit" }).format(day)}</strong>
-        </div>
-      ))}
+      {days.map((day: Date) => {
+        const dayStart = startOfDay(day).getTime();
+        const isToday = isSameDate(day, now);
+        const isPastDay = dayStart < todayStart;
+
+        return (
+          <div
+            key={day.toISOString()}
+            className={`${styles.dayHeader} ${isToday ? styles.dayHeaderToday : ""} ${isPastDay ? styles.dayHeaderPast : ""}`}
+          >
+            <span>{new Intl.DateTimeFormat(locale, { weekday: "short" }).format(day)}</span>
+            <strong>{new Intl.DateTimeFormat(locale, { day: "2-digit", month: "2-digit" }).format(day)}</strong>
+            {isToday && <small className={styles.todayLabel}>{locale === "pt-BR" ? "Hoje" : "Today"}</small>}
+          </div>
+        );
+      })}
 
       {hours.flatMap((hour) => [
         <div key={`hour-${hour}`} className={styles.timeCell}>{String(hour).padStart(2, "0")}:00</div>,
@@ -986,9 +1077,17 @@ function DayWeekCalendar({ days, appointments, data, locale, t, onCancel, onOpen
           });
           const nowInThisCell = isSameDate(day, now) && nowHour === hour;
           const top = `${Math.max(0, Math.min(100, (nowMinute / 60) * 100))}%`;
+          const cellStart = new Date(day);
+          cellStart.setHours(hour, 0, 0, 0);
+          const cellEnd = new Date(cellStart);
+          cellEnd.setHours(cellEnd.getHours() + 1);
+          const isPastCell = cellEnd.getTime() <= now.getTime();
 
           return (
-            <div key={`${day.toISOString()}-${hour}`} className={styles.slotCell}>
+            <div
+              key={`${day.toISOString()}-${hour}`}
+              className={`${styles.slotCell} ${isPastCell ? styles.slotCellPast : ""} ${nowInThisCell ? styles.slotCellCurrent : ""}`}
+            >
               {nowInThisCell && (
                 <div className={styles.currentTimeLine} style={{ top }}>
                   <span>{formatTime(now.toISOString(), locale)}</span>
@@ -1092,8 +1191,8 @@ function AppointmentDetailsModal({ appointment, data, locale, t, pending, onClos
       </div>
       <div className={styles.detailsPolicy}>
         {pt
-          ? `Cancelamento permitido até ${new Intl.DateTimeFormat(locale, { dateStyle: "short", hour: "2-digit", minute: "2-digit" }).format(cancellationDeadline)}.`
-          : `Cancellation allowed until ${new Intl.DateTimeFormat(locale, { dateStyle: "short", hour: "2-digit", minute: "2-digit" }).format(cancellationDeadline)}.`}
+          ? `Cancelamento permitido até ${formatDateTime(cancellationDeadline, locale)}.`
+          : `Cancellation allowed until ${formatDateTime(cancellationDeadline, locale)}.`}
       </div>
       <div className={styles.modalActions}>
         <button type="button" className={styles.secondaryButton} onClick={onClose}>{t.actions.close}</button>
@@ -1171,10 +1270,23 @@ function RecurrencesPanel({ data, t, pending, onNew, onStatus }: any) {
   );
 }
 
-function ResourcesPanel({ data, t, locale, pending, onNew, onEdit, onToggle, onRequirement, onSpecialty }: any) {
-  const resourceTypes = data.resourceTypes
-    .filter((item: any) => item.active)
-    .map((item: any) => [item.id, item.name]) as [string, string][];
+function ResourcesPanel({ data, t, locale, pending, onNew, onEdit, onToggle, onNewPool, onEditPool }: any) {
+  const typedGroups = data.resourceTypes.map((type: any) => ({
+    ...type,
+    resources: data.resources.filter((resource: any) => resource.resourceTypeId === type.id),
+  }));
+  const untypedResources = data.resources.filter((resource: any) => !resource.resourceTypeId);
+  const grouped = [
+    ...(untypedResources.length > 0
+      ? [{
+          id: "__untyped__",
+          name: locale === "pt-BR" ? "Tipo não definido" : "Type not defined",
+          resources: untypedResources,
+          untyped: true,
+        }]
+      : []),
+    ...typedGroups,
+  ];
 
   return (
     <section className={styles.panelCard}>
@@ -1187,70 +1299,84 @@ function ResourcesPanel({ data, t, locale, pending, onNew, onEdit, onToggle, onR
         <button type="button" className={styles.primaryButton} onClick={onNew}>{t.resources.new}</button>
       </div>
 
-      <div className={styles.resourceGrid}>
-        {data.resources.map((resource: any) => (
-          <article key={resource.id} className={styles.resourceCard}>
-            <div>
-              <span>{resource.resourceTypeName ?? (locale === "pt-BR" ? "Sem requisito vinculado" : "No linked requirement")}</span>
-              <strong>{resource.name}</strong>
+      <div className={styles.resourceInfoBanner}>
+        <strong>{locale === "pt-BR" ? "Recursos físicos formam pools compartilhados" : "Physical resources form shared pools"}</strong>
+        <p>
+          {locale === "pt-BR"
+            ? "Cadastre aqui o inventário físico. Quais pools cada serviço consome e a quantidade por agendamento são configurados em Serviços > Editar serviço."
+            : "Register the physical inventory here. Which pools a service consumes and the quantity per appointment are configured under Services > Edit service."}
+        </p>
+      </div>
+
+      <div className={styles.resourcePoolsSection}>
+        <div className={styles.resourcePoolsHeader}>
+          <div>
+            <h3>{locale === "pt-BR" ? "Pools de recursos" : "Resource pools"}</h3>
+            <p>{locale === "pt-BR" ? "Pools representam recursos intercambiáveis. Serviços diferentes que usam o mesmo pool disputam a mesma capacidade física." : "Pools represent interchangeable resources. Different services using the same pool compete for the same physical capacity."}</p>
+          </div>
+          <button type="button" className={styles.secondaryButton} onClick={onNewPool}>+ {locale === "pt-BR" ? "Novo pool" : "New pool"}</button>
+        </div>
+        <div className={styles.poolGrid}>
+          {data.resourcePools.map((pool: any) => (
+            <button type="button" key={pool.id} className={styles.poolCard} onClick={() => onEditPool(pool)}>
+              <span>{locale === "pt-BR" ? "Pool" : "Pool"}</span>
+              <strong>{pool.name}</strong>
+              <small>{pool.resourceIds.length} {locale === "pt-BR" ? "recursos" : "resources"}</small>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.resourceTypeGroups}>
+        {grouped.filter((group: any) => group.resources.length > 0).map((group: any) => (
+          <section
+            key={group.id}
+            className={`${styles.resourceTypeGroup} ${group.untyped ? styles.resourceTypeGroupWarning : ""}`}
+          >
+            <div className={styles.resourceTypeGroupHeader}>
+              <div>
+                <span>{group.untyped
+                  ? (locale === "pt-BR" ? "Requer atenção" : "Needs attention")
+                  : (locale === "pt-BR" ? "Tipo de recurso" : "Resource type")}</span>
+                <strong>{group.name}</strong>
+                {group.untyped && (
+                  <p className={styles.resourceTypeGroupHelp}>
+                    {locale === "pt-BR"
+                      ? "Estes recursos já existem, mas ainda não possuem um tipo. Edite cada recurso e defina o tipo correto; não é necessário cadastrá-los novamente."
+                      : "These resources already exist but do not have a type yet. Edit each resource and assign the correct type; you do not need to create them again."}
+                  </p>
+                )}
+              </div>
+              <small>
+                {group.resources.filter((resource: any) => resource.active).length} {locale === "pt-BR" ? "ativos" : "active"}
+              </small>
             </div>
-            <div className={styles.resourceCardActions}>
-              <button type="button" disabled={pending} onClick={() => onEdit(resource)}>{locale === "pt-BR" ? "Editar" : "Edit"}</button>
-              <button type="button" disabled={pending} onClick={() => onToggle(resource.id, !resource.active)}>
-                {resource.active ? t.resources.deactivate : t.resources.activate}
-              </button>
+            <div className={styles.resourceGrid}>
+              {group.resources.map((resource: any) => (
+                <article key={resource.id} className={`${styles.resourceCard} ${group.untyped ? styles.resourceCardWarning : ""}`}>
+                  <div>
+                    <span>{resource.resourceTypeName ?? (locale === "pt-BR" ? "Tipo não definido" : "Type not defined")}</span>
+                    <strong>{resource.name}</strong>
+                    {group.untyped && (
+                      <small className={styles.resourceNeedsConfiguration}>
+                        {locale === "pt-BR" ? "Configure o tipo antes de usar este recurso operacionalmente." : "Assign a type before using this resource operationally."}
+                      </small>
+                    )}
+                  </div>
+                  <div className={styles.resourceCardActions}>
+                    <button type="button" disabled={pending} onClick={() => onEdit(resource)}>{locale === "pt-BR" ? "Editar" : "Edit"}</button>
+                    <button type="button" disabled={pending} onClick={() => onToggle(resource.id, !resource.active)}>
+                      {resource.active ? t.resources.deactivate : t.resources.activate}
+                    </button>
+                  </div>
+                </article>
+              ))}
             </div>
-          </article>
+          </section>
         ))}
         {data.resources.length === 0 && <p className={styles.emptyText}>{t.resources.empty}</p>}
       </div>
-
-      <div className={styles.subsection}>
-        <h3>{t.resources.requirementsTitle}</h3>
-        <p>{t.resources.requirementsDescription}</p>
-        {data.activities.filter((activity: Activity) => activity.resourceRequirement !== "NONE").map((activity: Activity) => {
-          const existing = data.activityResourceRequirements.find((item: any) => item.activityId === activity.id);
-          return (
-            <RequirementEditor key={activity.id} activity={activity} existing={existing} resourceTypes={resourceTypes} t={t} onSave={onRequirement} />
-          );
-        })}
-      </div>
-
-      <div className={styles.subsection}>
-        <h3>{locale === "pt-BR" ? "Cor por especialidade" : "Specialty color"}</h3>
-        <p>{locale === "pt-BR" ? "Vincule opcionalmente cada serviço a uma especialidade. A agenda usará a cor dessa especialidade no compromisso." : "Optionally link each service to a specialty. The calendar will use that specialty color for appointments."}</p>
-        {data.activities.filter((activity: Activity) => activity.schedulingMode !== "NONE").map((activity: Activity) => (
-          <div className={styles.requirementRow} key={`specialty-${activity.id}`}>
-            <strong>{activity.name}</strong>
-            <select value={activity.specialtyId ?? ""} onChange={(event) => onSpecialty(activity.id, event.target.value || null)}>
-              <option value="">{locale === "pt-BR" ? "Cor padrão" : "Default color"}</option>
-              {data.specialties.filter((item: any) => item.active).map((item: any) => (
-                <option key={item.id} value={item.id}>{item.name} · {item.color}</option>
-              ))}
-            </select>
-          </div>
-        ))}
-      </div>
     </section>
-  );
-}
-
-function RequirementEditor({ activity, existing, resourceTypes, t, onSave }: any) {
-  const [typeId, setTypeId] = useState(existing?.resourceTypeId ?? resourceTypes[0]?.[0] ?? "");
-  const [quantity, setQuantity] = useState(String(existing?.quantity ?? 1));
-
-  return (
-    <div className={styles.requirementRow}>
-      <strong>{activity.name}</strong>
-      <select value={typeId} onChange={(event) => setTypeId(event.target.value)}>
-        <option value="">{t.resources.selectType}</option>
-        {resourceTypes.map(([id, name]: [string, string]) => <option key={id} value={id}>{name}</option>)}
-      </select>
-      <input type="number" min={1} value={quantity} onChange={(event) => setQuantity(event.target.value)} />
-      <button type="button" className={styles.secondaryButton} disabled={!typeId} onClick={() => onSave(activity.id, typeId, Number(quantity))}>
-        {t.actions.save}
-      </button>
-    </div>
   );
 }
 
@@ -1276,39 +1402,59 @@ function SubscriptionHint({ customerId, activityId, selectedId, data, t, onChang
   );
 }
 
-function ResourceSelector({ activity, selected, data, t, locale, onChange, date, startTime, endTime }: any) {
+function ResourcePoolPreview({ activity, data, locale, date, startTime, endTime }: any) {
   if (!activity || activity.resourceRequirement === "NONE") return null;
+
   const requirements = getRequiredResources(activity, data);
-  const allowedTypeIds = new Set(requirements.map((item: any) => item.resourceTypeId));
   const startsAt = date && startTime ? localDateTimeToIso(date, startTime) : null;
   const endsAt = date && endTime ? localDateTimeToIso(date, endTime) : null;
-  const resources = data.resources.filter((resource: any) => resource.active && (allowedTypeIds.size === 0 || (resource.resourceTypeId && allowedTypeIds.has(resource.resourceTypeId))));
 
   return (
     <div className={styles.resourceSelector}>
       <div>
-        <strong>{t.fields.resources}</strong>
-        <p>{activity.resourceRequirement === "REQUIRED" ? t.resources.requiredHelp : t.resources.optionalHelp}</p>
+        <strong>{locale === "pt-BR" ? "Recursos físicos" : "Physical resources"}</strong>
+        <p>
+          {locale === "pt-BR"
+            ? "O Courtly escolherá automaticamente recursos disponíveis dos pools configurados no serviço."
+            : "Courtly will automatically assign available resources from the pools configured on the service."}
+        </p>
       </div>
-      <div className={styles.resourceOptions}>
-        {resources.map((resource: any) => {
-          const busy = startsAt && endsAt ? isResourceBusy(resource.id, startsAt, endsAt, data) : false;
-          return (
-            <label key={resource.id} className={busy ? styles.resourceOptionBusy : ""}>
-              <input
-                type="checkbox"
-                disabled={busy}
-                checked={selected.includes(resource.id)}
-                onChange={(event) => {
-                  const next = event.target.checked ? [...selected, resource.id] : selected.filter((id: string) => id !== resource.id);
-                  onChange(next);
-                }}
-              />
-              <span>{resource.name}<small>{resource.resourceTypeName ?? (locale === "pt-BR" ? "Sem tipo" : "No type")} · {busy ? (locale === "pt-BR" ? "Ocupado" : "Busy") : (locale === "pt-BR" ? "Disponível" : "Available")}</small></span>
-            </label>
-          );
-        })}
-      </div>
+
+      {requirements.length === 0 ? (
+        <div className={styles.resourcePoolBlocked}>
+          {locale === "pt-BR"
+            ? "Nenhum tipo de recurso foi configurado para este serviço. Edite o serviço antes de agendar."
+            : "No resource type is configured for this service. Edit the service before scheduling."}
+        </div>
+      ) : (
+        <div className={styles.resourcePoolList}>
+          {requirements.map((requirement: any) => {
+            const poolDefinition = data.resourcePools.find((pool: any) => pool.id === requirement.resourcePoolId);
+            const pool = data.resources.filter((resource: any) =>
+              resource.active && poolDefinition?.resourceIds.includes(resource.id)
+            );
+            const available = startsAt && endsAt
+              ? pool.filter((resource: any) => !isResourceBusy(resource.id, startsAt, endsAt, data)).length
+              : pool.length;
+            const ok = available >= requirement.quantity;
+            return (
+              <div key={requirement.resourcePoolId} className={ok ? styles.resourcePoolItem : styles.resourcePoolItemBlocked}>
+                <div>
+                  <strong>{requirement.resourcePoolName}</strong>
+                  <small>
+                    {locale === "pt-BR"
+                      ? `${requirement.quantity} necessário(s) por agendamento`
+                      : `${requirement.quantity} required per appointment`}
+                  </small>
+                </div>
+                <span>
+                  {available}/{pool.length} {locale === "pt-BR" ? "livres" : "available"}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1321,7 +1467,6 @@ function AvailabilityPreview({ activity, form, data, t }: any) {
     startsAt,
     endsAt,
     professionalId: form.professionalId || null,
-    resourceIds: form.resourceIds,
     data,
   });
 
@@ -1559,17 +1704,7 @@ function getRequiredResources(activity: Activity, data: SchedulingPageData) {
   return data.activityResourceRequirements.filter((item) => item.activityId === activity.id);
 }
 
-function hasRequiredResourcesSelected(requirements: any[], selected: string[], data: SchedulingPageData) {
-  return requirements.every((requirement) => {
-    const count = selected.filter((resourceId) => {
-      const resource = data.resources.find((item) => item.id === resourceId);
-      return resource?.resourceTypeId === requirement.resourceTypeId;
-    }).length;
-    return count >= requirement.quantity;
-  });
-}
-
-function getClientAvailability({ activity, startsAt, endsAt, professionalId, resourceIds, data }: any) {
+function getClientAvailability({ activity, startsAt, endsAt, professionalId, data }: any) {
   if (!activity) return { available: false, reason: null };
 
   if (activity.professionalRequirement === "REQUIRED" && !professionalId) {
@@ -1588,20 +1723,20 @@ function getClientAvailability({ activity, startsAt, endsAt, professionalId, res
     return { available: false, reason: "Required resource type is not configured for this service." };
   }
 
-  if (
-    activity.resourceRequirement === "REQUIRED" &&
-    !hasRequiredResourcesSelected(requirements, resourceIds, data)
-  ) {
-    return { available: false, reason: "Select all required resources." };
-  }
+  if (activity.resourceRequirement === "REQUIRED") {
+    for (const requirement of requirements) {
+      const pool = data.resourcePools.find((item: any) => item.id === requirement.resourcePoolId);
+      const compatibleResources = data.resources.filter((resource: any) =>
+        resource.active && pool?.resourceIds.includes(resource.id)
+      );
+      const availableCount = compatibleResources.filter((resource: any) =>
+        !isResourceBusy(resource.id, startsAt, endsAt, data)
+      ).length;
 
-  for (const resourceId of resourceIds) {
-    const conflict = data.appointments.some((appointment: Appointment) =>
-      appointment.status === "SCHEDULED" &&
-      appointment.resourceIds.includes(resourceId) &&
-      overlaps(startsAt, endsAt, appointment.startsAt, appointment.endsAt)
-    );
-    if (conflict) return { available: false, reason: "One of the selected resources is already booked." };
+      if (availableCount < requirement.quantity) {
+        return { available: false, reason: "Required resource pool has no capacity for this time." };
+      }
+    }
   }
 
   return { available: true, reason: null };
@@ -1610,9 +1745,9 @@ function getClientAvailability({ activity, startsAt, endsAt, professionalId, res
 function humanizeServerError(error: string, t: any) {
   const value = error.toLowerCase();
   if (value.includes("professional is not available") || value.includes("professional_no_overlap")) return t.feedback.professionalUnavailable;
-  if (value.includes("resource is not available") || value.includes("appointment_resources_no_overlap")) return t.feedback.resourceUnavailable;
+  if (value.includes("resource is not available") || value.includes("required resources are not available") || value.includes("appointment_resources_no_overlap")) return t.feedback.resourceUnavailable;
   if (value.includes("professional is required")) return t.feedback.professionalRequired;
-  if (value.includes("required resources")) return t.feedback.resourceRequired;
+  if (value.includes("required resources") || value.includes("resource requirement is not configured")) return t.feedback.resourceRequired;
   if (value.includes("subscription")) return t.feedback.subscriptionInvalid;
   if (value.includes("pastappointment") || value.includes("scheduled in the past")) return t.feedback.pastAppointment ?? "Appointments cannot be scheduled in the past.";
   return t.feedback.unavailable;
@@ -1669,6 +1804,18 @@ function formatPeriodTitle(cursor: Date, view: ViewMode, locale: string) {
   if (view === "month") return new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(cursor);
   const days = getCalendarDays(cursor, "week");
   return `${new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short" }).format(days[0])} – ${new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", year: "numeric" }).format(days[6])}`;
+}
+
+function formatDateTime(value: Date | string, locale: string) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  // dateStyle/timeStyle can be combined with each other. They cannot be combined
+  // with individual hour/minute options in Intl.DateTimeFormat.
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
 }
 
 function formatTime(value: string, locale: string) {

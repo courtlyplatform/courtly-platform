@@ -598,7 +598,7 @@ export const ptBR = {
             modeHelp: "Define se este serviço utiliza agendamento.",
             professional: "Profissional",
             resource: "Recurso físico",
-            resourceHelp: "A configuração do tipo de recurso é feita na Agenda > Recursos.",
+            resourceHelp: "Define se o serviço consome capacidade física. Configure abaixo os tipos e a quantidade por agendamento.",
             none: "Não necessário",
             optional: "Opcional",
             required: "Obrigatório",

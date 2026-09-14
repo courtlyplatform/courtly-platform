@@ -12,6 +12,7 @@ type Params = {
   schedulingMode: Activity["schedulingMode"];
   professionalRequirement: Activity["professionalRequirement"];
   resourceRequirement: Activity["resourceRequirement"];
+  specialtyId?: string | null;
 };
 
 export async function updateActivity(
@@ -30,5 +31,6 @@ export async function updateActivity(
     schedulingMode: validated.schedulingMode,
     professionalRequirement: validated.professionalRequirement,
     resourceRequirement: validated.resourceRequirement,
+    specialtyId: validated.specialtyId ?? null,
   });
 }

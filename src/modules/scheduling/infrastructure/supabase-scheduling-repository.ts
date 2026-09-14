@@ -15,7 +15,7 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
 
     const [
       activities, settingsResult, customersResult, specialtiesResult, professionalsResult, qualificationsResult,
-      availabilityResult, exceptionsResult, resourceTypesResult, resourcesResult, requirementsResult,
+      availabilityResult, exceptionsResult, resourceTypesResult, resourcesResult, resourcePoolsResult, poolMembersResult, requirementsResult,
       subscriptionsResult, rulesResult, conflictsResult, ruleResourcesResult, appointmentsResult,
       appointmentResourcesResult,
     ] = await Promise.all([
@@ -29,7 +29,9 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
       db.from("professional_schedule_exceptions").select("id,professional_id,exception_type,starts_at,ends_at,active").eq("organization_id", organizationId).eq("active", true).order("starts_at"),
       db.from("resource_types").select("id,name,active").eq("organization_id", organizationId).order("name"),
       db.from("resources").select("id,name,active,resource_type_id,resource_types(name)").eq("organization_id", organizationId).order("name"),
-      db.from("activity_resource_requirements").select("activity_id,resource_type_id,quantity,resource_types(name)").eq("organization_id", organizationId),
+      db.from("resource_pools").select("id,name,active").eq("organization_id", organizationId).order("name"),
+      db.from("resource_pool_members").select("resource_pool_id,resource_id").eq("organization_id", organizationId),
+      db.from("activity_resource_requirements").select("activity_id,resource_pool_id,quantity,resource_pools(name)").eq("organization_id", organizationId).not("resource_pool_id", "is", null),
       db.from("customer_subscriptions").select("id,customer_id,activity_id,status,billing_cycle,starts_at,ends_at").eq("organization_id", organizationId),
       db.from("schedule_rules").select("id,customer_id,customer_subscription_id,activity_id,professional_id,weekday,start_time,end_time,effective_from,effective_until,status").eq("organization_id", organizationId),
       db.from("schedule_generation_conflicts").select("id,schedule_rule_id,starts_at,ends_at,reason").eq("organization_id", organizationId).is("resolved_at", null).order("starts_at"),
@@ -38,7 +40,7 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
       db.from("appointment_resources").select("appointment_id,resource_id").eq("organization_id", organizationId),
     ]);
 
-    const results = [settingsResult, customersResult, specialtiesResult, professionalsResult, qualificationsResult, availabilityResult, exceptionsResult, resourceTypesResult, resourcesResult, requirementsResult, subscriptionsResult, rulesResult, conflictsResult, ruleResourcesResult, appointmentsResult, appointmentResourcesResult];
+    const results = [settingsResult, customersResult, specialtiesResult, professionalsResult, qualificationsResult, availabilityResult, exceptionsResult, resourceTypesResult, resourcesResult, resourcePoolsResult, poolMembersResult, requirementsResult, subscriptionsResult, rulesResult, conflictsResult, ruleResourcesResult, appointmentsResult, appointmentResourcesResult];
     const failed = results.find((r: any) => r.error);
     if (failed?.error) throw new Error(`Failed to load scheduling: ${failed.error.message}`);
 
@@ -52,6 +54,8 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
     for (const row of ruleResourcesResult.data ?? []) ruleResourceMap.set(row.schedule_rule_id, [...(ruleResourceMap.get(row.schedule_rule_id) ?? []), row.resource_id]);
     const appointmentResourceMap = new Map<string, string[]>();
     for (const row of appointmentResourcesResult.data ?? []) appointmentResourceMap.set(row.appointment_id, [...(appointmentResourceMap.get(row.appointment_id) ?? []), row.resource_id]);
+    const poolMemberMap = new Map<string, string[]>();
+    for (const row of poolMembersResult.data ?? []) poolMemberMap.set(row.resource_pool_id, [...(poolMemberMap.get(row.resource_pool_id) ?? []), row.resource_id]);
 
     const rules: ScheduleRule[] = (rulesResult.data ?? []).map((row: any) => ({
       id: row.id, customerId: row.customer_id, customerSubscriptionId: row.customer_subscription_id,
@@ -80,7 +84,8 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
       })),
       resourceTypes: (resourceTypesResult.data ?? []).map((r: any) => ({ id: r.id, name: r.name, active: r.active })),
       resources: (resourcesResult.data ?? []).map((r: any) => ({ id: r.id, name: r.name, active: r.active, resourceTypeId: r.resource_type_id, resourceTypeName: r.resource_types?.name ?? null })),
-      activityResourceRequirements: (requirementsResult.data ?? []).map((r: any) => ({ activityId: r.activity_id, resourceTypeId: r.resource_type_id, resourceTypeName: r.resource_types?.name ?? "Resource", quantity: r.quantity })),
+      resourcePools: (resourcePoolsResult.data ?? []).map((r: any) => ({ id: r.id, name: r.name, active: r.active, resourceIds: poolMemberMap.get(r.id) ?? [] })),
+      activityResourceRequirements: (requirementsResult.data ?? []).map((r: any) => ({ activityId: r.activity_id, resourcePoolId: r.resource_pool_id, resourcePoolName: r.resource_pools?.name ?? "Resource pool", quantity: r.quantity })),
       subscriptions: (subscriptionsResult.data ?? []).map((r: any) => ({ id: r.id, customerId: r.customer_id, activityId: r.activity_id, status: r.status, billingCycle: r.billing_cycle, startsAt: r.starts_at, endsAt: r.ends_at })),
       rules,
       conflicts: (conflictsResult.data ?? []).map((r: any) => ({ id: r.id, scheduleRuleId: r.schedule_rule_id, startsAt: r.starts_at, endsAt: r.ends_at, reason: r.reason })),

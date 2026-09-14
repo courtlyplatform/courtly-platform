@@ -34,8 +34,36 @@ import {
 } from "../application/activity-actions";
 
 
+type ResourcePoolOption = {
+  id: string;
+  name: string;
+  active: boolean;
+  activeResourceCount: number;
+};
+
+type ResourceRequirement = {
+  activityId: string;
+  resourcePoolId: string;
+  quantity: number;
+};
+
+type SpecialtyOption = {
+  id: string;
+  name: string;
+  color: string;
+  active: boolean;
+};
+
+type ResourceRequirementForm = {
+  resourcePoolId: string;
+  quantity: string;
+};
+
 type Props = {
   initialActivities: Activity[];
+  resourcePools: ResourcePoolOption[];
+  resourceRequirements: ResourceRequirement[];
+  specialties: SpecialtyOption[];
 };
 
 
@@ -61,6 +89,10 @@ type ActivityFormState = {
   professionalRequirement: Activity["professionalRequirement"];
 
   resourceRequirement: Activity["resourceRequirement"];
+
+  specialtyId: string;
+
+  resourceRequirements: ResourceRequirementForm[];
 };
 
 
@@ -96,6 +128,10 @@ const EMPTY_FORM:
   professionalRequirement: "NONE",
 
   resourceRequirement: "NONE",
+
+  specialtyId: "",
+
+  resourceRequirements: [],
 };
 
 
@@ -115,6 +151,9 @@ function normalizeSearchText(
 
 export function ServicesClient({
   initialActivities,
+  resourcePools,
+  resourceRequirements,
+  specialties,
 }: Props) {
   const router =
     useRouter();
@@ -618,6 +657,17 @@ export function ServicesClient({
 
       resourceRequirement:
         activity.resourceRequirement,
+
+      specialtyId:
+        activity.specialtyId ?? "",
+
+      resourceRequirements:
+        resourceRequirements
+          .filter((item) => item.activityId === activity.id)
+          .map((item) => ({
+            resourcePoolId: item.resourcePoolId,
+            quantity: String(item.quantity),
+          })),
     });
 
     setModalOpen(
@@ -713,6 +763,34 @@ export function ServicesClient({
     }
 
 
+    if (
+      form.schedulingMode !== "NONE" &&
+      form.resourceRequirement === "REQUIRED" &&
+      form.resourceRequirements.length === 0
+    ) {
+      setModalError(
+        locale === "pt-BR"
+          ? "Adicione pelo menos um tipo de recurso obrigatório para este serviço."
+          : "Add at least one required resource type for this service."
+      );
+      return;
+    }
+
+    if (
+      form.resourceRequirements.some((requirement) =>
+        !requirement.resourcePoolId ||
+        !Number.isInteger(Number(requirement.quantity)) ||
+        Number(requirement.quantity) <= 0
+      )
+    ) {
+      setModalError(
+        locale === "pt-BR"
+          ? "Revise os tipos de recurso e as quantidades informadas."
+          : "Review the selected resource types and quantities."
+      );
+      return;
+    }
+
     const editing =
       Boolean(
         form.id
@@ -754,6 +832,17 @@ export function ServicesClient({
               form.schedulingMode === "NONE"
                 ? "NONE"
                 : form.resourceRequirement,
+
+            specialtyId:
+              form.specialtyId || null,
+
+            resourceRequirements:
+              form.schedulingMode === "NONE" || form.resourceRequirement === "NONE"
+                ? []
+                : form.resourceRequirements.map((requirement) => ({
+                  resourcePoolId: requirement.resourcePoolId,
+                  quantity: Number(requirement.quantity),
+                })),
           });
 
 
@@ -2029,18 +2118,212 @@ export function ServicesClient({
                   <select
                     id="service-resource-requirement"
                     value={form.resourceRequirement}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const resourceRequirement = event.target.value as Activity["resourceRequirement"];
                       setForm((current) => ({
                         ...current,
-                        resourceRequirement: event.target.value as Activity["resourceRequirement"],
-                      }))
-                    }
+                        resourceRequirement,
+                        resourceRequirements: resourceRequirement === "NONE" ? [] : current.resourceRequirements,
+                      }));
+                    }}
                   >
                     <option value="NONE">{t.scheduling.none}</option>
                     <option value="OPTIONAL">{t.scheduling.optional}</option>
                     <option value="REQUIRED">{t.scheduling.required}</option>
                   </select>
                   <small>{t.scheduling.resourceHelp}</small>
+                </div>
+              )}
+
+              {form.schedulingMode !== "NONE" && (
+                <div className="service-config-section">
+                  <div className="service-config-section__header">
+                    <div>
+                      <span className="service-config-eyebrow">
+                        {locale === "pt-BR" ? "Modalidade e aparência" : "Modality and appearance"}
+                      </span>
+                      <h3>{locale === "pt-BR" ? "Especialidade / modalidade" : "Specialty / modality"}</h3>
+                      <p>
+                        {locale === "pt-BR"
+                          ? "Opcional. A cor da especialidade será usada no compromisso da agenda."
+                          : "Optional. The specialty color will be used on the calendar appointment."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="service-specialty">
+                      {locale === "pt-BR" ? "Especialidade" : "Specialty"}
+                    </label>
+                    <select
+                      id="service-specialty"
+                      value={form.specialtyId}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, specialtyId: event.target.value }))
+                      }
+                    >
+                      <option value="">
+                        {locale === "pt-BR" ? "Sem especialidade / cor padrão" : "No specialty / default color"}
+                      </option>
+                      {specialties.filter((item) => item.active).map((specialty) => (
+                        <option key={specialty.id} value={specialty.id}>
+                          {specialty.name} · {specialty.color}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {form.schedulingMode !== "NONE" && form.resourceRequirement !== "NONE" && (
+                <div className="service-config-section">
+                  <div className="service-config-section__header">
+                    <div>
+                      <span className="service-config-eyebrow">
+                        {locale === "pt-BR" ? "Capacidade física" : "Physical capacity"}
+                      </span>
+                      <h3>{locale === "pt-BR" ? "Recursos necessários" : "Required resources"}</h3>
+                      <p>
+                        {locale === "pt-BR"
+                          ? "Informe quantas unidades deste tipo UM agendamento consome. O Courtly escolherá automaticamente um recurso físico disponível do pool."
+                          : "Define how many units of each type ONE appointment consumes. Courtly automatically assigns an available physical resource from the pool."}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="secondary-button service-add-requirement"
+                      disabled={resourcePools.filter((item) => item.active).length === 0}
+                      onClick={() =>
+                        setForm((current) => ({
+                          ...current,
+                          resourceRequirements: [
+                            ...current.resourceRequirements,
+                            { resourcePoolId: "", quantity: "1" },
+                          ],
+                        }))
+                      }
+                    >
+                      + {locale === "pt-BR" ? "Adicionar recurso" : "Add resource"}
+                    </button>
+                  </div>
+
+                  {resourcePools.filter((item) => item.active).length === 0 ? (
+                    <div className="service-resource-empty">
+                      {locale === "pt-BR"
+                        ? "Nenhum pool de recursos foi cadastrado. Configure os pools em Agenda > Recursos antes de tornar este requisito obrigatório."
+                        : "No resource pool has been registered. Configure pools in Scheduling > Resources before making this requirement mandatory."}
+                    </div>
+                  ) : form.resourceRequirements.length === 0 ? (
+                    <div className="service-resource-empty">
+                      {locale === "pt-BR"
+                        ? "Nenhum recurso configurado para este serviço."
+                        : "No resource configured for this service."}
+                    </div>
+                  ) : (
+                    <div className="service-resource-requirements">
+                      {form.resourceRequirements.map((requirement, index) => {
+                        const selectedType = resourcePools.find((item) => item.id === requirement.resourcePoolId);
+                        return (
+                          <div className="service-resource-requirement" key={`${requirement.resourcePoolId}-${index}`}>
+                            <div className="form-group">
+                              <label>
+                                {locale === "pt-BR" ? "Pool de recursos" : "Resource pool"}
+                              </label>
+                              <select
+                                value={requirement.resourcePoolId}
+                                onChange={(event) =>
+                                  setForm((current) => ({
+                                    ...current,
+                                    resourceRequirements: current.resourceRequirements.map((item, itemIndex) =>
+                                      itemIndex === index
+                                        ? { ...item, resourcePoolId: event.target.value }
+                                        : item
+                                    ),
+                                  }))
+                                }
+                              >
+                                <option value="">
+                                  {locale === "pt-BR" ? "Selecione o tipo" : "Select type"}
+                                </option>
+                                {resourcePools.filter((item) => item.active).map((resourcePool) => (
+                                  <option
+                                    key={resourcePool.id}
+                                    value={resourcePool.id}
+                                    disabled={form.resourceRequirements.some(
+                                      (item, itemIndex) => itemIndex !== index && item.resourcePoolId === resourcePool.id
+                                    )}
+                                  >
+                                    {resourcePool.name} · {resourcePool.activeResourceCount} {locale === "pt-BR" ? "ativos" : "active"}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="form-group service-resource-quantity">
+                              <label>
+                                {locale === "pt-BR" ? "Quantidade por agendamento" : "Quantity per appointment"}
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                step={1}
+                                value={requirement.quantity}
+                                onChange={(event) =>
+                                  setForm((current) => ({
+                                    ...current,
+                                    resourceRequirements: current.resourceRequirements.map((item, itemIndex) =>
+                                      itemIndex === index
+                                        ? { ...item, quantity: event.target.value }
+                                        : item
+                                    ),
+                                  }))
+                                }
+                              />
+                            </div>
+
+                            <div className="service-resource-pool">
+                              <span>{locale === "pt-BR" ? "Pool atual" : "Current pool"}</span>
+                              <strong>
+                                {selectedType
+                                  ? `${selectedType.activeResourceCount} ${locale === "pt-BR" ? "recursos físicos ativos" : "active physical resources"}`
+                                  : "—"}
+                              </strong>
+                              {selectedType && Number(requirement.quantity) > selectedType.activeResourceCount && (
+                                <small className="service-resource-warning">
+                                  {locale === "pt-BR"
+                                    ? "A quantidade por agendamento é maior que o pool disponível."
+                                    : "Quantity per appointment is greater than the available pool."}
+                                </small>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              className="service-resource-remove"
+                              aria-label={locale === "pt-BR" ? "Remover requisito" : "Remove requirement"}
+                              onClick={() =>
+                                setForm((current) => ({
+                                  ...current,
+                                  resourceRequirements: current.resourceRequirements.filter((_, itemIndex) => itemIndex !== index),
+                                }))
+                              }
+                            >
+                              ×
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="service-resource-example">
+                    <strong>{locale === "pt-BR" ? "Como funciona" : "How it works"}</strong>
+                    <p>
+                      {locale === "pt-BR"
+                        ? "Ex.: Beach Tennis, Futevôlei e Vôlei podem exigir 1 × Quadra de Areia. Se as 3 quadras físicas estiverem ocupadas, qualquer novo serviço que dependa desse mesmo tipo será bloqueado naquele horário."
+                        : "Example: Beach Tennis, Footvolley and Volleyball can require 1 × Sand Court. If all 3 physical courts are busy, any new service depending on that same type is blocked for the time slot."}
+                    </p>
+                  </div>
                 </div>
               )}
 

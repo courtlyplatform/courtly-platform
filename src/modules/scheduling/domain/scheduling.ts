@@ -49,6 +49,14 @@ export type SchedulingResourceType = {
   active: boolean;
 };
 
+
+export type SchedulingResourcePool = {
+  id: string;
+  name: string;
+  active: boolean;
+  resourceIds: string[];
+};
+
 export type SchedulingResource = {
   id: string;
   name: string;
@@ -100,8 +108,8 @@ export type Appointment = {
 
 export type ActivityResourceRequirement = {
   activityId: string;
-  resourceTypeId: string;
-  resourceTypeName: string;
+  resourcePoolId: string;
+  resourcePoolName: string;
   quantity: number;
 };
 
@@ -121,6 +129,7 @@ export type SchedulingPageData = {
   professionals: SchedulingProfessional[];
   resourceTypes: SchedulingResourceType[];
   resources: SchedulingResource[];
+  resourcePools: SchedulingResourcePool[];
   activityResourceRequirements: ActivityResourceRequirement[];
   subscriptions: SchedulingSubscription[];
   rules: ScheduleRule[];

@@ -618,7 +618,7 @@ export const enUS = {
             modeHelp: "Defines whether this service uses scheduling.",
             professional: "Professional",
             resource: "Physical resource",
-            resourceHelp: "Configure the resource type in Scheduling > Resources.",
+            resourceHelp: "Defines whether the service consumes physical capacity. Configure the types and quantity per appointment below.",
             none: "Not required",
             optional: "Optional",
             required: "Required",

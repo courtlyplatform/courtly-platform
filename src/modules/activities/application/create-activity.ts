@@ -11,6 +11,7 @@ type Params = {
   schedulingMode: Activity["schedulingMode"];
   professionalRequirement: Activity["professionalRequirement"];
   resourceRequirement: Activity["resourceRequirement"];
+  specialtyId?: string | null;
 };
 
 export async function createActivity(
@@ -28,5 +29,6 @@ export async function createActivity(
     schedulingMode: validated.schedulingMode,
     professionalRequirement: validated.professionalRequirement,
     resourceRequirement: validated.resourceRequirement,
+    specialtyId: validated.specialtyId ?? null,
   });
 }

@@ -43,6 +43,7 @@ export const activitySchema = z
     schedulingMode: z.enum(activitySchedulingModes),
     professionalRequirement: z.enum(schedulingRequirements),
     resourceRequirement: z.enum(schedulingRequirements),
+    specialtyId: z.string().uuid().optional().nullable(),
   })
   .superRefine((value, context) => {
     if (

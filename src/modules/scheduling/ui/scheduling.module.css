@@ -829,3 +829,291 @@
 
 /* Appointment details */
 .appointmentCard{cursor:pointer}.appointmentCard:focus-visible{outline:2px solid var(--courtly-green);outline-offset:2px}.detailsGrid{display:grid;grid-template-columns:1fr;gap:10px}.detailItem{display:grid;gap:4px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-secondary)}.detailItem span{font-size:.72rem;font-weight:800;text-transform:uppercase;color:var(--text-secondary)}.detailItem strong{font-size:.92rem;overflow-wrap:anywhere}.detailsPolicy{padding:12px;border-radius:12px;background:color-mix(in srgb,var(--courtly-green) 8%,var(--surface));color:var(--text-secondary);font-size:.82rem;line-height:1.45}.secondaryLinkButton,.dangerButton{min-height:42px;padding:0 16px;border-radius:12px;font:inherit;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.secondaryLinkButton{border:1px solid var(--border);background:var(--surface);color:var(--text)}.dangerButton{border:1px solid #b42318;background:#b42318;color:#fff;cursor:pointer}.dangerButton:disabled{opacity:.5;cursor:not-allowed}.modalActions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}@media(min-width:720px){.detailsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* =========================================================
+   RESOURCE POOLS
+   ========================================================= */
+.resourceInfoBanner {
+  margin: 18px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-secondary);
+}
+
+.resourceInfoBanner strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.resourceInfoBanner p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.resourceTypeGroups {
+  display: grid;
+  gap: 18px;
+}
+
+.resourceTypeGroup {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.resourceTypeGroup:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.resourceTypeGroupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.resourceTypeGroupHeader div {
+  display: grid;
+  gap: 2px;
+}
+
+.resourceTypeGroupHeader span,
+.resourceTypeGroupHeader small {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.resourceTypeGroupHeader strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.resourcePoolList {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.resourcePoolItem,
+.resourcePoolItemBlocked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-secondary);
+}
+
+.resourcePoolItemBlocked {
+  border-color: color-mix(in srgb, #d24a4a 55%, var(--border));
+}
+
+.resourcePoolItem > div,
+.resourcePoolItemBlocked > div {
+  display: grid;
+  gap: 2px;
+}
+
+.resourcePoolItem strong,
+.resourcePoolItemBlocked strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.resourcePoolItem small,
+.resourcePoolItemBlocked small,
+.resourcePoolItem span,
+.resourcePoolItemBlocked span {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.resourcePoolItem > span {
+  color: var(--courtly-green);
+  font-weight: 700;
+}
+
+.resourcePoolItemBlocked > span {
+  color: #d96b6b;
+  font-weight: 700;
+}
+
+.resourcePoolBlocked {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, #d24a4a 55%, var(--border));
+  border-radius: 9px;
+  color: #d96b6b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .resourceTypeGroupHeader,
+  .resourcePoolItem,
+  .resourcePoolItemBlocked {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+.resourcePoolsSection {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 22px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-secondary);
+}
+
+.resourcePoolsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.resourcePoolsHeader h3 {
+  margin: 0 0 4px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.resourcePoolsHeader p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.poolGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.poolCard {
+  display: grid;
+  gap: 3px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.poolCard:hover {
+  border-color: var(--courtly-green);
+}
+
+.poolCard span,
+.poolCard small {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.poolCard strong {
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .resourcePoolsHeader {
+    flex-direction: column;
+  }
+
+  .resourcePoolsHeader button {
+    width: 100%;
+  }
+}
+
+
+/* ===== Resource visibility / incomplete configuration ===== */
+.resourceTypeGroupWarning {
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, #d89a2b 55%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, #d89a2b 6%, var(--surface));
+}
+
+.resourceTypeGroupWarning:first-child {
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, #d89a2b 55%, var(--border));
+}
+
+.resourceTypeGroupHelp {
+  max-width: 760px;
+  margin: 5px 0 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.resourceCardWarning {
+  border-color: color-mix(in srgb, #d89a2b 45%, var(--border));
+}
+
+.resourceNeedsConfiguration {
+  display: block;
+  margin-top: 5px;
+  color: #b47a16;
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .resourceTypeGroupWarning {
+    padding: 12px;
+  }
+}
+
+/* ===== Calendar temporal states ===== */
+.dayHeaderPast {
+  background: color-mix(in srgb, var(--text) 4%, var(--surface));
+  opacity: .72;
+}
+
+.dayHeaderToday {
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--courtly-green) 70%, transparent);
+}
+
+.todayLabel {
+  display: inline-flex;
+  margin-top: 5px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--courtly-green) 14%, var(--surface));
+  color: var(--courtly-green);
+  font-size: .64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.slotCellPast {
+  background:
+    linear-gradient(to bottom, transparent 49%, var(--border) 50%, transparent 51%),
+    color-mix(in srgb, var(--text) 3.5%, var(--surface));
+}
+
+.slotCellCurrent {
+  background:
+    linear-gradient(to bottom, transparent 49%, var(--border) 50%, transparent 51%),
+    color-mix(in srgb, var(--courtly-green) 3%, var(--surface));
+}
+
+.currentTimeLine {
+  box-shadow: 0 0 0 1px color-mix(in srgb, #d94a4a 20%, transparent);
+}
