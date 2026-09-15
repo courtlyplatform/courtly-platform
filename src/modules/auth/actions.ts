@@ -60,7 +60,7 @@ export async function signUp(
         redirect(
             "/signup?error=" +
                 encodeURIComponent(
-                    "Preencha todos os campos obrigatórios."
+                    "requiredFields"
                 )
         );
     }
@@ -69,7 +69,7 @@ export async function signUp(
         redirect(
             "/signup?error=" +
                 encodeURIComponent(
-                    "A senha deve possuir pelo menos 8 caracteres."
+                    "passwordTooShort"
                 )
         );
     }
@@ -81,7 +81,7 @@ export async function signUp(
         redirect(
             "/signup?error=" +
                 encodeURIComponent(
-                    "As senhas não coincidem."
+                    "passwordsDoNotMatch"
                 )
         );
     }
@@ -112,7 +112,7 @@ export async function signUp(
         redirect(
             "/signup?error=" +
                 encodeURIComponent(
-                    "Não foi possível conectar ao Supabase. Verifique NEXT_PUBLIC_SUPABASE_URL e a chave pública no .env.local e confirme se o projeto Supabase está acessível."
+                    "authUnavailable"
                 )
         );
     }
@@ -120,7 +120,7 @@ export async function signUp(
     if (signUpError) {
         redirect(
             `/signup?error=${encodeURIComponent(
-                signUpError.message
+                "signUpFailed"
             )}`
         );
     }
@@ -160,7 +160,7 @@ export async function signIn(
         redirect(
             "/login?error=" +
                 encodeURIComponent(
-                    "Preencha todos os campos."
+                    "requiredFields"
                 )
         );
     }
@@ -178,7 +178,7 @@ export async function signIn(
         redirect(
             "/login?error=" +
                 encodeURIComponent(
-                    "E-mail ou senha inválidos."
+                    "invalidCredentials"
                 )
         );
     }
@@ -198,7 +198,7 @@ export async function signIn(
     if (membershipError) {
         redirect(
             `/login?error=${encodeURIComponent(
-                membershipError.message
+                "membershipFailed"
             )}`
         );
     }
@@ -239,7 +239,7 @@ export async function requestPasswordReset(
         redirect(
             "/forgot-password?error=" +
                 encodeURIComponent(
-                    "Informe seu e-mail."
+                    "emailRequired"
                 )
         );
     }
@@ -259,7 +259,7 @@ export async function requestPasswordReset(
     if (error) {
         redirect(
             `/forgot-password?error=${encodeURIComponent(
-                error.message
+                "passwordResetFailed"
             )}`
         );
     }
@@ -297,7 +297,7 @@ export async function updatePassword(
         redirect(
             "/reset-password?error=" +
                 encodeURIComponent(
-                    "A senha deve possuir pelo menos 8 caracteres."
+                    "passwordTooShort"
                 )
         );
     }
@@ -309,7 +309,7 @@ export async function updatePassword(
         redirect(
             "/reset-password?error=" +
                 encodeURIComponent(
-                    "As senhas não coincidem."
+                    "passwordsDoNotMatch"
                 )
         );
     }
@@ -324,7 +324,7 @@ export async function updatePassword(
     if (error) {
         redirect(
             `/reset-password?error=${encodeURIComponent(
-                error.message
+                "passwordUpdateFailed"
             )}`
         );
     }
@@ -464,7 +464,7 @@ export async function changePassword(
         redirect(
             "/profile?error=" +
                 encodeURIComponent(
-                    "As senhas não coincidem."
+                    "passwordsDoNotMatch"
                 )
         );
     }

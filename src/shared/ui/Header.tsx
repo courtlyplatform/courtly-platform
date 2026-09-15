@@ -126,16 +126,16 @@ export function Header({
                 );
 
             case "ADMIN":
-                return "Administrador";
+                return dictionary.common.admin;
 
             case "PROFESSIONAL":
-                return "Profissional";
+                return dictionary.common.professional;
 
             case "CUSTOMER":
-                return "Cliente";
+                return dictionary.common.customer;
 
             default:
-                return "Usuário";
+                return dictionary.common.user;
         }
     }
 
@@ -218,7 +218,7 @@ export function Header({
                         ?.split(
                             "@"
                         )[0] ||
-                    "Usuário";
+                    dictionary.common.user;
 
                 const avatarPath =
                     profileResult
@@ -354,7 +354,7 @@ export function Header({
     const initials =
         getInitials(
             displayName ||
-                "Usuário"
+                dictionary.common.user
         );
 
 
@@ -366,7 +366,7 @@ export function Header({
                 onClick={
                     onMobileMenuOpen
                 }
-                aria-label="Open menu"
+                aria-label={dictionary.accessibility.openMenu}
             >
                 ☰
             </button>
@@ -404,7 +404,7 @@ export function Header({
                             menuOpen
                         }
                         aria-haspopup="menu"
-                        aria-label="Abrir menu do usuário"
+                        aria-label={dictionary.accessibility.openUserMenu}
                     >
                         <div
                             className="header-user-info"

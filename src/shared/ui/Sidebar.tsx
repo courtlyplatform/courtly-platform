@@ -187,6 +187,12 @@ export function Sidebar({
                     .financial,
             permission: "FINANCIAL_VIEW",
         },
+        {
+            href: "/organization",
+            icon: "⚙",
+            label: dictionary.navigation.organization,
+            ownerOnly: true,
+        },
     ];
 
     const visibleNavigation =
@@ -237,7 +243,7 @@ export function Sidebar({
                     onClick={
                         onMobileClose
                     }
-                    aria-label="Close menu"
+                    aria-label={dictionary.accessibility.closeMenu}
                 />
             )}
 
@@ -287,7 +293,7 @@ export function Sidebar({
                             onClick={
                                 onMobileClose
                             }
-                            aria-label="Close menu"
+                            aria-label={dictionary.accessibility.closeMenu}
                         >
                             ×
                         </button>

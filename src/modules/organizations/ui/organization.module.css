@@ -1,0 +1,230 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 28px;
+    max-width: 1440px;
+    margin: 0 auto;
+    width: 100%
+}
+
+.heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px
+}
+
+.heading span {
+    display: block;
+    color: var(--courtly-green);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin-bottom: 6px
+}
+
+.heading h1 {
+    font-size: 2rem;
+    line-height: 1.05;
+    margin: 0
+}
+
+.heading p {
+    margin: 8px 0 0;
+    color: var(--text-secondary)
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px
+}
+
+.card {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 20px
+}
+
+.cardHeading {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 18px
+}
+
+.cardHeading>span {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(88, 189, 165, .12);
+    color: var(--courtly-green);
+    font-size: .75rem;
+    font-weight: 800
+}
+
+.cardHeading h2 {
+    margin: 0 0 4px;
+    font-size: 1rem
+}
+
+.cardHeading p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: .88rem
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px
+}
+
+.grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    font-size: .82rem;
+    font-weight: 700
+}
+
+.grid input,
+.grid select {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--input-background);
+    color: var(--text);
+    padding: 0 12px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background-color 0.2s ease,
+        color 0.2s ease
+}
+
+.grid input:hover,
+.grid select:hover {
+    border-color: var(--text-secondary)
+}
+
+.grid input:focus,
+.grid select:focus {
+    border-color: var(--courtly-green);
+    box-shadow: 0 0 0 3px var(--courtly-green-soft)
+}
+
+.grid input::placeholder {
+    color: var(--text-secondary)
+}
+
+.grid select option {
+    background-color: var(--surface);
+    color: var(--text)
+}
+
+.grid input[type=color] {
+    padding: 5px;
+    height: 44px
+}
+
+.grid small {
+    color: var(--text-secondary);
+    font-weight: 400
+}
+
+.wide {
+    grid-column: 1/-1
+}
+
+.enterpriseGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px
+}
+
+.enterpriseGrid article {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px
+}
+
+.enterpriseGrid article div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px
+}
+
+.enterpriseGrid article span {
+    color: var(--text-secondary);
+    font-size: .82rem
+}
+
+.enterpriseGrid em {
+    font-style: normal;
+    color: var(--courtly-green);
+    font-size: .72rem;
+    font-weight: 800;
+    text-transform: uppercase
+}
+
+.futureNote {
+    margin: 14px 0 0;
+    color: var(--text-secondary);
+    font-size: .84rem
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end
+}
+
+.actions button {
+    border: 0;
+    border-radius: 10px;
+    background: var(--courtly-green);
+    color: #07130f;
+    font-weight: 800;
+    min-height: 44px;
+    padding: 0 22px;
+    cursor: pointer
+}
+
+@media(max-width:760px) {
+    .page {
+        padding: 18px 14px
+    }
+
+    .heading h1 {
+        font-size: 1.65rem
+    }
+
+    .grid,
+    .enterpriseGrid {
+        grid-template-columns: 1fr
+    }
+
+    .card {
+        padding: 16px
+    }
+
+    .wide {
+        grid-column: auto
+    }
+
+    .actions button {
+        width: 100%
+    }
+}

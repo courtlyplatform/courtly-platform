@@ -5,8 +5,13 @@ import {
     useContext,
     useMemo,
     useState,
+    useTransition,
     type ReactNode,
 } from "react";
+
+import {
+    useRouter,
+} from "next/navigation";
 
 import {
     LOCALE_COOKIE_NAME,
@@ -38,12 +43,17 @@ export function I18nProvider({
     children,
     initialLocale,
 }: I18nProviderProps) {
+    const router = useRouter();
+
     const [
         locale,
         setLocaleState,
     ] = useState<Locale>(
         initialLocale
     );
+
+    const [, startTransition] =
+        useTransition();
 
     function setLocale(
         newLocale: Locale
@@ -56,7 +66,14 @@ export function I18nProvider({
         document.documentElement.lang =
             newLocale;
 
-        window.location.reload();
+        // The auth pages are Server Components and read the locale from the
+        // cookie. Updating only React state changes client components (such as
+        // the toggle), but does not re-render those Server Components.
+        // Refresh the current route after persisting the cookie so Next.js
+        // renders the whole page again using the newly selected locale.
+        startTransition(() => {
+            router.refresh();
+        });
     }
 
     const dictionary =

@@ -891,51 +891,167 @@ export type Database = {
           },
         ]
       }
+      organization_settings: {
+        Row: {
+          created_at: string
+          default_booking_horizon_days: number
+          default_booking_notice_minutes: number
+          default_cancellation_notice_minutes: number
+          default_reschedule_notice_minutes: number
+          organization_id: string
+          time_format: string
+          updated_at: string
+          week_starts_on: number
+        }
+        Insert: {
+          created_at?: string
+          default_booking_horizon_days?: number
+          default_booking_notice_minutes?: number
+          default_cancellation_notice_minutes?: number
+          default_reschedule_notice_minutes?: number
+          organization_id: string
+          time_format?: string
+          updated_at?: string
+          week_starts_on?: number
+        }
+        Update: {
+          created_at?: string
+          default_booking_horizon_days?: number
+          default_booking_notice_minutes?: number
+          default_cancellation_notice_minutes?: number
+          default_reschedule_notice_minutes?: number
+          organization_id?: string
+          time_format?: string
+          updated_at?: string
+          week_starts_on?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
+          address_line_1: string | null
+          address_line_2: string | null
           business_type:
             | Database["public"]["Enums"]["organization_business_type"]
             | null
+          city: string | null
+          contact_email: string | null
           country: Database["public"]["Enums"]["organization_country"]
+          country_code: string
           created_at: string
+          currency_code: string
+          custom_domain: string | null
+          custom_domain_status: string
+          custom_email_domain: string | null
+          custom_email_domain_status: string
           default_currency: Database["public"]["Enums"]["organization_currency"]
+          default_locale: string
+          display_name: string
           id: string
+          legal_name: string | null
+          logo_url: string | null
           name: string
           phone: string | null
+          phone_country_code: string | null
+          phone_number: string | null
+          postal_code: string | null
+          primary_color: string
+          region: string | null
+          registration_number: string | null
+          registration_type: string | null
+          reply_to_email: string | null
+          secondary_color: string
           slug: string
           status: Database["public"]["Enums"]["organization_status"]
           timezone: string
           updated_at: string
+          website_url: string | null
         }
         Insert: {
+          address_line_1?: string | null
+          address_line_2?: string | null
           business_type?:
             | Database["public"]["Enums"]["organization_business_type"]
             | null
+          city?: string | null
+          contact_email?: string | null
           country?: Database["public"]["Enums"]["organization_country"]
+          country_code: string
           created_at?: string
+          currency_code: string
+          custom_domain?: string | null
+          custom_domain_status?: string
+          custom_email_domain?: string | null
+          custom_email_domain_status?: string
           default_currency?: Database["public"]["Enums"]["organization_currency"]
+          default_locale?: string
+          display_name: string
           id?: string
+          legal_name?: string | null
+          logo_url?: string | null
           name: string
           phone?: string | null
+          phone_country_code?: string | null
+          phone_number?: string | null
+          postal_code?: string | null
+          primary_color?: string
+          region?: string | null
+          registration_number?: string | null
+          registration_type?: string | null
+          reply_to_email?: string | null
+          secondary_color?: string
           slug: string
           status?: Database["public"]["Enums"]["organization_status"]
           timezone?: string
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
+          address_line_1?: string | null
+          address_line_2?: string | null
           business_type?:
             | Database["public"]["Enums"]["organization_business_type"]
             | null
+          city?: string | null
+          contact_email?: string | null
           country?: Database["public"]["Enums"]["organization_country"]
+          country_code?: string
           created_at?: string
+          currency_code?: string
+          custom_domain?: string | null
+          custom_domain_status?: string
+          custom_email_domain?: string | null
+          custom_email_domain_status?: string
           default_currency?: Database["public"]["Enums"]["organization_currency"]
+          default_locale?: string
+          display_name?: string
           id?: string
+          legal_name?: string | null
+          logo_url?: string | null
           name?: string
           phone?: string | null
+          phone_country_code?: string | null
+          phone_number?: string | null
+          postal_code?: string | null
+          primary_color?: string
+          region?: string | null
+          registration_number?: string | null
+          registration_type?: string | null
+          reply_to_email?: string | null
+          secondary_color?: string
           slug?: string
           status?: Database["public"]["Enums"]["organization_status"]
           timezone?: string
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -1767,13 +1883,29 @@ export type Database = {
       }
       create_organization_onboarding: {
         Args: {
+          p_address_line_1: string
+          p_address_line_2: string
           p_business_type: Database["public"]["Enums"]["organization_business_type"]
-          p_country: Database["public"]["Enums"]["organization_country"]
-          p_default_currency: Database["public"]["Enums"]["organization_currency"]
-          p_organization_name: string
-          p_phone: string
+          p_city: string
+          p_contact_email: string
+          p_country_code: string
+          p_currency_code: string
+          p_default_locale: string
+          p_display_name: string
+          p_legal_name: string
+          p_phone_country_code: string
+          p_phone_number: string
+          p_postal_code: string
+          p_primary_color: string
           p_professional_name: string
+          p_region: string
+          p_registration_number: string
+          p_registration_type: string
+          p_reply_to_email: string
+          p_secondary_color: string
+          p_slug: string
           p_timezone: string
+          p_website_url: string
         }
         Returns: string
       }

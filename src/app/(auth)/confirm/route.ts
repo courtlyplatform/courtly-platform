@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const next = safeNext(url.searchParams.get("next"));
 
   if (!tokenHash || !type) {
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent("Convite inválido ou incompleto.")}`, url.origin));
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent("invalidInvite")}`, url.origin));
   }
 
   const supabase = await createClient();
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   });
 
   if (error) {
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent("O convite expirou ou já foi utilizado.")}`, url.origin));
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent("expiredInvite")}`, url.origin));
   }
 
   return NextResponse.redirect(new URL(next, url.origin));

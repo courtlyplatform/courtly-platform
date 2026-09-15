@@ -844,7 +844,7 @@ export function AvatarEditor({
                                     disabled={
                                         saving
                                     }
-                                    aria-label="Fechar"
+                                    aria-label={t.editor.close}
                                 >
                                     ×
                                 </button>
@@ -878,7 +878,7 @@ export function AvatarEditor({
                                             src={
                                                 selectedImageUrl
                                             }
-                                            alt="Pré-visualização da foto"
+                                            alt={t.editor.previewAlt}
                                             draggable={
                                                 false
                                             }
@@ -995,8 +995,8 @@ export function AvatarEditor({
                                     }
                                 >
                                     {saving
-                                        ? "Salvando..."
-                                        : "Salvar foto"}
+                                        ? t.editor.saving
+                                        : t.editor.save}
                                 </button>
                             </div>
                         </section>

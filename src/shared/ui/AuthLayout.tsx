@@ -1,28 +1,25 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 
-import type {
-    ReactNode,
-} from "react";
-
+import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
+import { ThemeToggle } from "@/shared/theme/ThemeToggle";
+import { getCurrentLocale } from "@/shared/i18n/getCurrentLocale";
+import { getDictionary } from "@/shared/i18n/getDictionary";
 
 type AuthLayoutProps = {
     children: ReactNode;
 };
 
+export async function AuthLayout({ children }: AuthLayoutProps) {
+    const locale = await getCurrentLocale();
+    const t = getDictionary(locale).authLayout;
 
-export function AuthLayout({
-    children,
-}: AuthLayoutProps) {
     return (
         <main className="auth-page">
             <section className="auth-brand-panel">
                 <div className="auth-brand-content">
-
                     <div className="auth-logo-area">
-                        <div
-                            className="auth-logo-glow"
-                            aria-hidden="true"
-                        />
+                        <div className="auth-logo-glow" aria-hidden="true" />
 
                         <div className="auth-logo-ring">
                             <Image
@@ -41,31 +38,23 @@ export function AuthLayout({
                             MOVE • IMPROVE • LIVE BETTER
                         </span>
 
-                        <h1>
-                            Gestão que acompanha
-                            o seu movimento.
-                        </h1>
-
-                        <p>
-                            Organize clientes,
-                            profissionais, agenda,
-                            presença e pagamentos
-                            em um único lugar.
-                        </p>
+                        <h1>{t.headline}</h1>
+                        <p>{t.description}</p>
                     </div>
 
                     <div className="auth-brand-footer">
-                        <span
-                            className="auth-brand-footer-line"
-                            aria-hidden="true"
-                        />
-
+                        <span className="auth-brand-footer-line" aria-hidden="true" />
                         Courtly Platform
                     </div>
                 </div>
             </section>
 
             <section className="auth-form-panel">
+                <div className="auth-language-area public-preferences">
+                    <ThemeToggle compact />
+                    <LanguageSwitcher />
+                </div>
+
                 <div className="auth-form-container">
                     {children}
                 </div>

@@ -7429,3 +7429,79 @@ CUSTOMER PLANS SUMMARY — DESKTOP
         width: 100%;
     }
 }
+
+/* =========================================================
+   COURTLY - Auth language + international organization setup
+   ========================================================= */
+.auth-form-panel{position:relative}.auth-language-area{position:absolute;top:22px;right:24px;z-index:5}.onboarding-form-panel{position:relative}.onboarding-form-panel .auth-language-area{top:20px;right:24px}.onboarding-container--wide{max-width:980px}.organization-stepper{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:22px 0}.organization-step{display:flex;align-items:center;gap:8px;min-height:46px;border:1px solid var(--border-color,#294039);border-radius:12px;background:transparent;color:var(--text-muted,#91a39d);padding:8px 10px;cursor:pointer;text-align:left}.organization-step>span{display:grid;place-items:center;flex:0 0 26px;height:26px;border-radius:8px;background:rgba(88,189,165,.08);font-size:.75rem;font-weight:800}.organization-step.active{border-color:var(--accent,#58bda5);color:var(--text-primary,#fff);background:rgba(88,189,165,.08)}.organization-step.active>span,.organization-step.done>span{background:var(--accent,#58bda5);color:#07130f}.organization-step.done{color:var(--text-primary,#fff)}.organization-hidden-step{display:none!important}.organization-step-actions{display:flex;justify-content:space-between;gap:12px}.organization-secondary-button{min-height:48px;padding:0 20px;border-radius:12px;border:1px solid var(--border-color,#294039);background:transparent;color:inherit;font-weight:800;cursor:pointer}.organization-secondary-button:disabled{opacity:.35;cursor:not-allowed}.organization-future-card{margin-top:14px;border:1px dashed rgba(88,189,165,.5);border-radius:14px;padding:16px;background:rgba(88,189,165,.05)}.organization-future-card strong{display:block;margin-bottom:6px}.organization-future-card p{margin:0 0 8px;color:var(--text-muted,#91a39d)}.organization-future-card span{font-size:.78rem;color:var(--accent,#58bda5);font-weight:800}
+@media(max-width:760px){.auth-language-area,.onboarding-form-panel .auth-language-area{top:14px;right:14px}.auth-form-container{padding-top:54px}.onboarding-container--wide{padding-top:54px}.organization-stepper{grid-template-columns:repeat(2,minmax(0,1fr))}.organization-step-actions{flex-direction:column-reverse}.organization-secondary-button,.organization-step-actions .onboarding-submit{width:100%}}
+
+/* =========================================================
+   COURTLY — PUBLIC AUTH PREFERENCES
+   Language + theme are available before authentication.
+   ========================================================= */
+.public-preferences {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.theme-control--compact {
+    width: auto;
+    gap: 0;
+}
+
+.theme-control--compact .theme-switcher {
+    display: flex;
+    width: auto;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-secondary);
+}
+
+.theme-control--compact .theme-option {
+    width: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 7px;
+    color: var(--text-secondary);
+}
+
+.theme-control--compact .theme-option.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow);
+}
+
+@media (max-width: 760px) {
+    .public-preferences {
+        max-width: calc(100vw - 28px);
+        gap: 6px;
+    }
+
+    .theme-control--compact .theme-option,
+    .language-option {
+        min-height: 40px;
+    }
+
+    .theme-control--compact .theme-option {
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+    }
+
+    .courtly-alert {
+        grid-template-columns: 30px minmax(0, 1fr) 40px;
+        gap: 9px;
+        padding: 11px 10px;
+    }
+
+    .courtly-alert__close {
+        width: 40px;
+        height: 40px;
+    }
+}

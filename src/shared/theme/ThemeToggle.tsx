@@ -8,7 +8,7 @@ import {
     useTheme,
 } from "./ThemeProvider";
 
-export function ThemeToggle() {
+export function ThemeToggle({ compact = false }: { compact?: boolean }) {
     const {
         theme,
         setTheme,
@@ -19,10 +19,10 @@ export function ThemeToggle() {
     } = useI18n();
 
     return (
-        <div className="theme-control">
-            <span className="theme-control-title">
-                {dictionary.theme.title}
-            </span>
+        <div className={compact ? "theme-control theme-control--compact" : "theme-control"}>
+            {!compact && (
+                <span className="theme-control-title">{dictionary.theme.title}</span>
+            )}
 
             <div
                 className="theme-switcher"
@@ -54,13 +54,7 @@ export function ThemeToggle() {
                         ☀
                     </span>
 
-                    <span>
-                        {
-                            dictionary
-                                .theme
-                                .light
-                        }
-                    </span>
+                    {!compact && <span>{dictionary.theme.light}</span>}
                 </button>
 
                 <button
@@ -86,13 +80,7 @@ export function ThemeToggle() {
                         ◐
                     </span>
 
-                    <span>
-                        {
-                            dictionary
-                                .theme
-                                .dark
-                        }
-                    </span>
+                    {!compact && <span>{dictionary.theme.dark}</span>}
                 </button>
             </div>
         </div>
