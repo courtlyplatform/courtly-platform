@@ -156,7 +156,7 @@ export function OrganizationSettingsClient({ organization, errorCode, success }:
                     <p className={styles.futureNote}>{t.future.description}</p>
                 </section>
 
-                <div className={styles.actions}><button type="submit">{t.actions.save}</button></div>
+                <div className={styles.actions}><button type="submit" className="primary-button">{t.actions.save}</button></div>
             </form>
         </main>
     );

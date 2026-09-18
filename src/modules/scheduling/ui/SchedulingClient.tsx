@@ -413,10 +413,10 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
         </div>
 
         <div className={styles.headerActions}>
-          <button className={styles.secondaryButton} type="button" onClick={openRecurrence}>
+          <button className={styles.headerPrimaryButton} type="button" onClick={openRecurrence}>
             {t.actions.newRecurrence}
           </button>
-          <button className={styles.primaryButton} type="button" onClick={openAppointment}>
+          <button className={styles.headerPrimaryButton} type="button" onClick={openAppointment}>
             {t.actions.newAppointment}
           </button>
         </div>
@@ -611,7 +611,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
           </div>
           <button
             type="button"
-            className={styles.primaryButton}
+            className={`${styles.headerPrimaryButton} ${styles.settingsSaveButton}`}
             disabled={isPending}
             onClick={() =>
               startTransition(async () => {

@@ -71,6 +71,33 @@
   flex-wrap: wrap;
 }
 
+.headerPrimaryButton {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .55rem .8rem;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: var(--courtly-green, #1f7a5f);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: normal;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s ease, transform .1s ease;
+}
+
+.headerPrimaryButton:hover {
+  background: var(--courtly-green-hover);
+}
+
+.headerPrimaryButton:active {
+  transform: translateY(1px);
+}
+
 .primaryButton,
 .secondaryButton,
 .iconButton,
@@ -483,6 +510,13 @@
 .settingsCard {
   display: grid;
   gap: 24px;
+}
+
+
+.settingsSaveButton {
+  justify-self: start;
+  align-self: start;
+  width: auto;
 }
 
 .settingRow {

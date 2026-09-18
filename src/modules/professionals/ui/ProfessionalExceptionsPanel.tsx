@@ -55,7 +55,8 @@ export function ProfessionalExceptionsPanel({ initialData }: { initialData: Prof
     setEditingId(item.id);
     setForm({
       exceptionType: item.exceptionType,
-      date: start.date,
+      startDate: start.date,
+      endDate: end.date,
       startTime: start.time,
       endTime: end.time,
       reason: item.reason,
@@ -66,8 +67,8 @@ export function ProfessionalExceptionsPanel({ initialData }: { initialData: Prof
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!selected) return;
-    if (!form.date || !form.startTime || !form.endTime || form.endTime <= form.startTime) {
-      setFeedback({ type: "error", message: pt ? "Informe uma data e um intervalo de horário válido." : "Enter a valid date and time interval." });
+    if (!form.startDate || !form.endDate || !form.startTime || !form.endTime || form.endDate < form.startDate || (form.endDate === form.startDate && form.endTime <= form.startTime)) {
+      setFeedback({ type: "error", message: pt ? "Informe um período de datas e horários válido." : "Enter a valid date and time range." });
       return;
     }
     if (form.reason === "OTHER" && !form.reasonDetails.trim()) {
@@ -79,8 +80,8 @@ export function ProfessionalExceptionsPanel({ initialData }: { initialData: Prof
         id: editingId ?? undefined,
         professionalId: selected.id,
         exceptionType: form.exceptionType,
-        startsAt: localDateTimeToIso(form.date, form.startTime),
-        endsAt: localDateTimeToIso(form.date, form.endTime),
+        startsAt: localDateTimeToIso(form.startDate, form.startTime),
+        endsAt: localDateTimeToIso(form.endDate, form.endTime),
         reason: form.reason,
         reasonDetails: form.reasonDetails,
       });
@@ -146,7 +147,8 @@ export function ProfessionalExceptionsPanel({ initialData }: { initialData: Prof
                     <option value="PRESENCE">{pt ? "Presença extraordinária" : "Extra presence"}</option>
                   </select>
                 </label>
-                <label><span>{pt ? "Data" : "Date"}</span><input type="date" value={form.date} onChange={(e) => setForm((x) => ({ ...x, date: e.target.value }))} /></label>
+                <label><span>{pt ? "Data inicial" : "Start date"}</span><input type="date" value={form.startDate} max={form.endDate || undefined} onChange={(e) => setForm((x) => ({ ...x, startDate: e.target.value, endDate: x.endDate < e.target.value ? e.target.value : x.endDate }))} /></label>
+                <label><span>{pt ? "Data final" : "End date"}</span><input type="date" value={form.endDate} min={form.startDate} onChange={(e) => setForm((x) => ({ ...x, endDate: e.target.value }))} /></label>
                 <label><span>{pt ? "Início" : "Start"}</span><input type="time" value={form.startTime} onChange={(e) => setForm((x) => ({ ...x, startTime: e.target.value }))} /></label>
                 <label><span>{pt ? "Fim" : "End"}</span><input type="time" value={form.endTime} onChange={(e) => setForm((x) => ({ ...x, endTime: e.target.value }))} /></label>
                 <label><span>{pt ? "Motivo" : "Reason"}</span>
@@ -172,7 +174,7 @@ export function ProfessionalExceptionsPanel({ initialData }: { initialData: Prof
                     {item.exceptionType === "ABSENCE" ? (pt ? "Ausência" : "Absence") : (pt ? "Presença" : "Presence")}
                   </div>
                   <div className={styles.exceptionHistoryMain}>
-                    <strong>{formatDate(item.startsAt, locale)} · {formatTime(item.startsAt, locale)}–{formatTime(item.endsAt, locale)}</strong>
+                    <strong>{formatExceptionRange(item.startsAt, item.endsAt, locale)}</strong>
                     <span>{reasonLabel(item.reason, pt)}{item.reasonDetails ? ` · ${item.reasonDetails}` : ""}</span>
                   </div>
                   <div className={styles.exceptionHistoryActions}>
@@ -196,12 +198,18 @@ export function ProfessionalExceptionsPanel({ initialData }: { initialData: Prof
 function emptyForm() {
   const today = new Date();
   const date = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  return { exceptionType: "ABSENCE" as ProfessionalScheduleExceptionType, date, startTime: "09:00", endTime: "10:00", reason: "PERSONAL" as ProfessionalScheduleExceptionReason, reasonDetails: "" };
+  return { exceptionType: "ABSENCE" as ProfessionalScheduleExceptionType, startDate: date, endDate: date, startTime: "09:00", endTime: "10:00", reason: "PERSONAL" as ProfessionalScheduleExceptionReason, reasonDetails: "" };
 }
 function localDateTimeToIso(date: string, time: string) { return new Date(`${date}T${time}:00`).toISOString(); }
 function toLocalParts(value: string) { const d = new Date(value); return { date: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`, time: `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}` }; }
 function formatDate(value: string, locale: string) { return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(value)); }
 function formatTime(value: string, locale: string) { return new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" }).format(new Date(value)); }
+function formatExceptionRange(startsAt: string, endsAt: string, locale: string) {
+  const start = toLocalParts(startsAt);
+  const end = toLocalParts(endsAt);
+  if (start.date === end.date) return `${formatDate(startsAt, locale)} · ${formatTime(startsAt, locale)}–${formatTime(endsAt, locale)}`;
+  return `${formatDate(startsAt, locale)} ${formatTime(startsAt, locale)} → ${formatDate(endsAt, locale)} ${formatTime(endsAt, locale)}`;
+}
 function reasonLabel(reason: ProfessionalScheduleExceptionReason, pt: boolean) {
   const map: Record<ProfessionalScheduleExceptionReason, [string,string]> = {
     PERSONAL: ["Pessoal","Personal"], HEALTH: ["Saúde","Health"], VACATION: ["Férias / folga","Vacation / day off"],

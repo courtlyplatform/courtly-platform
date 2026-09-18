@@ -708,13 +708,19 @@ export function ProfessionalsClient({
           continue;
         }
 
-        const onlyPlaceholder =
+        const singleDefaultRule =
           targetRules.length === 1 &&
           targetRules[0] &&
-          !targetRules[0].enabled;
+          targetRules[0].startTime === '08:00' &&
+          targetRules[0].endTime === '18:00';
 
-        if (onlyPlaceholder) {
-          nextRules = nextRules.filter((rule) => rule.key !== targetRules[0].key);
+        if (singleDefaultRule) {
+          nextRules = nextRules.map((rule) =>
+            rule.key === targetRules[0].key
+              ? { ...rule, startTime: source.startTime, endTime: source.endTime, enabled: true }
+              : rule,
+          );
+          continue;
         }
 
         nextRules.push(
