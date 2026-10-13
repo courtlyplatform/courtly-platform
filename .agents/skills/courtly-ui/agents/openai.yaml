@@ -1,0 +1,4 @@
+interface:
+  display_name: "courtly-ui"
+  short_description: "Procedimento local para o projeto Courtly"
+  default_prompt: "Use $courtly-ui para trabalhar no Courtly seguindo AGENTS.md."

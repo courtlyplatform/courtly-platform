@@ -1,0 +1,4 @@
+interface:
+  display_name: "courtly-change"
+  short_description: "Procedimento local para o projeto Courtly"
+  default_prompt: "Use $courtly-change para trabalhar no Courtly seguindo AGENTS.md."

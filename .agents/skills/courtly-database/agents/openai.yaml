@@ -1,0 +1,4 @@
+interface:
+  display_name: "courtly-database"
+  short_description: "Procedimento local para o projeto Courtly"
+  default_prompt: "Use $courtly-database para trabalhar no Courtly seguindo AGENTS.md."
