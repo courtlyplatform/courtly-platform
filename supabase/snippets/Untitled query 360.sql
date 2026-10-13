@@ -1,8 +1,6 @@
-select
-    id,
-    organization_id,
-    name,
-    resource_type_id,
-    active
-from public.resources
-order by name;
+SELECT
+  pg_get_functiondef(p.oid) AS definition
+FROM pg_proc p
+JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'public'
+  AND p.proname = 'create_group_scheduling_appointment';

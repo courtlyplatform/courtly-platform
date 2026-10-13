@@ -1151,3 +1151,91 @@
 .currentTimeLine {
   box-shadow: 0 0 0 1px color-mix(in srgb, #d94a4a 20%, transparent);
 }
+
+.participantPicker { max-height: 180px; overflow: auto; border: 1px solid var(--border); border-radius: 12px; padding: 8px; display: grid; gap: 4px; }
+.participantOption { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 8px; cursor: pointer; }
+.participantOption:hover { background: color-mix(in srgb, var(--courtly-green) 8%, transparent); }
+.participantOption input { width: auto; }
+
+/* Appointment lookup: aligned customer/service selectors, both themes. */
+.appointmentLookupField { min-width: 0; grid-template-rows: auto 42px 164px auto; align-content: start; }
+.appointmentLookupInput { width: 100%; height: 42px; min-height: 42px; box-sizing: border-box; }
+.appointmentLookupField .participantPicker { height: 164px; max-height: 164px; min-height: 0; overflow-y: auto; align-content: start; }
+.appointmentLookupField .appointmentServiceSelect { height: 164px; min-height: 0; align-self: start; }
+.appointmentLookupField small { color: var(--text-secondary); }
+@media (max-width: 700px) { .appointmentLookupField { grid-template-rows: auto 42px 164px auto; } }
+
+/* Novo Compromisso — altura padronizada do select de serviço */
+.appointmentServiceSelect {
+  height: 42px;
+  min-height: 42px;
+  max-height: 42px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+/* Appointment customer autocomplete: render results only after typing. */
+.appointmentLookupField { grid-template-rows: none; display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+.appointmentLookupField .appointmentServiceSelect { height: 42px; min-height: 42px; max-height: 42px; }
+.appointmentCustomerSuggestions { max-height: 210px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 4px; display: flex; flex-direction: column; gap: 2px; }
+.appointmentCustomerSuggestions > small { padding: 10px; color: var(--text-secondary); }
+.appointmentCustomerSuggestion { display: block; width: 100%; text-align: left; padding: 10px; background: transparent; color: var(--text); border: 0; border-radius: 7px; cursor: pointer; }
+.appointmentCustomerSuggestion:hover { background: color-mix(in srgb, var(--courtly-green) 10%, transparent); }
+.appointmentCustomerSuggestion:disabled { opacity: .45; cursor: not-allowed; }
+.appointmentSelectedCustomers { display: flex; flex-wrap: wrap; gap: 6px; }
+.appointmentCustomerChip { display: inline-flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 8px; background: color-mix(in srgb, var(--courtly-green) 13%, var(--surface)); color: var(--text); font-size: 12px; }
+.appointmentCustomerChip button { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 16px; }
+
+/* Recurrence contract autocomplete: no eager list rendering. */
+.recurrenceSearchResults { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.recurrenceSearchOption { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 12px; border: 0; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+.recurrenceSearchOption:hover, .recurrenceSearchOption:focus-visible { background: var(--surface-secondary); }
+.recurrenceSearchOption span { color: var(--text-secondary); font-size: .8rem; }
+.recurrenceSearchMessage { padding: 12px; color: var(--text-secondary); font-size: .84rem; }
+.recurrenceDateField { display: flex; flex-direction: column; min-width: 0; }
+.recurrenceDateField > label { width: 100%; }
+.recurrenceDateField input { width: 100%; }
+
+/* Nova Recorrência — alinhamento dos campos */
+.recurrenceFieldsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.recurrenceField {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.recurrenceField > label {
+  margin-bottom: 6px;
+}
+
+.recurrenceField input,
+.recurrenceField select {
+  height: 40px;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+.recurrenceFieldHint {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+@media (max-width: 540px) {
+  .recurrenceFieldsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+/* Recurrence fields always align at the top, even when contextual hints appear. */
+.formGrid { align-items: start; }
+.formGrid > .field, .formGrid > .recurrenceDateField { align-self: start; }
+.recurrenceWeekdays { display: flex; flex-wrap: wrap; gap: 6px; padding: 5px 0; }
+.recurrenceWeekdayOption { display: inline-flex; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: .78rem; }
+.recurrenceWeekdayOption input { width: 15px; height: 15px; min-height: 0; accent-color: var(--primary); }

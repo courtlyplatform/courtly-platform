@@ -1,5 +1,23 @@
 
 export const ptBR = {
+    pagination: {"from": "De", "to": "Até", "label": "Paginação", "pageSize": "Registros por página", "previous": "Anterior", "next": "Próxima", "page": "Página {page} de {pages}", "range": "Exibindo {start}–{end} de {total} registros", "empty": "Nenhum resultado encontrado", "loading": "Carregando registros...", "error": "Não foi possível carregar os registros.", "retry": "Tentar novamente"},
+    rescheduleAvailability: {
+        checking: "Verificando disponibilidade...",
+        available: "Disponível para reagendamento",
+        unavailable: "Reagendamento indisponível",
+        saveFailed: "Não foi possível confirmar o reagendamento. A disponibilidade pode ter mudado; tente novamente.",
+        reasons: {
+            professionalUnavailable: "O profissional não está disponível neste dia ou horário, ou já possui outro compromisso.",
+            resourceUnavailable: "Não há recursos livres suficientes no pool para este horário.",
+            professionalRequired: "Selecione um profissional para este serviço.",
+            pastAppointment: "Escolha uma data e um horário futuros.",
+            invalidInterval: "O horário de término deve ser posterior ao início.",
+            appointmentUnavailable: "O compromisso não está disponível para reagendamento.",
+            forbidden: "Você não possui permissão para reagendar este compromisso.",
+            checkFailed: "Não foi possível consultar a disponibilidade. Tente novamente.",
+            unknown: "A disponibilidade não pôde ser confirmada. Revise os dados ou tente outro horário.",
+        },
+    },
     common: {
         appName: "Courtly",
         appDescription: "Management Platform",

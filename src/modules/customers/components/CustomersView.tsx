@@ -1,4 +1,6 @@
 "use client";
+import { Pagination } from "@/shared/ui/Pagination";
+import { useServerPagination } from "@/shared/pagination/use-server-pagination";
 
 import {
     useMemo,
@@ -267,91 +269,8 @@ export function CustomersView({
        FILTERED CUSTOMERS
        ======================================================== */
 
-    const filteredCustomers =
-        useMemo(
-            () => {
-
-                const normalizedNameFilter =
-                    normalizeSearchText(
-                        nameFilter
-                    );
-
-
-                const normalizedDocumentFilter =
-                    normalizeDocumentSearch(
-                        documentNumberFilter
-                    );
-
-
-                return customers.filter(
-                    (
-                        customer
-                    ) => {
-
-                        const normalizedCustomerName =
-                            normalizeSearchText(
-                                customer.name
-                            );
-
-
-                        const matchesName =
-                            !normalizedNameFilter ||
-                            normalizedCustomerName.includes(
-                                normalizedNameFilter
-                            );
-
-
-                        const matchesDocumentType =
-                            !documentTypeFilter ||
-                            customer.document_type ===
-                                documentTypeFilter;
-
-
-                        const normalizedCustomerDocument =
-                            normalizeDocumentSearch(
-                                customer.document_number ??
-                                    ""
-                            );
-
-
-                        const matchesDocumentNumber =
-                            !normalizedDocumentFilter ||
-                            normalizedCustomerDocument.includes(
-                                normalizedDocumentFilter
-                            );
-
-
-                        const matchesStatus =
-                            !statusFilter ||
-                            (
-                                statusFilter ===
-                                    "active" &&
-                                customer.active
-                            ) ||
-                            (
-                                statusFilter ===
-                                    "inactive" &&
-                                !customer.active
-                            );
-
-
-                        return (
-                            matchesName &&
-                            matchesDocumentType &&
-                            matchesDocumentNumber &&
-                            matchesStatus
-                        );
-                    }
-                );
-            },
-            [
-                customers,
-                nameFilter,
-                documentTypeFilter,
-                documentNumberFilter,
-                statusFilter,
-            ]
-        );
+    const paginationFilteredcustomers = useServerPagination("customers",{name:nameFilter,documentType:documentTypeFilter,documentNumber:documentNumberFilter,status:statusFilter},customers);
+    const filteredCustomers = paginationFilteredcustomers.rows;
 
 
     const hasActiveFilters =
@@ -664,7 +583,7 @@ export function CustomersView({
              * - customer status
              * - active plan counter
              */
-            router.refresh();
+            paginationFilteredcustomers.refresh(); router.refresh();
 
         } catch (error) {
 
@@ -782,7 +701,7 @@ export function CustomersView({
              * Reactivation intentionally does NOT reactivate
              * previous subscriptions.
              */
-            router.refresh();
+            paginationFilteredcustomers.refresh(); router.refresh();
 
         } catch (error) {
 
@@ -817,7 +736,8 @@ export function CustomersView({
        RENDER
        ======================================================== */
 
-    return (
+    
+  return (
         <main className="customers-page">
 
             {/* =====================================
@@ -904,8 +824,7 @@ export function CustomersView({
                 EMPTY STATE
                ===================================== */}
 
-            {customers.length ===
-            0 ? (
+            {!paginationFilteredcustomers.loading && paginationFilteredcustomers.total === 0 && !hasActiveFilters ? (
 
                 <div className="empty-state">
 
@@ -1160,7 +1079,8 @@ export function CustomersView({
                         NO FILTER RESULTS
                        ================================= */}
 
-                    {filteredCustomers.length ===
+                   <Pagination state={paginationFilteredcustomers} locale={"pt-BR"} />
+                     {filteredCustomers.length ===
                     0 ? (
 
                         <div className="customers-filter-empty">
@@ -1265,7 +1185,7 @@ export function CustomersView({
 
                                         <tbody>
 
-                                            {filteredCustomers.map(
+                                            {paginationFilteredcustomers.rows.map(
                                                 (
                                                     customer
                                                 ) => (
@@ -1477,7 +1397,7 @@ export function CustomersView({
 
                             <section className="customers-mobile-list">
 
-                                {filteredCustomers.map(
+                                {paginationFilteredcustomers.rows.map(
                                     (
                                         customer
                                     ) => (

@@ -32,8 +32,9 @@ type ActivityNameRow = {
    CUSTOMERS LIST
    ============================================================ */
 
-export async function getCustomers():
+export async function getCustomers(ids?: string[]):
 Promise<CustomerListItem[]> {
+    if (ids?.length === 0) return [];
 
     const supabase =
         await createClient();
@@ -45,28 +46,10 @@ Promise<CustomerListItem[]> {
         );
 
 
-    const {
-        data: customers,
-        error: customersError,
-    } =
-        await supabase
-            .from(
-                "customers"
-            )
-            .select(
-                "*"
-            )
-            .eq(
-                "organization_id",
-                context.organizationId
-            )
-            .order(
-                "name",
-                {
-                    ascending:
-                        true,
-                }
-            );
+    let customerQuery = supabase.from("customers").select("*")
+        .eq("organization_id", context.organizationId);
+    if (ids) customerQuery = customerQuery.in("id", ids);
+    const { data: customers, error: customersError } = await customerQuery.order("name").order("id");
 
 
     if (customersError) {
@@ -128,7 +111,7 @@ Promise<CustomerListItem[]> {
             .eq(
                 "status",
                 "ACTIVE"
-            );
+            ).in("customer_id", customerRows.map(customer => customer.id));
 
 
     if (subscriptionError) {

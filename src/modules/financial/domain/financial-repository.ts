@@ -17,7 +17,10 @@ export type DateRange = {
     end: string;
 };
 
+export type RevenueTotal = { amount: number; status: FinancialEntryStatus; currencyCode: CurrencyCode; referenceDate: string };
 export interface FinancialRepository {
+    listRevenueTotals(organizationId: string, range: DateRange): Promise<RevenueTotal[]>;
+
     syncPeriod(
         referenceDate: string
     ): Promise<void>;

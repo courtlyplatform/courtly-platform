@@ -1,4 +1,6 @@
 "use client";
+import { Pagination } from "@/shared/ui/Pagination";
+import { useServerPagination } from "@/shared/pagination/use-server-pagination";
 
 import {
     useMemo,
@@ -279,173 +281,13 @@ export function FinancialClient({
             [initialData.categories]
         );
 
-    const filteredRevenues =
-        useMemo(
-            () => {
-
-                const normalizedCustomerFilter =
-                    normalizeSearchText(
-                        revenueCustomerFilter
-                    );
-
-                const normalizedCustomerDocumentFilter =
-                    normalizeDocumentSearch(
-                        revenueCustomerFilter
-                    );
-
-                const normalizedServiceFilter =
-                    normalizeSearchText(
-                        revenueServiceFilter
-                    );
-
-                const filtered =
-                    initialData.revenues.filter(
-                        (
-                            revenue
-                        ) => {
-
-                            const normalizedCustomerName =
-                                normalizeSearchText(
-                                    revenue.customerName ??
-                                    ""
-                                );
-
-                            const normalizedCustomerDocument =
-                                normalizeDocumentSearch(
-                                    revenue.customerDocumentNumber ??
-                                    ""
-                                );
-
-                            const normalizedServiceName =
-                                normalizeSearchText(
-                                    revenue.activityName ??
-                                    ""
-                                );
-
-                            const matchesCustomer =
-                                !revenueCustomerFilter ||
-                                normalizedCustomerName.includes(
-                                    normalizedCustomerFilter
-                                ) ||
-                                (
-                                    Boolean(
-                                        normalizedCustomerDocumentFilter
-                                    ) &&
-                                    normalizedCustomerDocument.includes(
-                                        normalizedCustomerDocumentFilter
-                                    )
-                                );
-
-                            const matchesService =
-                                !normalizedServiceFilter ||
-                                normalizedServiceName.includes(
-                                    normalizedServiceFilter
-                                );
-
-                            const matchesDocumentType =
-                                !revenueDocumentTypeFilter ||
-                                revenue.customerDocumentType ===
-                                    revenueDocumentTypeFilter;
-
-                            const matchesStatus =
-                                !revenueStatusFilter ||
-                                revenue.status ===
-                                    revenueStatusFilter;
-
-                            const matchesDueDate =
-                                !revenueDueDateFilter ||
-                                revenue.dueDate ===
-                                    revenueDueDateFilter;
-
-                            return (
-                                matchesCustomer &&
-                                matchesService &&
-                                matchesDocumentType &&
-                                matchesStatus &&
-                                matchesDueDate
-                            );
-                        }
-                    );
-
-                return [
-                    ...filtered,
-                ].sort(
-                    (
-                        left,
-                        right
-                    ) => {
-
-                        if (
-                            revenueSort ===
-                            "amount-desc"
-                        ) {
-
-                            return (
-                                right.amount -
-                                left.amount
-                            );
-                        }
-
-                        if (
-                            revenueSort ===
-                            "reference-desc"
-                        ) {
-
-                            return right.referenceDate.localeCompare(
-                                left.referenceDate
-                            );
-                        }
-
-                        if (
-                            revenueSort ===
-                            "reference-asc"
-                        ) {
-
-                            return left.referenceDate.localeCompare(
-                                right.referenceDate
-                            );
-                        }
-
-                        if (
-                            revenueSort ===
-                            "status"
-                        ) {
-
-                            const statusDifference =
-                                REVENUE_STATUS_ORDER[
-                                    left.status
-                                ] -
-                                REVENUE_STATUS_ORDER[
-                                    right.status
-                                ];
-
-                            if (
-                                statusDifference !==
-                                0
-                            ) {
-
-                                return statusDifference;
-                            }
-
-                            return left.dueDate.localeCompare(
-                                right.dueDate
-                            );
-                        }
-
-                        return 0;
-                    }
-                );
-            },
-            [
-                initialData.revenues,
-                revenueCustomerFilter,
-                revenueServiceFilter,
-                revenueDocumentTypeFilter,
-                revenueStatusFilter,
-                revenueDueDateFilter,
-                revenueSort,
-            ]
-        );
+    const paginationFilteredrevenues = useServerPagination("revenues",{customer:revenueCustomerFilter,service:revenueServiceFilter,documentType:revenueDocumentTypeFilter,status:revenueStatusFilter,dueDate:revenueDueDateFilter,sort:revenueSort,currency:defaultCurrency,start:initialData.periodStart,end:initialData.periodEnd},initialData);
+    const filteredRevenues = paginationFilteredrevenues.rows;
+    const revenueTotals = paginationFilteredrevenues.revenueTotals;
+    const receivedRevenue = revenueTotals?.receivedRevenue ?? initialData.summary.receivedRevenue;
+    const netProfit = receivedRevenue - initialData.summary.paidExpenses;
+    const filteredSummary = {...initialData.summary,...revenueTotals,netProfit,
+        netMargin:receivedRevenue > 0 ? netProfit / receivedRevenue * 100 : 0};
 
     const hasActiveRevenueFilters =
         Boolean(
@@ -526,7 +368,7 @@ export function FinancialClient({
                         t.feedback.success.synced,
                 });
 
-                router.refresh();
+                paginationFilteredrevenues.refresh(); router.refresh();
             }
         );
     }
@@ -563,7 +405,7 @@ export function FinancialClient({
                         t.feedback.success.statusUpdated,
                 });
 
-                router.refresh();
+                paginationFilteredrevenues.refresh(); router.refresh();
             }
         );
     }
@@ -687,7 +529,7 @@ export function FinancialClient({
                         t.feedback.success.statusUpdated,
                 });
 
-                router.refresh();
+                paginationFilteredrevenues.refresh(); router.refresh();
             }
         );
     }
@@ -745,7 +587,8 @@ export function FinancialClient({
         },
     ];
 
-    return (
+    
+  return (
         <main
             className={styles.page}
         >
@@ -859,7 +702,7 @@ export function FinancialClient({
                 <>
                     <FinancialSummaryCards
                         summary={
-                            initialData.summary
+                            filteredSummary
                         }
                         currency={
                             defaultCurrency
@@ -883,8 +726,7 @@ export function FinancialClient({
                             </span>
                             <strong>
                                 {
-                                    initialData
-                                        .summary
+                                    filteredSummary
                                         .activeCustomers
                                 }
                             </strong>
@@ -897,8 +739,7 @@ export function FinancialClient({
                             </span>
                             <strong>
                                 {
-                                    initialData
-                                        .summary
+                                    filteredSummary
                                         .activeSubscriptions
                                 }
                             </strong>
@@ -911,8 +752,7 @@ export function FinancialClient({
                             </span>
                             <strong>
                                 {formatCurrency(
-                                    initialData
-                                        .summary
+                                    filteredSummary
                                         .overdueRevenue,
                                     defaultCurrency,
                                     locale
@@ -927,8 +767,7 @@ export function FinancialClient({
                             </span>
                             <strong>
                                 {formatCurrency(
-                                    initialData
-                                        .summary
+                                    filteredSummary
                                         .totalExpenses,
                                     defaultCurrency,
                                     locale
@@ -1004,14 +843,6 @@ export function FinancialClient({
                         </button>
                     </div>
 
-                    {initialData.revenues.length ===
-                    0 ? (
-                        <EmptyMessage
-                            text={
-                                t.revenues.empty
-                            }
-                        />
-                    ) : (
                         <>
                             <section
                                 className={
@@ -1332,7 +1163,8 @@ export function FinancialClient({
                                 </button>
                             </section>
 
-                            {filteredRevenues.length ===
+                            <Pagination state={paginationFilteredrevenues} locale={locale} />
+                    {filteredRevenues.length ===
                             0 ? (
                                 <EmptyMessage
                                     text={
@@ -1415,7 +1247,7 @@ export function FinancialClient({
                                         </thead>
 
                                         <tbody>
-                                            {filteredRevenues.map(
+                                            {paginationFilteredrevenues.rows.map(
                                                 (
                                                     revenue
                                                 ) => {
@@ -1651,7 +1483,7 @@ export function FinancialClient({
                                             styles.mobileList
                                         }
                                     >
-                                        {filteredRevenues.map(
+                                        {paginationFilteredrevenues.rows.map(
                                             (
                                                 revenue
                                             ) => {
@@ -1921,7 +1753,6 @@ export function FinancialClient({
                                 </>
                             )}
                         </>
-                    )}
                 </section>
             )}
 

@@ -12,6 +12,9 @@ type Params = {
   professionalRequirement: Activity["professionalRequirement"];
   resourceRequirement: Activity["resourceRequirement"];
   specialtyId?: string | null;
+  attendanceMode?: Activity["attendanceMode"];
+  maxParticipants?: number | null;
+  sessionsPerWeek?: number | null;
 };
 
 export async function createActivity(
@@ -30,5 +33,8 @@ export async function createActivity(
     professionalRequirement: validated.professionalRequirement,
     resourceRequirement: validated.resourceRequirement,
     specialtyId: validated.specialtyId ?? null,
+    attendanceMode: validated.attendanceMode,
+    maxParticipants: validated.attendanceMode === "INDIVIDUAL" ? 1 : validated.maxParticipants ?? null,
+    sessionsPerWeek: validated.sessionsPerWeek ?? null,
   });
 }

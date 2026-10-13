@@ -1,4 +1,6 @@
 "use client";
+import { Pagination } from "@/shared/ui/Pagination";
+import { useServerPagination } from "@/shared/pagination/use-server-pagination";
 
 import {
   type FormEvent,
@@ -18,8 +20,12 @@ import {
   changeScheduleRuleStatusAction,
   createAppointmentAction,
   createScheduleRuleAction,
+  createWeeklyScheduleRulesAction,
   setProfessionalQualificationAction,
   updateSchedulingSettingsAction,
+  settleAppointmentPaymentAction,
+  searchAppointmentCustomersAction,
+  searchRecurrenceSubscriptionsAction,
 } from "../application/scheduling-actions";
 import type {
   Appointment,
@@ -35,7 +41,8 @@ type Modal = "appointment" | "recurrence" | "resource" | "pool" | "details" | nu
 type Feedback = { type: "success" | "error"; message: string } | null;
 
 type AppointmentForm = {
-  customerId: string;
+  customerId: string; // primary participant kept for subscription compatibility
+  customerIds: string[];
   activityId: string;
   subscriptionId: string;
   date: string;
@@ -48,6 +55,7 @@ type AppointmentForm = {
 type RecurrenceForm = {
   subscriptionId: string;
   weekday: string;
+  weekdays: number[];
   startTime: string;
   endTime: string;
   effectiveFrom: string;
@@ -75,6 +83,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
 
   const [appointmentForm, setAppointmentForm] = useState<AppointmentForm>(() => ({
     customerId: "",
+    customerIds: [],
     activityId: "",
     subscriptionId: "",
     date: todayIso(),
@@ -87,6 +96,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
   const [recurrenceForm, setRecurrenceForm] = useState<RecurrenceForm>(() => ({
     subscriptionId: "",
     weekday: "1",
+    weekdays: [1],
     startTime: "09:00",
     endTime: "10:00",
     effectiveFrom: todayIso(),
@@ -95,6 +105,57 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
     resourceIds: [],
   }));
   const [recurrenceSubscriptionSearch, setRecurrenceSubscriptionSearch] = useState("");
+  const [recurrenceMatches, setRecurrenceMatches] = useState<{ id: string; customerName: string; documentNumber: string | null; activityName: string }[]>([]);
+  const [recurrenceSearchLoading, setRecurrenceSearchLoading] = useState(false);
+  const [recurrenceSearchError, setRecurrenceSearchError] = useState(false);
+  const [recurrenceLookupOpen, setRecurrenceLookupOpen] = useState(false);
+  useEffect(() => {
+    const term = recurrenceSubscriptionSearch.trim();
+    if (modal !== "recurrence" || !recurrenceLookupOpen || term.length < 2) {
+      setRecurrenceMatches([]);
+      setRecurrenceSearchLoading(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setRecurrenceSearchLoading(true);
+      setRecurrenceSearchError(false);
+      try {
+        const matches = await searchRecurrenceSubscriptionsAction(term);
+        if (!cancelled) setRecurrenceMatches(matches);
+      } catch {
+        if (!cancelled) { setRecurrenceMatches([]); setRecurrenceSearchError(true); }
+      } finally {
+        if (!cancelled) setRecurrenceSearchLoading(false);
+      }
+    }, 300);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [recurrenceSubscriptionSearch, recurrenceLookupOpen, modal]);
+  const [appointmentCustomerSearch, setAppointmentCustomerSearch] = useState("");
+  const [appointmentCustomerResults, setAppointmentCustomerResults] = useState<{ id: string; name: string; documentNumber: string | null }[]>([]);
+  const [selectedAppointmentCustomers, setSelectedAppointmentCustomers] = useState<{ id: string; name: string; documentNumber: string | null }[]>([]);
+  const [appointmentSearchLoading, setAppointmentSearchLoading] = useState(false);
+  useEffect(() => {
+    if (modal !== "appointment" || appointmentCustomerSearch.trim().length < 2) {
+      setAppointmentCustomerResults([]);
+      setAppointmentSearchLoading(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setAppointmentSearchLoading(true);
+      try {
+        const results = await searchAppointmentCustomersAction(appointmentCustomerSearch);
+        if (!cancelled) setAppointmentCustomerResults(results);
+      } catch {
+        if (!cancelled) setAppointmentCustomerResults([]);
+      } finally {
+        if (!cancelled) setAppointmentSearchLoading(false);
+      }
+    }, 300);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [appointmentCustomerSearch, modal]);
+  const [appointmentServiceSearch, setAppointmentServiceSearch] = useState("");
 
   const [resourceForm, setResourceForm] = useState({ id: "", name: "", resourceTypeId: "" });
   const [resourceTypeForm, setResourceTypeForm] = useState("");
@@ -115,7 +176,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
     const startTime = searchParams.get("startTime") ?? "09:00";
     const endTime = searchParams.get("endTime") ?? "10:00";
     const activityId = searchParams.get("activityId") ?? "";
-    setAppointmentForm((current) => ({ ...current, customerId, date, startTime, endTime, activityId }));
+    setAppointmentForm((current) => ({ ...current, customerId, customerIds: customerId ? [customerId] : [], date, startTime, endTime, activityId }));
     setModal("appointment");
   }, [searchParams]);
 
@@ -130,30 +191,11 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
     ? activeActivities.find((activity) => activity.id === recurrenceSubscription.activityId) ?? null
     : null;
 
-  const filteredRecurrenceSubscriptions = useMemo(() => {
-    const query = normalizeLookup(recurrenceSubscriptionSearch);
-    const queryDigits = digitsOnly(recurrenceSubscriptionSearch);
-
-    return initialData.subscriptions
-      .filter((subscription) => subscription.status === "ACTIVE")
-      .filter((subscription) => {
-        const activity = initialData.activities.find((item) => item.id === subscription.activityId);
-        if (!activity || activity.schedulingMode === "NONE") return false;
-        if (!query && !queryDigits) return true;
-
-        const customer = initialData.customers.find((item) => item.id === subscription.customerId);
-        const haystack = normalizeLookup(`${customer?.name ?? ""} ${activity.name}`);
-        const document = digitsOnly(customer?.documentNumber ?? "");
-
-        return haystack.includes(query) || (!!queryDigits && document.includes(queryDigits));
-      });
-  }, [initialData.activities, initialData.customers, initialData.subscriptions, recurrenceSubscriptionSearch]);
-
   const recurrenceProfessionals = useMemo(
     () =>
       getAvailableProfessionalsForRecurrence(
         recurrenceActivity,
-        recurrenceForm.weekday,
+        String(recurrenceForm.weekdays[0] ?? 1),
         recurrenceForm.startTime,
         recurrenceForm.endTime,
         recurrenceForm.effectiveFrom,
@@ -185,10 +227,14 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
   const calendarDays = useMemo(() => getCalendarDays(cursor, view), [cursor, view]);
 
   const openAppointment = () => {
+    setSelectedAppointmentCustomers([]);
+    setAppointmentCustomerSearch("");
     setFeedback(null);
     setModalError(null);
+
     setAppointmentForm({
       customerId: "",
+      customerIds: [], // Inicializa os participantes
       activityId: "",
       subscriptionId: "",
       date: formatLocalDate(cursor),
@@ -197,6 +243,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
       professionalId: "",
       resourceIds: [],
     });
+
     setModal("appointment");
   };
 
@@ -204,9 +251,12 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
     setFeedback(null);
     setModalError(null);
     setRecurrenceSubscriptionSearch("");
+    setRecurrenceMatches([]);
+    setRecurrenceLookupOpen(false);
     setRecurrenceForm({
       subscriptionId: "",
       weekday: String(cursor.getDay()),
+      weekdays: [cursor.getDay()],
       startTime: "09:00",
       endTime: "10:00",
       effectiveFrom: formatLocalDate(cursor),
@@ -258,6 +308,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
     setRecurrenceForm((current) => ({
       ...current,
       subscriptionId,
+      weekdays: current.weekdays.slice(0, Math.max(1, activity?.sessionsPerWeek ?? 1)),
       effectiveFrom: subscription?.startsAt ?? todayIso(),
       effectiveUntil: subscription ? getSubscriptionRecurrenceEnd(subscription) : "",
       professionalId: "",
@@ -265,6 +316,8 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
     }));
 
     if (subscription) {
+      setRecurrenceLookupOpen(false);
+      setRecurrenceMatches([]);
       setRecurrenceSubscriptionSearch(
         `${customer?.name ?? ""}${customer?.documentNumber ? ` — ${customer.documentNumber}` : ""}${activity ? ` — ${activity.name}` : ""}`,
       );
@@ -275,7 +328,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
     event.preventDefault();
     setModalError(null);
 
-    if (!appointmentForm.customerId || !appointmentForm.activityId || !appointmentForm.date) {
+    if (!appointmentForm.customerIds.length || !appointmentForm.activityId || !appointmentForm.date) {
       setModalError(t.feedback.invalidData);
       return;
     }
@@ -309,7 +362,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
 
     startTransition(async () => {
       const result = await createAppointmentAction({
-        customerId: appointmentForm.customerId,
+        customerIds: appointmentForm.customerIds,
         activityId: appointmentForm.activityId,
         customerSubscriptionId: appointmentForm.subscriptionId || null,
         startsAt,
@@ -338,6 +391,12 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
       return;
     }
 
+    const expectedDays = recurrenceActivity.sessionsPerWeek ?? 1;
+    if (recurrenceForm.weekdays.length !== expectedDays) {
+      setModalError(locale === "pt-BR" ? `Selecione ${expectedDays} dia(s) da semana.` : `Select ${expectedDays} weekday(s).`);
+      return;
+    }
+
     if (recurrenceForm.endTime <= recurrenceForm.startTime) {
       setModalError(t.feedback.invalidInterval);
       return;
@@ -353,7 +412,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
 
     if (
       recurrenceForm.professionalId &&
-      !recurrenceProfessionals.some((professional) => professional.id === recurrenceForm.professionalId)
+      !recurrenceForm.weekdays.every((weekday) => getAvailableProfessionalsForRecurrence(recurrenceActivity, String(weekday), recurrenceForm.startTime, recurrenceForm.endTime, recurrenceForm.effectiveFrom, recurrenceForm.effectiveUntil, initialData).some((professional) => professional.id === recurrenceForm.professionalId))
     ) {
       setModalError(
         locale === "pt-BR"
@@ -373,9 +432,9 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
     }
 
     startTransition(async () => {
-      const result = await createScheduleRuleAction({
+      const result = await createWeeklyScheduleRulesAction({
         customerSubscriptionId: recurrenceForm.subscriptionId,
-        weekday: Number(recurrenceForm.weekday),
+        weekdays: recurrenceForm.weekdays,
         startTime: recurrenceForm.startTime,
         endTime: recurrenceForm.endTime,
         effectiveFrom: recurrenceForm.effectiveFrom,
@@ -519,9 +578,9 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
 
       {tab === "recurrences" && (
         <RecurrencesPanel
+          locale={locale}
           data={initialData}
           t={t}
-          locale={locale}
           pending={isPending}
           onNew={openRecurrence}
           onStatus={(ruleId: string, status: "ACTIVE" | "PAUSED" | "ENDED") =>
@@ -541,7 +600,6 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
         <ResourcesPanel
           data={initialData}
           t={t}
-          locale={locale}
           pending={isPending}
           onNew={() => {
             setResourceForm({ id: "", name: "", resourceTypeId: "" });
@@ -633,33 +691,74 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
         <Modal title={t.appointment.title} subtitle={t.appointment.description} closeLabel={t.actions.close} onClose={closeModal}>
           <form className={styles.form} onSubmit={handleAppointmentSubmit}>
             <div className={styles.formGrid}>
-              <Field label={t.fields.customer}>
-                <CustomerSearchField
-                  customers={initialData.customers.filter((customer) => customer.active)}
-                  selectedId={appointmentForm.customerId}
-                  onSelect={(customerId: string) =>
-                    setAppointmentForm((current) => ({
-                      ...current,
-                      customerId,
-                      activityId: "",
-                      subscriptionId: "",
-                      professionalId: "",
-                      resourceIds: [],
-                    }))
-                  }
-                  createHref={buildCustomerCreateHref(appointmentForm)}
-                  locale={locale}
+              <div className={`${styles.field} ${styles.appointmentLookupField}`}>
+                <span>{locale === "pt-BR" ? "Alunos / clientes" : "Participants"}</span>
+                <input
+                  type="search"
+                  className={styles.appointmentLookupInput}
+                  value={appointmentCustomerSearch}
+                  onChange={(event) => setAppointmentCustomerSearch(event.target.value)}
+                  placeholder={locale === "pt-BR" ? "Buscar por nome ou CPF" : "Search by name or document"}
+                  aria-label={locale === "pt-BR" ? "Buscar alunos por nome ou CPF" : "Search participants"}
                 />
-              </Field>
+                {appointmentCustomerSearch.trim().length >= 2 && (
+                  <div className={styles.appointmentCustomerSuggestions}>
+                    {appointmentSearchLoading ? <small>{locale === "pt-BR" ? "Buscando..." : "Searching..."}</small> :
+                      appointmentCustomerResults.filter(customer => !appointmentForm.customerIds.includes(customer.id)).map(customer => (
+                        <button key={customer.id} type="button" className={styles.appointmentCustomerSuggestion}
+                          disabled={appointmentForm.customerIds.length >= (appointmentActivity?.maxParticipants ?? (appointmentActivity?.attendanceMode === "INDIVIDUAL" ? 1 : Infinity))}
+                          onClick={() => {
+                            setSelectedAppointmentCustomers(current => current.some(item => item.id === customer.id) ? current : [...current, customer]);
+                            setAppointmentForm(current => {
+                              const customerIds = current.customerIds.includes(customer.id) ? current.customerIds : [...current.customerIds, customer.id];
+                              return { ...current, customerIds, customerId: customerIds[0] ?? "", subscriptionId: "" };
+                            });
+                            setAppointmentCustomerSearch("");
+                          }}>
+                          {customer.name}{customer.documentNumber ? ` - ${customer.documentNumber}` : ""}
+                        </button>
+                      ))}
+                    {!appointmentSearchLoading && appointmentCustomerResults.filter(customer => !appointmentForm.customerIds.includes(customer.id)).length === 0 &&
+                      <small>{locale === "pt-BR" ? "Nenhum cliente encontrado." : "No clients found."}</small>}
+                  </div>
+                )}
+                {appointmentForm.customerIds.length > 0 && (
+                  <div className={styles.appointmentSelectedCustomers}>
+                    {appointmentForm.customerIds.map(id => {
+                      const customer = selectedAppointmentCustomers.find(item => item.id === id) ?? initialData.customers.find(item => item.id === id);
+                      return <span key={id} className={styles.appointmentCustomerChip}>
+                        {customer?.name ?? id}
+                        <button type="button" aria-label={locale === "pt-BR" ? "Remover participante" : "Remove participant"} onClick={() => {
+                          setAppointmentForm(current => {
+                            const customerIds = current.customerIds.filter(value => value !== id);
+                            return { ...current, customerIds, customerId: customerIds[0] ?? "", subscriptionId: "" };
+                          });
+                          setSelectedAppointmentCustomers(current => current.filter(item => item.id !== id));
+                        }}>×</button>
+                      </span>;
+                    })}
+                  </div>
+                )}
+                <small>{appointmentForm.customerIds.length}/{appointmentActivity?.maxParticipants ?? (appointmentActivity?.attendanceMode === "INDIVIDUAL" ? 1 : "∞")} {locale === "pt-BR" ? "participantes" : "participants"}</small>
+              </div>
 
-              <Field label={t.fields.service}>
-                <select value={appointmentForm.activityId} onChange={(event) => handleActivityChange(event.target.value)}>
+              <div className={`${styles.field} ${styles.appointmentLookupField}`}>
+                <span>{t.fields.service}</span>
+                <input
+                  type="search"
+                  className={styles.appointmentLookupInput}
+                  value={appointmentServiceSearch}
+                  onChange={(event) => setAppointmentServiceSearch(event.target.value)}
+                  placeholder={locale === "pt-BR" ? "Buscar serviço pelo nome" : "Search service by name"}
+                  aria-label={locale === "pt-BR" ? "Buscar serviço" : "Search service"}
+                />
+                <select className={styles.appointmentServiceSelect} value={appointmentForm.activityId} onChange={(event) => handleActivityChange(event.target.value)}>
                   <option value="">{t.placeholders.selectService}</option>
-                  {activeActivities.map((activity) => (
-                    <option key={activity.id} value={activity.id}>{activity.name}</option>
+                  {activeActivities.filter((activity) => !appointmentServiceSearch || normalizeLookup(activity.name).includes(normalizeLookup(appointmentServiceSearch)) || activity.id === appointmentForm.activityId).map((activity) => (
+                    <option key={activity.id} value={activity.id}>{activity.name}{activity.sessionsPerWeek ? ` • ${activity.sessionsPerWeek}x/${locale === "pt-BR" ? "semana" : "week"}` : ""}{activity.attendanceMode ? ` • ${activity.attendanceMode === "GROUP" ? (locale === "pt-BR" ? "Grupo" : "Group") : activity.attendanceMode === "INDIVIDUAL" ? "Individual" : (locale === "pt-BR" ? "Flexível" : "Flexible")}` : ""}</option>
                   ))}
                 </select>
-              </Field>
+              </div>
 
               <Field label={t.fields.date}>
                 <input
@@ -820,6 +919,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
           t={t}
           pending={isPending}
           onClose={closeModal}
+          onSettle={() => startTransition(async () => { const r = await settleAppointmentPaymentAction({ appointmentId: selectedAppointment.id, amount: null }); if (r.success) { setFeedback({type:"success", message: locale === "pt-BR" ? "Pagamento do compromisso baixado com sucesso." : "Appointment payment settled."}); closeModal(); router.refresh(); } else setModalError("error" in r ? r.error : "paymentFailed"); })}
           onCancel={(appointmentId: string) => startTransition(async () => {
             const result = await cancelAppointmentAction(appointmentId);
             if (result.success) {
@@ -842,44 +942,53 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
               <div className={styles.subscriptionLookup}>
                 <input
                   type="search"
+                  autoComplete="off"
                   value={recurrenceSubscriptionSearch}
-                  placeholder={locale === "pt-BR" ? "Buscar por nome ou documento do cliente" : "Search by customer name or document"}
-                  onChange={(event) => setRecurrenceSubscriptionSearch(event.target.value)}
+                  placeholder={locale === "pt-BR" ? "Buscar contrato por nome ou CPF (mín. 2 caracteres)" : "Search contracts by name or document (min. 2 characters)"}
+                  onChange={(event) => {
+                    setRecurrenceSubscriptionSearch(event.target.value);
+                    setRecurrenceLookupOpen(true);
+                    setRecurrenceForm((current) => ({ ...current, subscriptionId: "", professionalId: "", resourceIds: [] }));
+                  }}
                 />
-                <select
-                  value={recurrenceForm.subscriptionId}
-                  size={Math.min(Math.max(filteredRecurrenceSubscriptions.length + 1, 2), 6)}
-                  onChange={(event) => handleRecurrenceSubscriptionChange(event.target.value)}
-                >
-                  <option value="">{t.placeholders.selectSubscription}</option>
-                  {filteredRecurrenceSubscriptions.map((subscription) => {
-                    const customer = initialData.customers.find((item) => item.id === subscription.customerId);
-                    const activity = initialData.activities.find((item) => item.id === subscription.activityId);
-                    if (!activity) return null;
-                    const documentLabel = customer?.documentNumber ? ` • ${customer.documentNumber}` : "";
-                    return (
-                      <option key={subscription.id} value={subscription.id}>
-                        {customer?.name ?? "Customer"}{documentLabel} — {activity.name}
-                      </option>
-                    );
-                  })}
-                </select>
-                {filteredRecurrenceSubscriptions.length === 0 && recurrenceSubscriptionSearch.trim() && (
-                  <small className={styles.lookupHelp}>
-                    {locale === "pt-BR" ? "Nenhum plano ativo encontrado para essa busca." : "No active plan found for this search."}
-                  </small>
+                {recurrenceLookupOpen && recurrenceSubscriptionSearch.trim().length >= 2 && (
+                  <div className={styles.recurrenceSearchResults} role="listbox" aria-label={t.fields.subscription}>
+                    {recurrenceSearchLoading ? <div className={styles.recurrenceSearchMessage}>Buscando contratos...</div> :
+                      recurrenceSearchError ? <div className={styles.recurrenceSearchMessage}>Não foi possível buscar contratos. Tente novamente.</div> :
+                      recurrenceMatches.length ? recurrenceMatches.map((match) => (
+                        <button key={match.id} type="button" role="option" aria-selected={false}
+                          className={styles.recurrenceSearchOption}
+                          onClick={() => handleRecurrenceSubscriptionChange(match.id)}>
+                          <strong>{match.customerName}</strong>
+                          <span>{match.documentNumber ? `CPF: ${match.documentNumber} · ` : ""}{match.activityName}</span>
+                        </button>
+                      )) : <div className={styles.recurrenceSearchMessage}>Nenhum contrato ativo encontrado.</div>}
+                  </div>
+                )}
+                {recurrenceForm.subscriptionId && !recurrenceLookupOpen && (
+                  <small className={styles.lookupHelp}>Contrato selecionado. Para alterar, digite uma nova busca.</small>
                 )}
               </div>
             </Field>
 
             <div className={styles.formGrid}>
-              <Field label={t.fields.weekday}>
-                <select
-                  value={recurrenceForm.weekday}
-                  onChange={(event) => setRecurrenceForm((current) => ({ ...current, weekday: event.target.value }))}
-                >
-                  {t.weekdays.map((label: string, index: number) => <option key={label} value={index}>{label}</option>)}
-                </select>
+              <Field label={locale === "pt-BR" ? "Dias da semana" : "Weekdays"}>
+                <div className={styles.recurrenceWeekdays}>
+                  {t.weekdays.map((label: string, index: number) => (
+                    <label key={index} className={styles.recurrenceWeekdayOption}>
+                      <input type="checkbox" checked={recurrenceForm.weekdays.includes(index)}
+                        onChange={(event) => setRecurrenceForm((current) => ({
+                          ...current,
+                          weekdays: event.target.checked
+                            ? [...current.weekdays, index].sort((a, b) => a - b)
+                            : current.weekdays.filter((day) => day !== index),
+                        }))}
+                        disabled={!recurrenceActivity || (!recurrenceForm.weekdays.includes(index) && recurrenceForm.weekdays.length >= (recurrenceActivity.sessionsPerWeek ?? 1))} />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </div>
+                <small className={styles.lookupHelp}>{recurrenceForm.weekdays.length}/{recurrenceActivity?.sessionsPerWeek ?? 1} {locale === "pt-BR" ? "dias selecionados" : "days selected"}</small>
               </Field>
               <Field label={t.fields.startTime}>
                 <input type="time" value={recurrenceForm.startTime} onChange={(event) => setRecurrenceForm((current) => ({ ...current, startTime: event.target.value }))} />
@@ -895,7 +1004,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
                   onChange={(event) => setRecurrenceForm((current) => ({ ...current, effectiveFrom: event.target.value }))}
                 />
               </Field>
-              <Field label={t.fields.effectiveUntil}>
+              <div className={styles.recurrenceDateField}><Field label={t.fields.effectiveUntil}>
                 <input
                   type="date"
                   value={recurrenceForm.effectiveUntil}
@@ -909,7 +1018,7 @@ export function SchedulingClient({ initialData }: { initialData: SchedulingPageD
                       : `Period calculated from the plan (${billingCycleLabel(recurrenceSubscription.billingCycle, locale)}).`}
                   </small>
                 )}
-              </Field>
+              </Field></div>
               <Field label={t.fields.professional}>
                 <select value={recurrenceForm.professionalId} onChange={(event) => setRecurrenceForm((current) => ({ ...current, professionalId: event.target.value }))}>
                   <option value="">{t.placeholders.noProfessional}</option>
@@ -1137,6 +1246,7 @@ function MonthCalendar({ days, cursor, appointments, data, locale, t, onSelectDa
 function AppointmentCard({ appointment, data, locale, t, onCancel, onOpenDetails }: any) {
   const activity = data.activities.find((item: Activity) => item.id === appointment.activityId);
   const customer = data.customers.find((item: any) => item.id === appointment.customerId);
+  const participantNames = (appointment.participants ?? []).filter((p: any) => p.participantStatus === "ACTIVE").map((p: any) => data.customers.find((c: any) => c.id === p.customerId)?.name).filter(Boolean);
   const professional = data.professionals.find((item: any) => item.id === appointment.professionalId);
   const resources = data.resources.filter((item: any) => appointment.resourceIds.includes(item.id));
   const color = activity?.specialtyColor ?? "var(--courtly-green)";
@@ -1151,7 +1261,8 @@ function AppointmentCard({ appointment, data, locale, t, onCancel, onOpenDetails
       onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onOpenDetails(appointment); }}
     >
       <div className={styles.appointmentTime} style={{ color }}>{formatTime(appointment.startsAt, locale)}–{formatTime(appointment.endsAt, locale)}</div>
-      <strong>{customer?.name ?? t.calendar.unknownCustomer}</strong>
+      <strong>{participantNames.length ? `${participantNames.slice(0, 3).join(", ")}${participantNames.length > 3 ? ` +${participantNames.length - 3}` : ""}` : customer?.name ?? t.calendar.unknownCustomer}</strong>
+      <small>{participantNames.length}/{appointment.capacity ?? 1} {locale === "pt-BR" ? "participantes" : "participants"}</small>
       <span>{activity?.name ?? t.calendar.unknownService}</span>
       {activity?.specialtyName && <small>{activity.specialtyName}</small>}
       {professional && <small>{professional.name}</small>}
@@ -1164,9 +1275,10 @@ function AppointmentCard({ appointment, data, locale, t, onCancel, onOpenDetails
   );
 }
 
-function AppointmentDetailsModal({ appointment, data, locale, t, pending, onClose, onCancel }: any) {
+function AppointmentDetailsModal({ appointment, data, locale, t, pending, onClose, onCancel, onSettle }: any) {
   const activity = data.activities.find((item: Activity) => item.id === appointment.activityId);
   const customer = data.customers.find((item: any) => item.id === appointment.customerId);
+  const participants = (appointment.participants ?? []).map((p: any) => data.customers.find((c: any) => c.id === p.customerId)?.name).filter(Boolean);
   const professional = data.professionals.find((item: any) => item.id === appointment.professionalId);
   const resources = data.resources.filter((item: any) => appointment.resourceIds.includes(item.id));
   const cancellationDeadline = new Date(new Date(appointment.startsAt).getTime() - data.settings.cancellationWindowMinutes * 60_000);
@@ -1176,7 +1288,9 @@ function AppointmentDetailsModal({ appointment, data, locale, t, pending, onClos
   return (
     <Modal title={pt ? "Detalhes do compromisso" : "Appointment details"} subtitle={pt ? "Informações completas do agendamento selecionado." : "Complete information for the selected booking."} closeLabel={t.actions.close} onClose={onClose}>
       <div className={styles.detailsGrid}>
-        <Detail label={pt ? "Cliente" : "Customer"} value={customer?.name ?? t.calendar.unknownCustomer} />
+        <Detail label={pt ? "Participantes" : "Participants"} value={participants.length ? participants.join(", ") : customer?.name ?? t.calendar.unknownCustomer} />
+        <Detail label={pt ? "Ocupação" : "Occupancy"} value={`${participants.length}/${appointment.capacity ?? 1}`} />
+        <Detail label={pt ? "Pagamento" : "Payment"} value={appointment.paymentStatus === "PAID" ? (pt ? "Pago" : "Paid") : (pt ? "Pendente" : "Pending")} />
         <Detail label={pt ? "Documento" : "Document"} value={[customer?.documentType, customer?.documentNumber].filter(Boolean).join(" · ") || "—"} />
         <Detail label="E-mail" value={customer?.email ?? "—"} />
         <Detail label={pt ? "Telefone" : "Phone"} value={customer?.phone ?? "—"} />
@@ -1189,6 +1303,7 @@ function AppointmentDetailsModal({ appointment, data, locale, t, pending, onClos
         <Detail label={pt ? "Confirmação" : "Confirmation"} value={appointment.attendanceStatus === "CONFIRMED" ? (pt ? "Confirmado" : "Confirmed") : appointment.attendanceStatus === "CANCELLED" ? (pt ? "Cancelado" : "Cancelled") : (pt ? "Pendente" : "Pending")} />
         <Detail label={pt ? "Origem" : "Source"} value={appointment.source} />
       </div>
+      {appointment.status !== "CANCELLED" && appointment.paymentStatus !== "PAID" && <div className={styles.modalActions}><button type="button" className={styles.primaryButton} disabled={pending} onClick={onSettle}>{pt ? "Dar baixa no pagamento deste compromisso" : "Settle this appointment"}</button></div>}
       <div className={styles.detailsPolicy}>
         {pt
           ? `Cancelamento permitido até ${formatDateTime(cancellationDeadline, locale)}.`
@@ -1213,8 +1328,9 @@ function Detail({ label, value }: { label: string; value: string }) {
   return <div className={styles.detailItem}><span>{label}</span><strong>{value}</strong></div>;
 }
 
-function RecurrencesPanel({ data, t, pending, onNew, onStatus }: any) {
-  return (
+function RecurrencesPanel({ data, t, pending, onNew, onStatus, locale }: any) {
+    const paginationDatarules = useServerPagination("rules",{},data);
+return (
     <section className={styles.panelCard}>
       <div className={styles.sectionHeader}>
         <div>
@@ -1226,12 +1342,13 @@ function RecurrencesPanel({ data, t, pending, onNew, onStatus }: any) {
       </div>
 
       <div className={styles.rulesList}>
-        {data.rules.map((rule: any) => {
+        <Pagination state={paginationDatarules} locale={locale} />
+        {paginationDatarules.rows.map((rule: any) => {
           const customer = data.customers.find((item: any) => item.id === rule.customerId);
           const activity = data.activities.find((item: Activity) => item.id === rule.activityId);
           const professional = data.professionals.find((item: any) => item.id === rule.professionalId);
           const resources = data.resources.filter((item: any) => rule.resourceIds.includes(item.id));
-          const conflicts = data.conflicts.filter((item: any) => item.scheduleRuleId === rule.id);
+          const conflicts = rule.conflicts;
 
           return (
             <article key={rule.id} className={styles.ruleCard}>
@@ -1264,7 +1381,7 @@ function RecurrencesPanel({ data, t, pending, onNew, onStatus }: any) {
             </article>
           );
         })}
-        {data.rules.length === 0 && <p className={styles.emptyText}>{t.recurrences.empty}</p>}
+        {!paginationDatarules.loading && !paginationDatarules.error && paginationDatarules.total === 0 && <p className={styles.emptyText}>{t.recurrences.empty}</p>}
       </div>
     </section>
   );

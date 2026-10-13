@@ -1,6 +1,8 @@
 "use client";
+import { Pagination } from "@/shared/ui/Pagination";
+import { useServerPagination } from "@/shared/pagination/use-server-pagination";
 
-import { useMemo, useState, useTransition, type FormEvent } from "react";
+import { useEffect, useMemo, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CourtlyAlert } from "@/shared/ui/CourtlyAlert";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -29,7 +31,7 @@ const reasons: ProfessionalScheduleExceptionReason[] = [
 
 export function ProfessionalExceptionsPanel({ initialData }: { initialData: ProfessionalPageData }) {
   const router = useRouter();
-  const { locale } = useI18n();
+  const { locale, dictionary } = useI18n();
   const pt = locale === "pt-BR";
   const [pending, startTransition] = useTransition();
   const [selectedId, setSelectedId] = useState(initialData.professionals[0]?.id ?? "");
@@ -37,11 +39,17 @@ export function ProfessionalExceptionsPanel({ initialData }: { initialData: Prof
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(() => emptyForm());
 
-  const selected = initialData.professionals.find((p) => p.id === selectedId) ?? null;
-  const history = useMemo(
-    () => [...(selected?.scheduleExceptions ?? [])].sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime()),
-    [selected],
-  );
+  const [professionalSearch,setProfessionalSearch] = useState("");
+  const professionalPages = useServerPagination("professionals",{search:professionalSearch},initialData);
+  const [selectedProfessional,setSelectedProfessional] = useState<Professional | null>(initialData.professionals[0] ?? null);
+  const selected = selectedProfessional;
+  useEffect(()=>{
+    if (!selectedProfessional && professionalPages.rows[0]) {
+      setSelectedProfessional(professionalPages.rows[0]);setSelectedId(professionalPages.rows[0].id);
+    }
+  },[professionalPages.rows,selectedProfessional]);
+  const paginationHistory = useServerPagination("exceptions",{professionalId:selectedId},initialData,selectedId,Boolean(selectedId));
+  const history = paginationHistory.rows;
 
   function startNew(type: ProfessionalScheduleExceptionType = "ABSENCE") {
     setEditingId(null);
@@ -92,10 +100,11 @@ export function ProfessionalExceptionsPanel({ initialData }: { initialData: Prof
       setFeedback({ type: "success", message: pt ? "Exceção salva com sucesso." : "Exception saved successfully." });
       setEditingId(null);
       setForm(emptyForm());
-      router.refresh();
+      paginationHistory.refresh(); router.refresh();
     });
   }
 
+  
   return (
     <section className={styles.exceptionsLayout}>
       <aside className={styles.exceptionsProfessionals}>
@@ -106,16 +115,18 @@ export function ProfessionalExceptionsPanel({ initialData }: { initialData: Prof
             <p>{pt ? "Ausências e presenças extraordinárias." : "Absences and extraordinary availability."}</p>
           </div>
         </div>
+        <label><span>{dictionary.professionals.filters.search}</span><input value={professionalSearch} onChange={e=>setProfessionalSearch(e.target.value)} /></label>
+        <Pagination state={professionalPages} locale={locale} />
         <div className={styles.exceptionProfessionalList}>
-          {initialData.professionals.map((professional) => (
+          {professionalPages.rows.map((professional) => (
             <button
               key={professional.id}
               type="button"
               className={professional.id === selectedId ? styles.exceptionProfessionalActive : styles.exceptionProfessionalButton}
-              onClick={() => { setSelectedId(professional.id); setEditingId(null); setForm(emptyForm()); }}
+              onClick={() => { setSelectedId(professional.id); setSelectedProfessional(professional); setEditingId(null); setForm(emptyForm()); }}
             >
               <strong>{professional.fullName}</strong>
-              <span>{professional.scheduleExceptions.length} {pt ? "registros" : "records"}</span>
+              <span>{professional.scheduleExceptionCount} {pt ? "registros" : "records"}</span>
             </button>
           ))}
         </div>
@@ -168,7 +179,8 @@ export function ProfessionalExceptionsPanel({ initialData }: { initialData: Prof
 
             <div className={styles.exceptionHistory}>
               <h3>{pt ? "Histórico" : "History"}</h3>
-              {history.length === 0 ? <p className={styles.emptyText}>{pt ? "Nenhuma exceção cadastrada." : "No exceptions registered."}</p> : history.map((item) => (
+              <Pagination state={paginationHistory} locale={locale} />
+              {!paginationHistory.loading && !paginationHistory.error && history.length === 0 ? <p className={styles.emptyText}>{pt ? "Nenhuma exceção cadastrada." : "No exceptions registered."}</p> : paginationHistory.rows.map((item) => (
                 <article key={item.id} className={styles.exceptionHistoryRow}>
                   <div className={item.exceptionType === "ABSENCE" ? styles.exceptionBadgeAbsence : styles.exceptionBadgePresence}>
                     {item.exceptionType === "ABSENCE" ? (pt ? "Ausência" : "Absence") : (pt ? "Presença" : "Presence")}
@@ -182,7 +194,7 @@ export function ProfessionalExceptionsPanel({ initialData }: { initialData: Prof
                     <button type="button" onClick={() => editException(item)}>{pt ? "Editar" : "Edit"}</button>
                     <button type="button" disabled={pending} onClick={() => startTransition(async () => {
                       const result = await setProfessionalScheduleExceptionActiveAction(item.id, !item.active);
-                      if (result.success) router.refresh();
+                      if (result.success) {paginationHistory.refresh(); router.refresh();}
                     })}>{item.active ? (pt ? "Cancelar" : "Cancel") : (pt ? "Reativar" : "Reactivate")}</button>
                   </div>
                 </article>

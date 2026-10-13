@@ -4,7 +4,7 @@ export interface SchedulingRepository {
   getPageData(organizationId: string): Promise<SchedulingPageData>;
 
   createAppointment(input: {
-    customerId: string;
+    customerIds: string[];
     activityId: string;
     customerSubscriptionId?: string | null;
     startsAt: string;
@@ -23,6 +23,8 @@ export interface SchedulingRepository {
     professionalId?: string | null;
     resourceIds?: string[];
   }): Promise<string>;
+
+  createWeeklyScheduleRules(input: { customerSubscriptionId: string; weekdays: number[]; startTime: string; endTime: string; effectiveFrom: string; effectiveUntil?: string | null; professionalId?: string | null; resourceIds?: string[] }): Promise<string>;
 
   cancelAppointment(input: {
     organizationId: string;
@@ -56,4 +58,6 @@ export interface SchedulingRepository {
   }): Promise<void>;
 
   refreshOrganizationWindow(organizationId: string): Promise<void>;
+
+  settleAppointmentPayment(input: { appointmentId: string; amount?: number | null; reference?: string | null }): Promise<void>;
 }

@@ -90,6 +90,8 @@ export type ScheduleRule = {
   resourceIds: string[];
 };
 
+export type AppointmentParticipant = { id: string; customerId: string; attendanceStatus: "PENDING" | "CONFIRMED" | "ABSENT" | "CANCELLED"; participantStatus: "ACTIVE" | "CANCELLED" };
+
 export type Appointment = {
   id: string;
   customerId: string;
@@ -104,6 +106,12 @@ export type Appointment = {
   cancellationReason: string | null;
   attendanceStatus: "PENDING" | "CONFIRMED" | "CANCELLED";
   resourceIds: string[];
+  participants: AppointmentParticipant[];
+  capacity: number;
+  paymentStatus: "PENDING" | "PAID" | "CANCELLED";
+  paidAt: string | null;
+  paidAmount: number | null;
+  paymentReference: string | null;
 };
 
 export type ActivityResourceRequirement = {

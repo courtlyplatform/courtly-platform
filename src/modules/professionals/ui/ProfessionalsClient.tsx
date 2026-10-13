@@ -1,4 +1,6 @@
-'use client';
+"use client";
+import { Pagination } from "@/shared/ui/Pagination";
+import { useServerPagination } from "@/shared/pagination/use-server-pagination";
 
 import {
   useMemo,
@@ -190,6 +192,9 @@ export function ProfessionalsClient({
   const [specialtyStatus, setSpecialtyStatus] = useState('');
 
   const [replacementId, setReplacementId] = useState('');
+  const [replacementSearch,setReplacementSearch] = useState('');
+  const replacements = useServerPagination("professionals",{search:replacementSearch,status:"ACTIVE"},initialData,"",modal === "deactivate");
+
 
   const [role, setRole] = useState<'ADMIN' | 'PROFESSIONAL'>(
     'PROFESSIONAL',
@@ -206,64 +211,8 @@ export function ProfessionalsClient({
    * PROFESSIONALS FILTER
    * ============================================================
    */
-  const filtered = useMemo(
-    () =>
-      initialData.professionals.filter((professional) => {
-        const haystack = norm(
-          [
-            professional.fullName,
-            professional.preferredName,
-            professional.documentNumber,
-            professional.registrations
-              .map(
-                (registration) =>
-                  `${registration.authority} ${registration.registrationNumber}`,
-              )
-              .join(' '),
-          ]
-            .filter(Boolean)
-            .join(' '),
-        );
-
-        return (
-          (!search || haystack.includes(norm(search))) &&
-          (!status ||
-            (status === 'ACTIVE'
-              ? professional.active
-              : !professional.active)) &&
-          (!specialty ||
-            professional.specialties.some(
-              (item) => item.id === specialty,
-            )) &&
-          (!docType || professional.documentType === docType) &&
-          (!docNumber ||
-            digits(professional.documentNumber ?? '').includes(
-              digits(docNumber),
-            )) &&
-          (!regAuthority ||
-            professional.registrations.some(
-              (registration) =>
-                registration.authority === regAuthority,
-            )) &&
-          (!regNumber ||
-            professional.registrations.some((registration) =>
-              norm(registration.registrationNumber).includes(
-                norm(regNumber),
-              ),
-            ))
-        );
-      }),
-    [
-      initialData.professionals,
-      search,
-      status,
-      specialty,
-      docType,
-      docNumber,
-      regAuthority,
-      regNumber,
-    ],
-  );
+  const paginationFiltered = useServerPagination("professionals",{search,status,specialty,docType,docNumber,regAuthority,regNumber},initialData,"",tab === "professionals");
+    const filtered = paginationFiltered.rows;
 
   /*
    * ============================================================
@@ -280,67 +229,10 @@ export function ProfessionalsClient({
    *    retorna "Tennis" e "Beach Tennis".
    * ============================================================
    */
-  const filteredSpecialties = useMemo(() => {
-    const query = norm(specialtySearch);
+  const paginationFilteredspecialties = useServerPagination("specialties",{search:specialtySearch,area:specialtyArea,status:specialtyStatus},initialData,"",tab === "specialties");
+  const filteredSpecialties = paginationFilteredspecialties.rows;
 
-    /*
-     * Primeiro aplicamos os outros filtros.
-     */
-    const candidates = initialData.specialties.filter(
-      (specialtyItem) =>
-        (!specialtyArea ||
-          specialtyItem.area === specialtyArea) &&
-        (!specialtyStatus ||
-          (specialtyStatus === 'ACTIVE'
-            ? specialtyItem.active
-            : !specialtyItem.active)),
-    );
-
-    /*
-     * Sem texto digitado, retorna todos os candidatos.
-     */
-    if (!query) {
-      return candidates;
-    }
-
-    /*
-     * Primeiro procuramos correspondência EXATA.
-     */
-    const exactMatches = candidates.filter(
-      (specialtyItem) =>
-        norm(specialtyItem.name) === query,
-    );
-
-    /*
-     * Se existir uma especialidade com aquele nome exato,
-     * ela tem prioridade sobre qualquer correspondência parcial.
-     */
-    if (exactMatches.length > 0) {
-      return exactMatches;
-    }
-
-    /*
-     * Caso contrário, utiliza correspondência parcial.
-     */
-    return candidates.filter((specialtyItem) =>
-      norm(specialtyItem.name).includes(query),
-    );
-  }, [
-    initialData.specialties,
-    specialtySearch,
-    specialtyArea,
-    specialtyStatus,
-  ]);
-
-  const allAuthorities = Array.from(
-    new Set(
-      initialData.professionals.flatMap((professional) =>
-        professional.registrations.map(
-          (registration) => registration.authority,
-        ),
-      ),
-    ),
-  ).sort();
+  const allAuthorities = initialData.registrationAuthorities;
 
   const age = (birthDate: string | null) => {
     if (!birthDate) {
@@ -501,7 +393,7 @@ export function ProfessionalsClient({
         message: t.feedback.saved,
       });
 
-      router.refresh();
+      paginationFiltered.refresh(); paginationFilteredspecialties.refresh(); router.refresh();
     });
   }
 
@@ -537,7 +429,7 @@ export function ProfessionalsClient({
           t.specialties.feedback.saved,
       });
 
-      router.refresh();
+      paginationFiltered.refresh(); paginationFilteredspecialties.refresh(); router.refresh();
     });
   }
 
@@ -577,7 +469,7 @@ export function ProfessionalsClient({
 
     setModal(null);
 
-    router.refresh();
+    paginationFiltered.refresh(); paginationFilteredspecialties.refresh(); router.refresh();
   }
 
   const addInterval = (weekday: number) => {
@@ -751,6 +643,8 @@ export function ProfessionalsClient({
     }));
   };
 
+  
+  
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -1027,31 +921,26 @@ export function ProfessionalsClient({
             <strong>
               {t.summary.all}:{' '}
               {
-                initialData
-                  .professionals.length
+                initialData.counts.total
               }
             </strong>
 
             <span>
               {t.summary.active}:{' '}
               {
-                initialData.professionals.filter(
-                  (item) =>
-                    item.active,
-                ).length
+                initialData.counts.active
               }
             </span>
 
             <span>
               {t.summary.inactive}:{' '}
               {
-                initialData.professionals.filter(
-                  (item) =>
-                    !item.active,
-                ).length
+                initialData.counts.inactive
               }
             </span>
           </div>
+
+          <Pagination state={paginationFiltered} locale={locale} />
 
           <section className={styles.list}>
             <div
@@ -1088,7 +977,7 @@ export function ProfessionalsClient({
               </span>
             </div>
 
-            {filtered.map(
+            {paginationFiltered.rows.map(
               (professional) => (
                 <article
                   key={
@@ -1311,7 +1200,7 @@ export function ProfessionalsClient({
                                   true,
                                 );
 
-                                router.refresh();
+                                paginationFiltered.refresh(); paginationFilteredspecialties.refresh(); router.refresh();
                               },
                             )
                           }
@@ -1327,7 +1216,7 @@ export function ProfessionalsClient({
               ),
             )}
 
-            {!filtered.length && (
+            {!paginationFiltered.loading && !paginationFiltered.error && !filtered.length && (
               <p
                 className={
                   styles.empty
@@ -1474,6 +1363,8 @@ export function ProfessionalsClient({
             </button>
           </section>
 
+          <Pagination state={paginationFilteredspecialties} locale={locale} />
+
           <section
             className={`${styles.list} ${styles.specialtyList}`}
           >
@@ -1517,7 +1408,7 @@ export function ProfessionalsClient({
               </span>
             </div>
 
-            {filteredSpecialties.map(
+            {paginationFilteredspecialties.rows.map(
               (specialtyItem) => (
                 <article
                   key={
@@ -1622,7 +1513,7 @@ export function ProfessionalsClient({
                               if (
                                 result.success
                               ) {
-                                router.refresh();
+                                paginationFiltered.refresh(); paginationFilteredspecialties.refresh(); router.refresh();
                               }
                             },
                           )
@@ -1638,7 +1529,7 @@ export function ProfessionalsClient({
               ),
             )}
 
-            {!filteredSpecialties.length && (
+            {!paginationFilteredspecialties.loading && !paginationFilteredspecialties.error && !filteredSpecialties.length && (
               <p
                 className={
                   styles.empty
@@ -2787,6 +2678,8 @@ export function ProfessionalsClient({
                 }
               </span>
 
+              <input aria-label={t.filters.search} value={replacementSearch} onChange={e=>setReplacementSearch(e.target.value)} />
+              <Pagination state={replacements} locale={locale} />
               <select
                 value={
                   replacementId
@@ -2804,7 +2697,7 @@ export function ProfessionalsClient({
                   }
                 </option>
 
-                {initialData.professionals
+                {replacements.rows
                   .filter(
                     (professional) =>
                       professional.active &&
@@ -2990,7 +2883,7 @@ export function ProfessionalsClient({
                               null,
                             );
 
-                            router.refresh();
+                            paginationFiltered.refresh(); paginationFilteredspecialties.refresh(); router.refresh();
                           }
                         },
                       )
@@ -3115,7 +3008,7 @@ export function ProfessionalsClient({
                               null,
                             );
 
-                            router.refresh();
+                            paginationFiltered.refresh(); paginationFilteredspecialties.refresh(); router.refresh();
                           }
                         },
                       )

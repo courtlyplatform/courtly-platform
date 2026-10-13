@@ -37,46 +37,55 @@ export type Database = {
       activities: {
         Row: {
           active: boolean
+          attendance_mode: string
           created_at: string
           default_duration_minutes: number
           default_price: number | null
           description: string | null
           id: string
+          max_participants: number | null
           name: string
           organization_id: string
           professional_requirement: Database["public"]["Enums"]["scheduling_requirement"]
           resource_requirement: Database["public"]["Enums"]["scheduling_requirement"]
           scheduling_mode: Database["public"]["Enums"]["activity_scheduling_mode"]
+          sessions_per_week: number | null
           specialty_id: string | null
           updated_at: string
         }
         Insert: {
           active?: boolean
+          attendance_mode?: string
           created_at?: string
           default_duration_minutes: number
           default_price?: number | null
           description?: string | null
           id?: string
+          max_participants?: number | null
           name: string
           organization_id: string
           professional_requirement?: Database["public"]["Enums"]["scheduling_requirement"]
           resource_requirement?: Database["public"]["Enums"]["scheduling_requirement"]
           scheduling_mode?: Database["public"]["Enums"]["activity_scheduling_mode"]
+          sessions_per_week?: number | null
           specialty_id?: string | null
           updated_at?: string
         }
         Update: {
           active?: boolean
+          attendance_mode?: string
           created_at?: string
           default_duration_minutes?: number
           default_price?: number | null
           description?: string | null
           id?: string
+          max_participants?: number | null
           name?: string
           organization_id?: string
           professional_requirement?: Database["public"]["Enums"]["scheduling_requirement"]
           resource_requirement?: Database["public"]["Enums"]["scheduling_requirement"]
           scheduling_mode?: Database["public"]["Enums"]["activity_scheduling_mode"]
+          sessions_per_week?: number | null
           specialty_id?: string | null
           updated_at?: string
         }
@@ -152,6 +161,68 @@ export type Database = {
           },
         ]
       }
+      appointment_participants: {
+        Row: {
+          appointment_id: string
+          attendance_status: string
+          created_at: string
+          customer_id: string
+          id: string
+          organization_id: string
+          participant_status: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          attendance_status?: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          organization_id: string
+          participant_status?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          attendance_status?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          organization_id?: string
+          participant_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_participants_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_capacity_view"
+            referencedColumns: ["appointment_id"]
+          },
+          {
+            foreignKeyName: "appointment_participants_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_participants_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_participants_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_resources: {
         Row: {
           appointment_id: string
@@ -185,6 +256,13 @@ export type Database = {
             foreignKeyName: "fk_appointment_resources_appointment"
             columns: ["appointment_id", "organization_id"]
             isOneToOne: false
+            referencedRelation: "appointment_capacity_view"
+            referencedColumns: ["appointment_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "fk_appointment_resources_appointment"
+            columns: ["appointment_id", "organization_id"]
+            isOneToOne: false
             referencedRelation: "appointments"
             referencedColumns: ["id", "organization_id"]
           },
@@ -203,12 +281,17 @@ export type Database = {
           attendance_status: string
           cancellation_reason: string | null
           cancelled_at: string | null
+          capacity: number | null
           created_at: string
           customer_id: string
           customer_subscription_id: string | null
           ends_at: string
           id: string
           organization_id: string
+          paid_amount: number | null
+          paid_at: string | null
+          payment_reference: string | null
+          payment_status: string
           professional_id: string | null
           schedule_rule_id: string | null
           source: Database["public"]["Enums"]["appointment_source"]
@@ -221,12 +304,17 @@ export type Database = {
           attendance_status?: string
           cancellation_reason?: string | null
           cancelled_at?: string | null
+          capacity?: number | null
           created_at?: string
           customer_id: string
           customer_subscription_id?: string | null
           ends_at: string
           id?: string
           organization_id: string
+          paid_amount?: number | null
+          paid_at?: string | null
+          payment_reference?: string | null
+          payment_status?: string
           professional_id?: string | null
           schedule_rule_id?: string | null
           source?: Database["public"]["Enums"]["appointment_source"]
@@ -239,12 +327,17 @@ export type Database = {
           attendance_status?: string
           cancellation_reason?: string | null
           cancelled_at?: string | null
+          capacity?: number | null
           created_at?: string
           customer_id?: string
           customer_subscription_id?: string | null
           ends_at?: string
           id?: string
           organization_id?: string
+          paid_amount?: number | null
+          paid_at?: string | null
+          payment_reference?: string | null
+          payment_status?: string
           professional_id?: string | null
           schedule_rule_id?: string | null
           source?: Database["public"]["Enums"]["appointment_source"]
@@ -1850,9 +1943,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      appointment_capacity_view: {
+        Row: {
+          activity_id: string | null
+          appointment_id: string | null
+          available: number | null
+          capacity: number | null
+          occupied: number | null
+          organization_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_appointments_activity"
+            columns: ["activity_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
     }
     Functions: {
+      courtly_page_ids: {
+        Args: {p_organization_id: string;p_module: string;p_filters?: Json;p_page?: number;p_page_size?: number}
+        Returns: {ids:string[];total:number;totalPages:number;page:number;pageSize:10|20|50|100;revenueTotals:{billedRevenue:number;receivedRevenue:number;receivableRevenue:number;overdueRevenue:number}}
+      }
+      courtly_revenue_totals: {
+        Args: {p_organization_id:string;p_start:string;p_end:string}
+        Returns: {reference_date:string;status:Database["public"]["Enums"]["financial_entry_status"];currency_code:Database["public"]["Enums"]["organization_currency"];amount:number}[]
+      }
+      courtly_mrr: {
+        Args: {p_organization_id:string;p_currency:string}
+        Returns: {mrr:number;activeSubscriptions:number;activeCustomers:number}
+      }
+      courtly_service_durations: {Args:{p_organization_id:string};Returns:number[]}
+      courtly_professional_options: {Args:{p_organization_id:string};Returns:{total:number;active:number;inactive:number;authorities:string[]}}
+
       add_expense_recurrence_cycle: {
         Args: {
           p_cycle: Database["public"]["Enums"]["expense_recurrence_cycle"]
@@ -1880,6 +2006,19 @@ export type Database = {
       cancel_scheduling_appointment: {
         Args: { p_appointment_id: string; p_reason?: string }
         Returns: undefined
+      }
+      create_group_scheduling_appointment: {
+        Args: {
+          p_activity_id: string
+          p_customer_ids: string[]
+          p_customer_subscription_id: string
+          p_ends_at: string
+          p_professional_id?: string
+          p_resource_ids?: string[]
+          p_source?: string
+          p_starts_at: string
+        }
+        Returns: string
       }
       create_organization_onboarding: {
         Args: {
@@ -2054,6 +2193,14 @@ export type Database = {
         Args: { p_appointment_id: string; p_status: string }
         Returns: undefined
       }
+      set_appointment_participant_attendance_status: {
+        Args: {
+          p_appointment_id: string
+          p_customer_id: string
+          p_status: string
+        }
+        Returns: undefined
+      }
       set_customer_active_status: {
         Args: { p_active: boolean; p_customer_id: string }
         Returns: {
@@ -2071,6 +2218,14 @@ export type Database = {
         Args: {
           p_schedule_rule_id: string
           p_status: Database["public"]["Enums"]["schedule_rule_status"]
+        }
+        Returns: undefined
+      }
+      settle_appointment_payment: {
+        Args: {
+          p_amount?: number
+          p_appointment_id: string
+          p_reference?: string
         }
         Returns: undefined
       }

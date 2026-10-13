@@ -13,6 +13,9 @@ type ActivityRow = {
   professional_requirement: Activity["professionalRequirement"];
   resource_requirement: Activity["resourceRequirement"];
   specialty_id: string | null;
+  attendance_mode: Activity["attendanceMode"];
+  max_participants: number | null;
+  sessions_per_week: number | null;
   professional_specialties?: { name: string; color: string } | null;
   active: boolean;
   created_at: string;
@@ -22,15 +25,17 @@ type ActivityRow = {
 const ACTIVITY_SELECT = `
   id, organization_id, name, description, default_duration_minutes, default_price,
   scheduling_mode, professional_requirement, resource_requirement, specialty_id,
-  professional_specialties(name,color), active, created_at, updated_at
+  professional_specialties(name,color), attendance_mode, max_participants, sessions_per_week, active, created_at, updated_at
 `;
 
 export class SupabaseActivityRepository implements ActivityRepository {
-  constructor(private readonly supabase: SupabaseClient) {}
+  constructor(private readonly supabase: SupabaseClient, private readonly listIds?: string[]) {}
 
   async listByOrganization(organizationId: string): Promise<Activity[]> {
-    const { data, error } = await this.supabase.from("activities").select(ACTIVITY_SELECT)
-      .eq("organization_id", organizationId).order("active", { ascending: false }).order("name", { ascending: true });
+    if (this.listIds?.length === 0) return [];
+    let query = this.supabase.from("activities").select(ACTIVITY_SELECT).eq("organization_id", organizationId);
+    if (this.listIds) query = query.in("id", this.listIds);
+    const { data, error } = await query.order("active", { ascending: false }).order("name").order("id");
     if (error) throw new Error(`Failed to list activities: ${error.message}`);
     return (data as unknown as ActivityRow[]).map(mapActivityToDomain);
   }
@@ -53,6 +58,9 @@ export class SupabaseActivityRepository implements ActivityRepository {
       professional_requirement: input.professionalRequirement,
       resource_requirement: input.resourceRequirement,
       specialty_id: input.specialtyId ?? null,
+      attendance_mode: input.attendanceMode ?? "INDIVIDUAL",
+      max_participants: input.attendanceMode === "INDIVIDUAL" ? 1 : input.maxParticipants ?? null,
+      sessions_per_week: input.sessionsPerWeek ?? null,
     }).select(ACTIVITY_SELECT).single();
     if (error) throw new Error(`Failed to create activity: ${error.message}`);
     return mapActivityToDomain(data as unknown as ActivityRow);
@@ -67,6 +75,9 @@ export class SupabaseActivityRepository implements ActivityRepository {
       scheduling_mode: input.schedulingMode,
       professional_requirement: input.professionalRequirement,
       resource_requirement: input.resourceRequirement,
+      attendance_mode: input.attendanceMode ?? "INDIVIDUAL",
+      max_participants: input.attendanceMode === "INDIVIDUAL" ? 1 : input.maxParticipants ?? null,
+      sessions_per_week: input.sessionsPerWeek ?? null,
     };
     if (input.specialtyId !== undefined) payload.specialty_id = input.specialtyId;
     const { data, error } = await this.supabase.from("activities").update(payload).eq("organization_id", input.organizationId).eq("id", input.id).select(ACTIVITY_SELECT).single();
@@ -95,6 +106,9 @@ function mapActivityToDomain(row: ActivityRow): Activity {
     specialtyId: row.specialty_id,
     specialtyName: row.professional_specialties?.name ?? null,
     specialtyColor: row.professional_specialties?.color ?? null,
+    attendanceMode: row.attendance_mode ?? "INDIVIDUAL",
+    maxParticipants: row.max_participants,
+    sessionsPerWeek: row.sessions_per_week,
     active: row.active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

@@ -1,4 +1,6 @@
 "use client";
+import { Pagination } from "@/shared/ui/Pagination";
+import { useServerPagination } from "@/shared/pagination/use-server-pagination";
 
 import {
   type FormEvent,
@@ -61,6 +63,7 @@ type ResourceRequirementForm = {
 
 type Props = {
   initialActivities: Activity[];
+  availableDurations: number[];
   resourcePools: ResourcePoolOption[];
   resourceRequirements: ResourceRequirement[];
   specialties: SpecialtyOption[];
@@ -91,6 +94,10 @@ type ActivityFormState = {
   resourceRequirement: Activity["resourceRequirement"];
 
   specialtyId: string;
+
+  attendanceMode: Activity["attendanceMode"];
+  maxParticipants: string;
+  sessionsPerWeek: string;
 
   resourceRequirements: ResourceRequirementForm[];
 };
@@ -131,6 +138,10 @@ const EMPTY_FORM:
 
   specialtyId: "",
 
+  attendanceMode: "INDIVIDUAL",
+  maxParticipants: "1",
+  sessionsPerWeek: "",
+
   resourceRequirements: [],
 };
 
@@ -151,6 +162,7 @@ function normalizeSearchText(
 
 export function ServicesClient({
   initialActivities,
+  availableDurations,
   resourcePools,
   resourceRequirements,
   specialties,
@@ -302,260 +314,12 @@ export function ServicesClient({
      AVAILABLE DURATIONS
      ===================================== */
 
-  const availableDurations =
-    useMemo(
-      () => {
-        return Array.from(
-          new Set(
-            activities.map(
-              (
-                activity
-              ) =>
-                activity
-                  .defaultDurationMinutes
-            )
-          )
-        ).sort(
-          (
-            a,
-            b
-          ) =>
-            a -
-            b
-        );
-      },
-      [
-        activities,
-      ]
-    );
-
-
   /* =====================================
      FILTERED ACTIVITIES
      ===================================== */
 
-  const filteredActivities =
-    useMemo(
-      () => {
-        const normalizedSearch =
-          normalizeSearchText(
-            search
-          );
-
-
-        const selectedDuration =
-          durationFilter
-            ? Number(
-              durationFilter
-            )
-            : null;
-
-
-        const minimumPrice =
-          parseFilterPrice(
-            minPriceFilter
-          );
-
-
-        const maximumPrice =
-          parseFilterPrice(
-            maxPriceFilter
-          );
-
-
-        /*
-         * If the user typed the complete name of
-         * an existing service, Courtly prioritizes
-         * exact service-name matching.
-         *
-         * Example:
-         *
-         * "Tennis"
-         *
-         * Tennis        -> exact
-         * Beach Tennis  -> partial
-         *
-         * Result:
-         * Tennis only.
-         *
-         * While typing:
-         *
-         * "Ten"
-         *
-         * there is no exact match, therefore the
-         * regular partial search remains active.
-         */
-        const hasExactNameMatch =
-          normalizedSearch !==
-          "" &&
-          activities.some(
-            (
-              activity
-            ) =>
-              normalizeSearchText(
-                activity.name
-              ) ===
-              normalizedSearch
-          );
-
-
-        return activities.filter(
-          (
-            activity
-          ) => {
-            /* =============================
-               SEARCH
-               ============================= */
-
-            const normalizedName =
-              normalizeSearchText(
-                activity.name
-              );
-
-
-            const normalizedDescription =
-              normalizeSearchText(
-                activity
-                  .description ??
-                ""
-              );
-
-
-            let matchesSearch =
-              true;
-
-
-            if (
-              normalizedSearch
-            ) {
-              if (
-                hasExactNameMatch
-              ) {
-                /*
-                 * A service exists whose complete
-                 * name is exactly what was typed.
-                 */
-                matchesSearch =
-                  normalizedName ===
-                  normalizedSearch;
-              } else {
-                /*
-                 * No exact service exists yet.
-                 *
-                 * Keep the current flexible
-                 * search behavior while typing.
-                 */
-                matchesSearch =
-                  normalizedName.includes(
-                    normalizedSearch
-                  ) ||
-                  normalizedDescription.includes(
-                    normalizedSearch
-                  );
-              }
-            }
-
-
-            /* =============================
-               STATUS
-               ============================= */
-
-            const matchesStatus =
-              !statusFilter ||
-              (
-                statusFilter ===
-                "active" &&
-                activity.active
-              ) ||
-              (
-                statusFilter ===
-                "inactive" &&
-                !activity.active
-              );
-
-
-            /* =============================
-               DURATION
-               ============================= */
-
-            const matchesDuration =
-              selectedDuration ===
-              null ||
-              activity
-                .defaultDurationMinutes ===
-              selectedDuration;
-
-
-            /* =============================
-               PRICE
-               ============================= */
-
-            const hasPriceFilter =
-              minimumPrice !==
-              null ||
-              maximumPrice !==
-              null;
-
-
-            let matchesPrice =
-              true;
-
-
-            if (
-              hasPriceFilter
-            ) {
-              if (
-                activity
-                  .defaultPrice ===
-                null
-              ) {
-                matchesPrice =
-                  false;
-              } else {
-                if (
-                  minimumPrice !==
-                  null &&
-                  activity
-                    .defaultPrice <
-                  minimumPrice
-                ) {
-                  matchesPrice =
-                    false;
-                }
-
-
-                if (
-                  maximumPrice !==
-                  null &&
-                  activity
-                    .defaultPrice >
-                  maximumPrice
-                ) {
-                  matchesPrice =
-                    false;
-                }
-              }
-            }
-
-
-            return (
-              matchesSearch &&
-              matchesStatus &&
-              matchesDuration &&
-              matchesPrice
-            );
-          }
-        );
-      },
-      [
-        activities,
-        search,
-        statusFilter,
-        durationFilter,
-        minPriceFilter,
-        maxPriceFilter,
-      ]
-    );
+  const paginationFilteredactivities = useServerPagination("services",{search,status:statusFilter,duration:durationFilter,minPrice:parseFilterPrice(minPriceFilter)?.toString() ?? "",maxPrice:parseFilterPrice(maxPriceFilter)?.toString() ?? ""},initialActivities);
+    const filteredActivities = paginationFilteredactivities.rows;
 
 
   const hasActiveFilters =
@@ -660,6 +424,10 @@ export function ServicesClient({
 
       specialtyId:
         activity.specialtyId ?? "",
+
+      attendanceMode: activity.attendanceMode ?? "INDIVIDUAL",
+      maxParticipants: String(activity.maxParticipants ?? (activity.attendanceMode === "INDIVIDUAL" ? 1 : "")),
+      sessionsPerWeek: activity.sessionsPerWeek ? String(activity.sessionsPerWeek) : "",
 
       resourceRequirements:
         resourceRequirements
@@ -836,6 +604,10 @@ export function ServicesClient({
             specialtyId:
               form.specialtyId || null,
 
+            attendanceMode: form.attendanceMode,
+            maxParticipants: form.attendanceMode === "INDIVIDUAL" ? 1 : (form.maxParticipants ? Number(form.maxParticipants) : null),
+            sessionsPerWeek: form.sessionsPerWeek ? Number(form.sessionsPerWeek) : null,
+
             resourceRequirements:
               form.schedulingMode === "NONE" || form.resourceRequirement === "NONE"
                 ? []
@@ -885,7 +657,7 @@ export function ServicesClient({
         });
 
 
-        router.refresh();
+        paginationFilteredactivities.refresh(); router.refresh();
       }
     );
   }
@@ -1004,7 +776,7 @@ export function ServicesClient({
         });
 
 
-        router.refresh();
+        paginationFilteredactivities.refresh(); router.refresh();
       }
     );
   }
@@ -1085,12 +857,13 @@ export function ServicesClient({
         });
 
 
-        router.refresh();
+        paginationFilteredactivities.refresh(); router.refresh();
       }
     );
   }
 
 
+  
   return (
     <main className="services-page">
       {/* =====================================
@@ -1157,8 +930,7 @@ export function ServicesClient({
                 EMPTY DATABASE
                ===================================== */}
 
-      {activities.length ===
-        0 ? (
+      {!paginationFilteredactivities.loading && paginationFilteredactivities.total === 0 && !hasActiveFilters ? (
         <div className="empty-state">
           <h2>
             {
@@ -1442,7 +1214,8 @@ export function ServicesClient({
                         EMPTY FILTER RESULT
                        ================================= */}
 
-          {filteredActivities.length ===
+          <Pagination state={paginationFilteredactivities} locale={locale} />
+                    {filteredActivities.length ===
             0 ? (
             <div className="services-filter-empty">
               {
@@ -1489,6 +1262,10 @@ export function ServicesClient({
                           }
                         </th>
 
+                        <th>{locale === "pt-BR" ? "Formato" : "Format"}</th>
+                        <th>{locale === "pt-BR" ? "Máx./aula" : "Max/session"}</th>
+                        <th>{locale === "pt-BR" ? "Frequência" : "Frequency"}</th>
+
                         <th>
                           {
                             t.table
@@ -1507,7 +1284,7 @@ export function ServicesClient({
 
 
                     <tbody>
-                      {filteredActivities.map(
+                      {paginationFilteredactivities.rows.map(
                         (
                           activity
                         ) => (
@@ -1557,6 +1334,10 @@ export function ServicesClient({
                                 )}
                             </td>
 
+
+                            <td>{activity.attendanceMode === "GROUP" ? (locale === "pt-BR" ? "Grupo" : "Group") : activity.attendanceMode === "FLEXIBLE" ? (locale === "pt-BR" ? "Flexível" : "Flexible") : "Individual"}</td>
+                            <td>{activity.maxParticipants ?? "—"}</td>
+                            <td>{activity.sessionsPerWeek ? `${activity.sessionsPerWeek}x/${locale === "pt-BR" ? "semana" : "week"}` : "—"}</td>
 
                             <td>
                               <span
@@ -1641,7 +1422,7 @@ export function ServicesClient({
                                ========================= */}
 
               <section className="services-mobile-list">
-                {filteredActivities.map(
+                {paginationFilteredactivities.rows.map(
                   (
                     activity
                   ) => (
@@ -2059,6 +1840,23 @@ export function ServicesClient({
                 </div>
               </div>
 
+
+              <div className="service-form-row">
+                <div className="form-group">
+                  <label htmlFor="service-attendance-mode">{locale === "pt-BR" ? "Formato do atendimento" : "Attendance format"}</label>
+                  <select id="service-attendance-mode" value={form.attendanceMode} onChange={(e) => setForm((c) => ({ ...c, attendanceMode: e.target.value as Activity["attendanceMode"], maxParticipants: e.target.value === "INDIVIDUAL" ? "1" : c.maxParticipants }))}>
+                    <option value="INDIVIDUAL">Individual</option><option value="GROUP">{locale === "pt-BR" ? "Grupo" : "Group"}</option><option value="FLEXIBLE">{locale === "pt-BR" ? "Flexível" : "Flexible"}</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="service-max-participants">{locale === "pt-BR" ? "Quantidade máxima por aula/agendamento" : "Maximum participants"}</label>
+                  <input id="service-max-participants" type="number" min="1" max="999" disabled={form.attendanceMode === "INDIVIDUAL"} value={form.attendanceMode === "INDIVIDUAL" ? "1" : form.maxParticipants} onChange={(e) => setForm((c) => ({ ...c, maxParticipants: e.target.value }))} />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="service-sessions-week">{locale === "pt-BR" ? "Quantidade de vezes por semana" : "Sessions per week"}</label>
+                  <input id="service-sessions-week" type="number" min="1" max="14" placeholder={locale === "pt-BR" ? "Opcional" : "Optional"} value={form.sessionsPerWeek} onChange={(e) => setForm((c) => ({ ...c, sessionsPerWeek: e.target.value }))} />
+                </div>
+              </div>
 
               <div className="service-form-row">
                 <div className="form-group">

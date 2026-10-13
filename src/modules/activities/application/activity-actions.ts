@@ -30,6 +30,9 @@ type SaveActivityRequest = {
   professionalRequirement: "NONE" | "OPTIONAL" | "REQUIRED";
   resourceRequirement: "NONE" | "OPTIONAL" | "REQUIRED";
   specialtyId?: string | null;
+  attendanceMode?: "INDIVIDUAL" | "GROUP" | "FLEXIBLE";
+  maxParticipants?: number | null;
+  sessionsPerWeek?: number | null;
   resourceRequirements?: ResourceRequirementRequest[];
 };
 
@@ -69,6 +72,9 @@ export async function saveActivityAction(
       professionalRequirement: request.professionalRequirement,
       resourceRequirement: request.resourceRequirement,
       specialtyId: request.specialtyId ?? null,
+      attendanceMode: request.attendanceMode ?? "INDIVIDUAL",
+      maxParticipants: request.attendanceMode === "INDIVIDUAL" ? 1 : request.maxParticipants ?? null,
+      sessionsPerWeek: request.sessionsPerWeek ?? null,
     };
 
     const saved = request.id

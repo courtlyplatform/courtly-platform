@@ -21,7 +21,7 @@ export default async function CustomersPage() {
     if (!can(access, "CUSTOMERS_VIEW")) redirect("/dashboard");
 
     const customers =
-        await getCustomers();
+        await getCustomers([]);
 
 
     return (

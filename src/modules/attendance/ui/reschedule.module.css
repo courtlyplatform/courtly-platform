@@ -1,1 +1,145 @@
-.page{width:100%;max-width:980px;display:grid;gap:20px;color:var(--text)}.page header h1{margin:0}.page header p{margin:7px 0 0;color:var(--text-secondary);line-height:1.5}.eyebrow{display:inline-block;margin-bottom:6px;color:var(--courtly-green);font-size:.76rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.summary,.form{border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:16px}.summary{display:grid;gap:5px;border-left-width:5px}.summary span,.summary small{color:var(--text-secondary)}.grid{display:grid;gap:12px}.grid label{display:grid;gap:6px;font-size:.8rem;font-weight:800}.grid input,.grid select{min-height:42px;border:1px solid var(--border);border-radius:11px;background:var(--input-background,var(--surface));color:var(--text);padding:0 11px}.form{display:grid;gap:16px}.actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}.actions a,.actions button{min-height:40px;border-radius:11px;padding:9px 14px;font:inherit;font-weight:750;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.actions a{border:1px solid var(--border);background:var(--surface-secondary);color:var(--text)}.actions button{border:1px solid var(--courtly-green);background:var(--courtly-green);color:white;cursor:pointer}.actions button:disabled{opacity:.55;cursor:not-allowed}@media(min-width:720px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, .6);
+    padding: 16px
+}
+
+.modal {
+    width: min(680px, 100%);
+    max-height: 90vh;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--surface);
+    box-shadow: var(--shadow-lg);
+    padding: 20px;
+    color: var(--text)
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px
+}
+
+.modalHeader h2 {
+    margin: 0;
+    font-size: 1.35rem
+}
+
+.modalHeader p {
+    margin: 7px 0 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    font-size: .85rem
+}
+
+.close {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface-secondary);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 1.25rem
+}
+
+.summary {
+    display: grid;
+    gap: 4px;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--courtly-green);
+    border-radius: 12px;
+    padding: 13px;
+    margin-bottom: 16px
+}
+
+.summary span,
+.summary small {
+    color: var(--text-secondary)
+}
+
+.form {
+    display: grid;
+    gap: 16px
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px
+}
+
+.grid label {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    min-width: 0;
+    font-size: .8rem;
+    font-weight: 800
+}
+
+.grid input,
+.grid select {
+    width: 100%;
+    height: 42px;
+    min-height: 42px;
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--input-background, var(--surface));
+    color: var(--text);
+    padding: 0 11px
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    flex-wrap: wrap
+}
+
+.actions button {
+    min-height: 40px;
+    border: 1px solid var(--courtly-green);
+    border-radius: 10px;
+    padding: 9px 14px;
+    background: var(--courtly-green);
+    color: white;
+    font: inherit;
+    font-weight: 750;
+    cursor: pointer
+}
+
+.actions button.cancel {
+    border-color: var(--border);
+    background: var(--surface-secondary);
+    color: var(--text)
+}
+
+.actions button:disabled {
+    opacity: .55;
+    cursor: not-allowed
+}
+
+@media(max-width:480px) {
+    .grid {
+        grid-template-columns: 1fr
+    }
+
+    .modal {
+        padding: 15px
+    }
+}
+.availability { display: grid; gap: 5px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: .85rem; background: var(--surface-secondary); }
+.availability span { font-weight: 400; line-height: 1.5; }
+.available { border-color: #398e74; }
+.unavailable { border-color: #b15d58; }

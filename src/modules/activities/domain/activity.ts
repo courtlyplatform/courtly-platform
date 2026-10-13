@@ -1,5 +1,6 @@
 export type ActivitySchedulingMode = "NONE" | "OPTIONAL" | "REQUIRED";
 export type SchedulingRequirement = "NONE" | "OPTIONAL" | "REQUIRED";
+export type ActivityAttendanceMode = "INDIVIDUAL" | "GROUP" | "FLEXIBLE";
 
 export type Activity = {
   id: string;
@@ -14,6 +15,9 @@ export type Activity = {
   specialtyId: string | null;
   specialtyName: string | null;
   specialtyColor: string | null;
+  attendanceMode: ActivityAttendanceMode;
+  maxParticipants: number | null;
+  sessionsPerWeek: number | null;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -29,6 +33,9 @@ export type CreateActivityInput = {
   professionalRequirement: SchedulingRequirement;
   resourceRequirement: SchedulingRequirement;
   specialtyId?: string | null;
+  attendanceMode?: ActivityAttendanceMode;
+  maxParticipants?: number | null;
+  sessionsPerWeek?: number | null;
 };
 
 export type UpdateActivityInput = CreateActivityInput & { id: string };

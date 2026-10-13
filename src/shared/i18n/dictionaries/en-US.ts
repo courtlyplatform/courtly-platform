@@ -20,6 +20,24 @@ type Dictionary =
     >;
 
 export const enUS = {
+    pagination: {"from": "From", "to": "To", "label": "Pagination", "pageSize": "Rows per page", "previous": "Previous", "next": "Next", "page": "Page {page} of {pages}", "range": "Showing {start}–{end} of {total} records", "empty": "No results found", "loading": "Loading records...", "error": "Could not load records.", "retry": "Try again"},
+    rescheduleAvailability: {
+        checking: "Checking availability...",
+        available: "Available for rescheduling",
+        unavailable: "Rescheduling unavailable",
+        saveFailed: "Could not confirm rescheduling. Availability may have changed; please try again.",
+        reasons: {
+            professionalUnavailable: "The professional is unavailable at this time or has another appointment.",
+            resourceUnavailable: "There are not enough free resources in the pool for this time.",
+            professionalRequired: "Select a professional for this service.",
+            pastAppointment: "Choose a future date and time.",
+            invalidInterval: "End time must be later than start time.",
+            appointmentUnavailable: "This appointment cannot be rescheduled.",
+            forbidden: "You do not have permission to reschedule this appointment.",
+            checkFailed: "Could not check availability. Please try again.",
+            unknown: "Availability could not be confirmed. Review the details or try another time.",
+        },
+    },
     common: {
         appName: "Courtly",
         appDescription: "Management Platform",

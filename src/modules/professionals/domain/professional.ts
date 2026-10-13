@@ -95,6 +95,7 @@ export type Professional = {
   availabilityRules: ProfessionalAvailabilityRule[];
   unavailability: ProfessionalUnavailability[];
   scheduleExceptions: ProfessionalScheduleException[];
+  scheduleExceptionCount: number;
 };
 
 export type ProfessionalListFilters = {
@@ -108,6 +109,8 @@ export type ProfessionalListFilters = {
 };
 
 export type ProfessionalPageData = {
+  counts: {total:number;active:number;inactive:number};
+  registrationAuthorities: string[];
   professionals: Professional[];
   specialties: ProfessionalSpecialty[];
   activities: { id: string; name: string; active: boolean }[];

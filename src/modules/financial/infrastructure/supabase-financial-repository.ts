@@ -10,6 +10,7 @@ import type {
 import type {
     DateRange,
     FinancialRepository,
+    RevenueTotal,
 } from "../domain/financial-repository";
 
 import type {
@@ -140,7 +141,8 @@ const REVENUE_FIELDS = `
 export class SupabaseFinancialRepository
 implements FinancialRepository {
     constructor(
-        private readonly supabase: SupabaseClient
+        private readonly supabase: SupabaseClient,
+        private readonly revenueIds?: string[]
     ) {}
 
     async syncPeriod(
@@ -163,48 +165,25 @@ implements FinancialRepository {
         }
     }
 
+    async listRevenueTotals(organizationId: string, range: DateRange): Promise<RevenueTotal[]> {
+        const {data,error} = await this.supabase.rpc("courtly_revenue_totals",{
+            p_organization_id:organizationId,p_start:range.start,p_end:range.end,
+        });
+        if(error) throw new Error(error.message);
+        return (data ?? []).map((row: {amount: number | string;status: FinancialEntryStatus;currency_code: CurrencyCode;reference_date: string}) => ({
+            amount:Number(row.amount),status:row.status,currencyCode:row.currency_code,referenceDate:row.reference_date,
+        }));
+    }
+
     async listRevenues(
         organizationId: string,
         range: DateRange
     ): Promise<FinancialRevenue[]> {
 
-        const {
-            data,
-            error,
-        } =
-            await this.supabase
-                .from(
-                    "financial_revenues"
-                )
-                .select(
-                    REVENUE_FIELDS
-                )
-                .eq(
-                    "organization_id",
-                    organizationId
-                )
-                .gte(
-                    "reference_date",
-                    range.start
-                )
-                .lte(
-                    "reference_date",
-                    range.end
-                )
-                .order(
-                    "reference_date",
-                    {
-                        ascending:
-                            false,
-                    }
-                )
-                .order(
-                    "created_at",
-                    {
-                        ascending:
-                            false,
-                    }
-                );
+        let query = this.supabase.from("financial_revenues").select(REVENUE_FIELDS)
+            .eq("organization_id", organizationId).gte("reference_date",range.start).lte("reference_date",range.end);
+        if (this.revenueIds) query = query.in("id",this.revenueIds);
+        const {data,error} = await query.order("reference_date",{ascending:false}).order("created_at",{ascending:false}).order("id");
 
 
         if (error) {
@@ -560,57 +539,9 @@ implements FinancialRepository {
         activeSubscriptions: number;
         activeCustomers: number;
     }> {
-        const {
-            data,
-            error,
-        } = await this.supabase
-            .from("customer_subscriptions")
-            .select(
-                "customer_id, amount, currency_code, billing_cycle"
-            )
-            .eq(
-                "organization_id",
-                organizationId
-            )
-            .eq(
-                "status",
-                "ACTIVE"
-            )
-            .eq(
-                "currency_code",
-                currencyCode
-            );
-
-        if (error) {
-            throw new Error(
-                `Failed to calculate MRR: ${error.message}`
-            );
-        }
-
-        const rows =
-            (data ?? []) as ActiveSubscriptionRow[];
-
-        const mrr = rows.reduce(
-            (total, item) =>
-                total + monthlyEquivalent(
-                    Number(item.amount),
-                    item.billing_cycle
-                ),
-            0
-        );
-
-        return {
-            mrr,
-            activeSubscriptions:
-                rows.length,
-            activeCustomers:
-                new Set(
-                    rows.map(
-                        (item) =>
-                            item.customer_id
-                    )
-                ).size,
-        };
+        const {data,error} = await this.supabase.rpc("courtly_mrr",{p_organization_id:organizationId,p_currency:currencyCode});
+        if(error) throw new Error(error.message);
+        return {mrr:Number(data.mrr),activeSubscriptions:Number(data.activeSubscriptions),activeCustomers:Number(data.activeCustomers)};
     }
 
     async createCategory(

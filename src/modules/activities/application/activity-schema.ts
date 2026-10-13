@@ -44,6 +44,9 @@ export const activitySchema = z
     professionalRequirement: z.enum(schedulingRequirements),
     resourceRequirement: z.enum(schedulingRequirements),
     specialtyId: z.string().uuid().optional().nullable(),
+    attendanceMode: z.enum(["INDIVIDUAL", "GROUP", "FLEXIBLE"]).default("INDIVIDUAL"),
+    maxParticipants: z.number().int().positive().max(999).optional().nullable(),
+    sessionsPerWeek: z.number().int().min(1).max(14).optional().nullable(),
   })
   .superRefine((value, context) => {
     if (

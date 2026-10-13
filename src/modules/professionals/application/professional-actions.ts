@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getCurrentOrganizationCommercialContext } from '@/shared/auth/get-current-organization-commercial-context';
 import { createClient } from '@/shared/database/supabase/server';
 import { createAdminClient } from '@/shared/database/supabase/admin';
 import { can, getCurrentAccessContext } from '@/shared/auth/permissions';
@@ -507,4 +508,42 @@ export async function setProfessionalScheduleExceptionActiveAction(
     console.error('[PROFESSIONALS] schedule exception status failed', e);
     return { success: false, error: 'statusFailed' };
   }
+}
+
+// Group appointment availability lookup (retained from the latest implementation).
+export type AvailabilitySlot = { professionalId: string; professionalName: string; activityId: string; date: string; startTime: string; endTime: string; kind: "AVAILABLE" | "EXISTING_WITH_CAPACITY"; appointmentId?: string; availableCapacity?: number };
+
+export async function findProfessionalAvailabilityAction(input: { from: string; to: string; activityId?: string | null; professionalId?: string | null; specialtyId?: string | null }): Promise<{success:true; slots:AvailabilitySlot[]}|{success:false; error:string}> {
+  try {
+    const supabase = await createClient(); const { organizationId } = await getCurrentOrganizationCommercialContext(supabase); const db = supabase as any;
+    const [pros, quals, rules, exceptions, activities, appointments, participants, requirements, poolMembers, appointmentResources] = await Promise.all([
+      db.from("professionals").select("id,name").eq("organization_id", organizationId).eq("active", true),
+      db.from("professional_activities").select("professional_id,activity_id").eq("organization_id", organizationId),
+      db.from("professional_availability_rules").select("professional_id,weekday,start_time,end_time").eq("organization_id", organizationId).eq("active", true),
+      db.from("professional_schedule_exceptions").select("professional_id,exception_type,starts_at,ends_at").eq("organization_id", organizationId).eq("active", true),
+      db.from("activities").select("id,specialty_id,default_duration_minutes,max_participants").eq("organization_id", organizationId).eq("active", true),
+      db.from("appointments").select("id,activity_id,professional_id,starts_at,ends_at,status,capacity").eq("organization_id", organizationId).gte("starts_at", input.from).lte("starts_at", input.to).neq("status","CANCELLED"),
+      db.from("appointment_participants").select("appointment_id").eq("organization_id", organizationId).eq("participant_status","ACTIVE"),
+      db.from("activity_resource_requirements").select("activity_id,resource_pool_id,quantity").eq("organization_id", organizationId),
+      db.from("resource_pool_members").select("resource_pool_id,resource_id").eq("organization_id", organizationId),
+      db.from("appointment_resources").select("appointment_id,resource_id").eq("organization_id", organizationId),
+    ]);
+    for (const r of [pros,quals,rules,exceptions,activities,appointments,participants,requirements,poolMembers,appointmentResources]) if (r.error) throw r.error;
+    const occ = new Map<string,number>(); for (const p of participants.data ?? []) occ.set(p.appointment_id,(occ.get(p.appointment_id)??0)+1);
+    const filteredActivities=(activities.data??[]).filter((a:any)=>(!input.activityId||a.id===input.activityId)&&(!input.specialtyId||a.specialty_id===input.specialtyId));
+    const slots:AvailabilitySlot[]=[]; const from=new Date(input.from), to=new Date(input.to);
+    for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)) for(const a of filteredActivities) for(const p of (pros.data??[]).filter((x:any)=>!input.professionalId||x.id===input.professionalId)) {
+      if (!(quals.data??[]).some((q:any)=>q.professional_id===p.id&&q.activity_id===a.id)) continue;
+      const weekday=d.getDay(); for(const r of (rules.data??[]).filter((x:any)=>x.professional_id===p.id&&x.weekday===weekday)) {
+        const date=d.toISOString().slice(0,10); const start=new Date(`${date}T${r.start_time}`); const end=new Date(`${date}T${r.end_time}`);
+        const absent=(exceptions.data??[]).some((e:any)=>e.professional_id===p.id&&e.exception_type==='ABSENCE'&&new Date(e.starts_at)<end&&new Date(e.ends_at)>start); if(absent) continue;
+        const existing=(appointments.data??[]).find((x:any)=>x.professional_id===p.id&&x.activity_id===a.id&&new Date(x.starts_at)<end&&new Date(x.ends_at)>start);
+        if(existing){ const free=(existing.capacity??a.max_participants??1)-(occ.get(existing.id)??0); if(free>0) slots.push({professionalId:p.id,professionalName:p.name,activityId:a.id,date,startTime:r.start_time,endTime:r.end_time,kind:'EXISTING_WITH_CAPACITY',appointmentId:existing.id,availableCapacity:free}); }
+        else { const conflict=(appointments.data??[]).some((x:any)=>x.professional_id===p.id&&new Date(x.starts_at)<end&&new Date(x.ends_at)>start);
+          const resourceOk=(requirements.data??[]).filter((q:any)=>q.activity_id===a.id).every((q:any)=>{ const members=(poolMembers.data??[]).filter((m:any)=>m.resource_pool_id===q.resource_pool_id).map((m:any)=>m.resource_id); const busy=new Set((appointments.data??[]).filter((x:any)=>new Date(x.starts_at)<end&&new Date(x.ends_at)>start).flatMap((x:any)=>(appointmentResources.data??[]).filter((ar:any)=>ar.appointment_id===x.id).map((ar:any)=>ar.resource_id))); return members.filter((id:string)=>!busy.has(id)).length >= q.quantity; });
+          if(!conflict && resourceOk) slots.push({professionalId:p.id,professionalName:p.name,activityId:a.id,date,startTime:r.start_time,endTime:r.end_time,kind:'AVAILABLE'}); }
+      }
+    }
+    return {success:true,slots};
+  } catch(error){ return {success:false,error:error instanceof Error?error.message:"availabilityFailed"}; }
 }

@@ -4,6 +4,7 @@ import type {
 
 import type {
     FinancialRepository,
+    RevenueTotal,
 } from "../domain/financial-repository";
 
 import type {
@@ -43,7 +44,7 @@ export async function getFinancialPageData(
         historyRevenues,
         historyExpenses,
     ] = await Promise.all([
-        repository.listRevenues(
+        repository.listRevenueTotals(
             organizationId,
             selectedPeriod
         ),
@@ -58,7 +59,7 @@ export async function getFinancialPageData(
             organizationId,
             defaultCurrency
         ),
-        repository.listRevenues(
+        repository.listRevenueTotals(
             organizationId,
             {
                 start: historyStart,
@@ -124,7 +125,7 @@ export async function getFinancialPageData(
         periodEnd:
             selectedPeriod.end,
         summary,
-        revenues,
+        revenues: [],
         expenses,
         categories,
         monthlyHistory,
@@ -134,7 +135,7 @@ export async function getFinancialPageData(
 }
 
 function buildSummary(
-    revenues: FinancialRevenue[],
+    revenues: RevenueTotal[],
     expenses: FinancialExpense[],
     mrr: {
         mrr: number;
@@ -227,7 +228,7 @@ function buildSummary(
 }
 
 function buildMonthlyHistory(
-    revenues: FinancialRevenue[],
+    revenues: RevenueTotal[],
     expenses: FinancialExpense[],
     currency: CurrencyCode,
     selectedPeriodStart: string,
@@ -293,7 +294,7 @@ function buildMonthlyHistory(
 }
 
 function buildReports(
-    revenues: FinancialRevenue[],
+    revenues: RevenueTotal[],
     expenses: FinancialExpense[],
     currency: CurrencyCode,
     selectedPeriodStart: string,

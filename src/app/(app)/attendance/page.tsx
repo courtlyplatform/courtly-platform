@@ -28,7 +28,7 @@ export default async function AttendancePage() {
         professionals(name)
       `)
       .eq("organization_id", context.organizationId)
-      .order("starts_at", { ascending: false }),
+      .order("starts_at", { ascending: false }).limit(0),
     db
       .from("organization_scheduling_settings")
       .select("late_cancellation_window_minutes")

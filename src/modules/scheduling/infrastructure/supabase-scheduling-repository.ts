@@ -17,7 +17,7 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
       activities, settingsResult, customersResult, specialtiesResult, professionalsResult, qualificationsResult,
       availabilityResult, exceptionsResult, resourceTypesResult, resourcesResult, resourcePoolsResult, poolMembersResult, requirementsResult,
       subscriptionsResult, rulesResult, conflictsResult, ruleResourcesResult, appointmentsResult,
-      appointmentResourcesResult,
+      appointmentResourcesResult, appointmentParticipantsResult,
     ] = await Promise.all([
       listActivities(activityRepository, organizationId),
       db.from("organization_scheduling_settings").select("scheduling_enabled,generation_window_days,late_cancellation_window_minutes").eq("organization_id", organizationId).single(),
@@ -33,14 +33,15 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
       db.from("resource_pool_members").select("resource_pool_id,resource_id").eq("organization_id", organizationId),
       db.from("activity_resource_requirements").select("activity_id,resource_pool_id,quantity,resource_pools(name)").eq("organization_id", organizationId).not("resource_pool_id", "is", null),
       db.from("customer_subscriptions").select("id,customer_id,activity_id,status,billing_cycle,starts_at,ends_at").eq("organization_id", organizationId),
-      db.from("schedule_rules").select("id,customer_id,customer_subscription_id,activity_id,professional_id,weekday,start_time,end_time,effective_from,effective_until,status").eq("organization_id", organizationId),
-      db.from("schedule_generation_conflicts").select("id,schedule_rule_id,starts_at,ends_at,reason").eq("organization_id", organizationId).is("resolved_at", null).order("starts_at"),
-      db.from("schedule_rule_resources").select("schedule_rule_id,resource_id").eq("organization_id", organizationId),
-      db.from("appointments").select("id,schedule_rule_id,customer_id,customer_subscription_id,activity_id,professional_id,starts_at,ends_at,status,source,cancellation_reason,attendance_status").eq("organization_id", organizationId).gte("starts_at", rangeStart.toISOString()).lte("starts_at", rangeEnd.toISOString()).order("starts_at"),
+      db.from("schedule_rules").select("id,customer_id,customer_subscription_id,activity_id,professional_id,weekday,start_time,end_time,effective_from,effective_until,status").eq("organization_id", organizationId).limit(0),
+      db.from("schedule_generation_conflicts").select("id,schedule_rule_id,starts_at,ends_at,reason").eq("organization_id", organizationId).is("resolved_at", null).order("starts_at").limit(0),
+      db.from("schedule_rule_resources").select("schedule_rule_id,resource_id").eq("organization_id", organizationId).limit(0),
+      db.from("appointments").select("id,schedule_rule_id,customer_id,customer_subscription_id,activity_id,professional_id,starts_at,ends_at,status,source,cancellation_reason,attendance_status,capacity,payment_status,paid_at,paid_amount,payment_reference").eq("organization_id", organizationId).gte("starts_at", rangeStart.toISOString()).lte("starts_at", rangeEnd.toISOString()).order("starts_at"),
       db.from("appointment_resources").select("appointment_id,resource_id").eq("organization_id", organizationId),
+      db.from("appointment_participants").select("id,appointment_id,customer_id,attendance_status,participant_status").eq("organization_id", organizationId),
     ]);
 
-    const results = [settingsResult, customersResult, specialtiesResult, professionalsResult, qualificationsResult, availabilityResult, exceptionsResult, resourceTypesResult, resourcesResult, resourcePoolsResult, poolMembersResult, requirementsResult, subscriptionsResult, rulesResult, conflictsResult, ruleResourcesResult, appointmentsResult, appointmentResourcesResult];
+    const results = [settingsResult, customersResult, specialtiesResult, professionalsResult, qualificationsResult, availabilityResult, exceptionsResult, resourceTypesResult, resourcesResult, resourcePoolsResult, poolMembersResult, requirementsResult, subscriptionsResult, rulesResult, conflictsResult, ruleResourcesResult, appointmentsResult, appointmentResourcesResult, appointmentParticipantsResult];
     const failed = results.find((r: any) => r.error);
     if (failed?.error) throw new Error(`Failed to load scheduling: ${failed.error.message}`);
 
@@ -54,6 +55,8 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
     for (const row of ruleResourcesResult.data ?? []) ruleResourceMap.set(row.schedule_rule_id, [...(ruleResourceMap.get(row.schedule_rule_id) ?? []), row.resource_id]);
     const appointmentResourceMap = new Map<string, string[]>();
     for (const row of appointmentResourcesResult.data ?? []) appointmentResourceMap.set(row.appointment_id, [...(appointmentResourceMap.get(row.appointment_id) ?? []), row.resource_id]);
+    const participantMap = new Map<string, any[]>();
+    for (const row of appointmentParticipantsResult.data ?? []) participantMap.set(row.appointment_id, [...(participantMap.get(row.appointment_id) ?? []), row]);
     const poolMemberMap = new Map<string, string[]>();
     for (const row of poolMembersResult.data ?? []) poolMemberMap.set(row.resource_pool_id, [...(poolMemberMap.get(row.resource_pool_id) ?? []), row.resource_id]);
 
@@ -70,6 +73,9 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
       status: row.status, source: row.source, cancellationReason: row.cancellation_reason,
       attendanceStatus: row.attendance_status ?? (row.status === "CANCELLED" ? "CANCELLED" : "PENDING"),
       resourceIds: appointmentResourceMap.get(row.id) ?? [],
+      participants: (participantMap.get(row.id) ?? []).map((p: any) => ({ id: p.id, customerId: p.customer_id, attendanceStatus: p.attendance_status, participantStatus: p.participant_status })),
+      capacity: row.capacity ?? 1, paymentStatus: row.payment_status ?? "PENDING", paidAt: row.paid_at ?? null,
+      paidAmount: row.paid_amount === null ? null : Number(row.paid_amount), paymentReference: row.payment_reference ?? null,
     }));
 
     return {
@@ -94,8 +100,8 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
   }
 
   async createAppointment(input: Parameters<SchedulingRepository["createAppointment"]>[0]): Promise<string> {
-    const { data, error } = await (this.supabase as any).rpc("create_scheduling_appointment", {
-      p_customer_id: input.customerId, p_activity_id: input.activityId,
+    const { data, error } = await (this.supabase as any).rpc("create_group_scheduling_appointment", {
+      p_customer_ids: input.customerIds, p_activity_id: input.activityId,
       p_customer_subscription_id: input.customerSubscriptionId ?? null,
       p_starts_at: input.startsAt, p_ends_at: input.endsAt,
       p_professional_id: input.professionalId ?? null, p_resource_ids: input.resourceIds ?? [], p_source: "MANUAL",
@@ -111,6 +117,21 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
       p_resource_ids: input.resourceIds ?? [],
     });
     if (error) throw error; return data as string;
+  }
+
+  async createWeeklyScheduleRules(input: Parameters<SchedulingRepository["createWeeklyScheduleRules"]>[0]): Promise<string> {
+    const { data, error } = await (this.supabase as any).rpc("create_weekly_scheduling_rules", {
+      p_customer_subscription_id: input.customerSubscriptionId,
+      p_weekdays: input.weekdays,
+      p_start_time: input.startTime,
+      p_end_time: input.endTime,
+      p_effective_from: input.effectiveFrom,
+      p_effective_until: input.effectiveUntil ?? null,
+      p_professional_id: input.professionalId ?? null,
+      p_resource_ids: input.resourceIds ?? [],
+    });
+    if (error) throw error;
+    return (data as string[])[0];
   }
 
   async cancelAppointment(input: Parameters<SchedulingRepository["cancelAppointment"]>[0]): Promise<void> {
@@ -147,4 +168,10 @@ export class SupabaseSchedulingRepository implements SchedulingRepository {
   async refreshOrganizationWindow(organizationId: string): Promise<void> {
     const { error } = await (this.supabase as any).rpc("refresh_organization_scheduling_window", { p_organization_id: organizationId }); if (error) throw error;
   }
+
+  async settleAppointmentPayment(input: { appointmentId: string; amount?: number | null; reference?: string | null }): Promise<void> {
+    const { error } = await (this.supabase as any).rpc("settle_appointment_payment", { p_appointment_id: input.appointmentId, p_amount: input.amount ?? null, p_reference: input.reference ?? null });
+    if (error) throw new Error(error.message);
+  }
+
 }

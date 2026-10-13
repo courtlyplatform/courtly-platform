@@ -15,9 +15,9 @@ export default async function ServicesPage() {
   if (!can(access, "SERVICES_VIEW")) redirect("/dashboard");
 
   const organizationId = await getCurrentOrganizationId(supabase);
-  const repository = new SupabaseActivityRepository(supabase);
+  const repository = new SupabaseActivityRepository(supabase, []);
 
-  const [activities, poolsResult, membersResult, requirementsResult, specialtiesResult] =
+  const [activities, poolsResult, membersResult, requirementsResult, specialtiesResult, durationsResult] =
     await Promise.all([
       listActivities(repository, organizationId),
       (supabase as any)
@@ -39,9 +39,10 @@ export default async function ServicesPage() {
         .select("id,name,color,active")
         .eq("organization_id", organizationId)
         .order("name"),
+      supabase.rpc("courtly_service_durations",{p_organization_id:organizationId}),
     ]);
 
-  const failed = [poolsResult, membersResult, requirementsResult, specialtiesResult].find(
+  const failed = [poolsResult, membersResult, requirementsResult, specialtiesResult, durationsResult].find(
     (result) => result.error,
   );
   if (failed?.error) {
@@ -60,6 +61,7 @@ export default async function ServicesPage() {
   return (
     <ServicesClient
       initialActivities={activities}
+      availableDurations={(durationsResult.data ?? []) as number[]}
       resourcePools={(poolsResult.data ?? []).map((row: any) => ({
         id: row.id,
         name: row.name,

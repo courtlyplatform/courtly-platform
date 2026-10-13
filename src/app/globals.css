@@ -7993,6 +7993,12 @@ CUSTOMER PLANS SUMMARY — DESKTOP
     text-align: left
 }
 
+/* Onboarding: readable progress labels in light theme only. */
+:root:not([data-theme="dark"]) .organization-step,
+[data-theme="light"] .organization-step {
+    color: var(--text, #18211e);
+}
+
 .organization-step>span {
     display: grid;
     place-items: center;
@@ -8224,3 +8230,53 @@ CUSTOMER PLANS SUMMARY — DESKTOP
     border-color: var(--border);
     color: var(--text);
 }
+
+
+/* Courtly services listing: 9-column layout after adding format, capacity and frequency.
+   Override legacy nth-child widths which targeted the former 6-column table. */
+.services-table-card .table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.services-table-card .services-table {
+  width: 100%;
+  min-width: 1260px;
+  table-layout: fixed;
+}
+.services-table-card .services-table th:nth-child(1),
+.services-table-card .services-table td:nth-child(1) { width: 14%; }
+.services-table-card .services-table th:nth-child(2),
+.services-table-card .services-table td:nth-child(2) { width: 16%; }
+.services-table-card .services-table th:nth-child(3),
+.services-table-card .services-table td:nth-child(3) { width: 8%; }
+.services-table-card .services-table th:nth-child(4),
+.services-table-card .services-table td:nth-child(4) { width: 12%; }
+.services-table-card .services-table th:nth-child(5),
+.services-table-card .services-table td:nth-child(5) { width: 10%; overflow: hidden; }
+.services-table-card .services-table th:nth-child(6),
+.services-table-card .services-table td:nth-child(6) { width: 9%; overflow: hidden; }
+.services-table-card .services-table th:nth-child(7),
+.services-table-card .services-table td:nth-child(7) { width: 11%; }
+.services-table-card .services-table th:nth-child(8),
+.services-table-card .services-table td:nth-child(8) { width: 8%; }
+.services-table-card .services-table th:nth-child(9),
+.services-table-card .services-table td:nth-child(9) { width: 12%; overflow: visible; text-align: right; }
+.services-table-card .services-table th,
+.services-table-card .services-table td { box-sizing: border-box; }
+.services-table-card .services-table .table-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.services-table-card .services-table .table-actions button {
+  flex-shrink: 0;
+}
+
+.courtly-pagination {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 4px;font-size:13px;}
+.courtly-pagination label,.courtly-pagination>div {display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.courtly-pagination select,.courtly-pagination button {width:auto;flex:none;padding:7px 10px;border-radius:8px;background:var(--surface,transparent);color:inherit;border:1px solid var(--border,#58635f);}
+.courtly-pagination button:disabled {opacity:.45;cursor:not-allowed;}
+@media(max-width:600px){.courtly-pagination{align-items:flex-start;}.courtly-pagination>div{width:100%;justify-content:flex-start;}}

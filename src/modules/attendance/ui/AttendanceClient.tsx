@@ -1,11 +1,13 @@
 "use client";
+import { Pagination } from "@/shared/ui/Pagination";
+import { useServerPagination } from "@/shared/pagination/use-server-pagination";
 
-import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { CourtlyAlert } from "@/shared/ui/CourtlyAlert";
-import { setAttendanceStatusAction } from "../application/attendance-actions";
+import { getRescheduleOptionsAction, setAttendanceStatusAction } from "../application/attendance-actions";
+import { RescheduleClient } from "./RescheduleClient";
 import styles from "./attendance.module.css";
 
 export type AttendanceAppointment = {
@@ -41,31 +43,30 @@ export function AttendanceClient({
   canManageAttendance: boolean;
   canReschedule: boolean;
 }) {
-  const { locale } = useI18n();
+  const { locale, dictionary } = useI18n();
   const pt = locale === "pt-BR";
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [startDate,setStartDate] = useState("");
+  const [endDate,setEndDate] = useState("");
   const [status, setStatus] = useState("ALL");
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [pending, startTransition] = useTransition();
+  const [rescheduleData, setRescheduleData] = useState<null | { appointment: Parameters<typeof RescheduleClient>[0]["appointment"]; professionals: Parameters<typeof RescheduleClient>[0]["professionals"] }>(null);
+  const [loadingReschedule, setLoadingReschedule] = useState<string | null>(null);
+  const openReschedule = async (id: string) => {
+    setFeedback(null);
+    setLoadingReschedule(id);
+    try {
+      const result = await getRescheduleOptionsAction(id);
+      if (result.success) setRescheduleData({ appointment: result.appointment, professionals: result.professionals });
+      else setFeedback({ type: "error", message: pt ? "Não foi possível carregar o reagendamento." : "Could not load rescheduling." });
+    } finally { setLoadingReschedule(null); }
+  };
 
-  const filtered = useMemo(() => {
-    const normalized = normalize(query);
-    return appointments.filter((item) => {
-      const matchesStatus = status === "ALL" || item.attendanceStatus === status;
-      const haystack = normalize([
-        item.customerName,
-        item.documentType,
-        item.documentNumber,
-        item.email,
-        item.phone,
-        item.activityName,
-        item.specialtyName,
-        item.professionalName,
-      ].filter(Boolean).join(" "));
-      return matchesStatus && (!normalized || haystack.includes(normalized));
-    });
-  }, [appointments, query, status]);
+
+  const paginationFiltered = useServerPagination("attendance",{search:query,status,start:startDate,end:endDate},appointments);
+    const filtered = paginationFiltered.rows;
 
   const updateStatus = (appointmentId: string, next: "PENDING" | "CONFIRMED") => {
     setFeedback(null);
@@ -76,10 +77,11 @@ export function AttendanceClient({
         return;
       }
       setFeedback({ type: "success", message: pt ? "Confirmação atualizada." : "Confirmation updated." });
-      router.refresh();
+      paginationFiltered.refresh(); router.refresh();
     });
   };
 
+  
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -96,6 +98,8 @@ export function AttendanceClient({
       {feedback && <CourtlyAlert type={feedback.type} message={feedback.message} />}
 
       <section className={styles.filters}>
+        <label><span>{dictionary.pagination.from}</span><input type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} /></label>
+        <label><span>{dictionary.pagination.to}</span><input type="date" value={endDate} onChange={e=>setEndDate(e.target.value)} /></label>
         <label>
           <span>{pt ? "Buscar" : "Search"}</span>
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={pt ? "Cliente, documento, e-mail, telefone, serviço ou profissional" : "Customer, document, email, phone, service or professional"} />
@@ -111,14 +115,15 @@ export function AttendanceClient({
         </label>
       </section>
 
+      <Pagination state={paginationFiltered} locale={locale} />
       <section className={styles.listCard}>
         <div className={styles.listHead}>
           <span>{pt ? "Cliente" : "Customer"}</span><span>{pt ? "Documento" : "Document"}</span><span>{pt ? "Contato" : "Contact"}</span>
           <span>{pt ? "Modalidade" : "Service"}</span><span>{pt ? "Compromisso" : "Appointment"}</span><span>{pt ? "Profissional" : "Professional"}</span><span>Status</span><span>{pt ? "Ações" : "Actions"}</span>
         </div>
-        {filtered.length === 0 ? (
+        {!paginationFiltered.loading && !paginationFiltered.error && filtered.length === 0 ? (
           <div className={styles.empty}>{pt ? "Nenhum compromisso encontrado." : "No appointments found."}</div>
-        ) : filtered.map((item) => (
+        ) : paginationFiltered.rows.map((item) => (
           <article key={item.id} className={styles.row}>
             <div data-label={pt ? "Cliente" : "Customer"}><strong>{item.customerName}</strong></div>
             <div data-label={pt ? "Documento" : "Document"}><span>{item.documentType ?? "—"}</span><small>{item.documentNumber ?? "—"}</small></div>
@@ -135,13 +140,14 @@ export function AttendanceClient({
                 <>
                   {canManageAttendance && <button disabled={pending || item.attendanceStatus === "CONFIRMED"} onClick={() => updateStatus(item.id, "CONFIRMED")}>{pt ? "Confirmar" : "Confirm"}</button>}
                   {canManageAttendance && <button disabled={pending || item.attendanceStatus === "PENDING"} onClick={() => updateStatus(item.id, "PENDING")}>{pt ? "Pendente" : "Pending"}</button>}
-                  {canReschedule && <Link className={styles.primaryAction} href={`/attendance/${item.id}/reschedule`}>{pt ? "Reagendar" : "Reschedule"}</Link>}
+                  {canReschedule && <button className={styles.primaryAction} type="button" disabled={!!loadingReschedule} onClick={() => void openReschedule(item.id)}>{loadingReschedule === item.id ? (pt ? "Carregando..." : "Loading...") : (pt ? "Reagendar" : "Reschedule")}</button>}
                 </>
               )}
             </div>
           </article>
         ))}
       </section>
+      {rescheduleData && <RescheduleClient key={rescheduleData.appointment.id} appointment={rescheduleData.appointment} professionals={rescheduleData.professionals} onClose={() => setRescheduleData(null)} onSuccess={() => { setRescheduleData(null); setFeedback({ type: "success", message: pt ? "Compromisso reagendado." : "Appointment rescheduled." }); paginationFiltered.refresh(); router.refresh(); }} />}
     </main>
   );
 }
